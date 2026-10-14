@@ -1,0 +1,320 @@
+Village ID,Village Name,Latitude,Longitude,Graph Node,Snap Distance (m),Baseline Nearest Node,Scenario Nearest Node,Baseline Facility Name,Scenario Facility Name,Baseline Distance (km),Scenario Distance (km),Additional Detour (km),Baseline Travel Time (min),Scenario Travel Time (min),Additional Delay (min),Detour Ratio,Destination Altered,Modeled Status
+1,"Disāma",24.9125,92.8942,10017,37,4100,NULL,"Emanuel Hospital, Pailapool","None (Isolated by Inundation)",5.28,INF,INF,18.3,INF,INF,INF,false,MODEL_ISOLATED
+2,"Binnākāndi",24.8052,92.9814,10034,166.3,4200,6200,"Nightingale Hospital","Valley Hospital, Silchar",5.14,16.82,11.68,19,65.7,46.7,3.27,true,REROUTED_ALT_FACILITY
+3,"Kumbhir",24.9398,92.9653,10051,122.7,4300,NULL,"BPHC, Udharbond","None (Isolated by Inundation)",11.38,INF,INF,37.6,INF,INF,INF,false,MODEL_ISOLATED
+4,"Harinagar East",24.9193,93.1136,10068,140.3,4400,NULL,"South City Hospital, Cachar","None (Isolated by Inundation)",1.98,INF,INF,8.9,INF,INF,INF,false,MODEL_ISOLATED
+5,"Chotobekra",24.62941,92.69868,10085,120.9,4500,NULL,"Valley Hospital, Silchar","None (Isolated by Inundation)",4.01,INF,INF,15.7,INF,INF,INF,false,MODEL_ISOLATED
+6,"Ankhasuo",24.82357,92.84656,10102,139.8,4600,NULL,"CHC, Vairengte Link","None (Isolated by Inundation)",5.95,INF,INF,21.8,INF,INF,INF,false,MODEL_ISOLATED
+7,"Lakhipur Sub-Division",24.74662,92.80259,10119,77,4700,6700,"PHC, Algapur","PHC, Algapur",11.45,11.45,0,40.1,40.1,0,1,false,REACHABLE_SAME_FACILITY
+8,"Pailapool Outpost",24.55856,92.75343,10136,172.6,4800,6800,"50 Bed Hospital, Lakhipur","50 Bed Hospital, Lakhipur",2.19,2.19,0,9.3,9.3,0,1,false,REACHABLE_SAME_FACILITY
+9,"Sonāimukh North",24.89938,92.88575,10153,126.5,4900,6900,"50 Bed Hospital, Lakhipur","50 Bed Hospital, Lakhipur",3.82,3.82,0,13,13,0,1,false,REACHABLE_SAME_FACILITY
+10,"Badarpur Riverside",24.9691,92.82622,10170,178.8,5000,7000,"BPHC, Udharbond","BPHC, Udharbond",9.01,9.01,0,32.8,32.8,0,1,false,REACHABLE_SAME_FACILITY
+11,"Katakhal Junction",24.92771,92.76151,10187,29.4,5100,7100,"F.R.U, Kalain","F.R.U, Kalain",10.44,10.44,0,34.8,34.8,0,1,false,REACHABLE_SAME_FACILITY
+12,"Silkuri Border Enclave",24.9352,92.87827,10204,98.3,5200,7200,"50 Bed Hospital, Lakhipur","South City Hospital, Cachar",11.77,16.95,5.18,40,61.3,21.3,1.44,true,REROUTED_ALT_FACILITY
+13,"Umednagar",24.69811,92.78704,10221,33.6,5300,7300,"Jiribam CHC","Jiribam CHC",4.4,4.4,0,14.7,14.7,0,1,false,REACHABLE_SAME_FACILITY
+14,"Hailakandi Central",24.62782,92.84417,10238,33.3,5400,7400,"State Dispensary, Nityanandpur","State Dispensary, Nityanandpur",6.39,6.39,0,21.1,21.1,0,1,false,REACHABLE_SAME_FACILITY
+15,"Masimpur",24.92643,92.89613,10255,191.4,4000,6000,"F.R.U, Kalain","F.R.U, Kalain",4.61,4.61,0,17.7,17.7,0,1,false,REACHABLE_SAME_FACILITY
+16,"Dholai",24.79392,92.56956,10272,27.8,4100,6100,"Emanuel Hospital, Pailapool","PHC, Algapur",2.73,11.43,8.7,9.5,41.4,31.9,4.19,true,REROUTED_ALT_FACILITY
+17,"Moragang",24.88683,92.72332,10289,176.8,4200,6200,"F.R.U, Kalain","F.R.U, Kalain",2.92,2.92,0,10,10,0,1,false,REACHABLE_SAME_FACILITY
+18,"Bilaipur",24.91655,92.61713,10306,34.1,4300,6300,"PHC, Algapur","PHC, Algapur",7.2,7.2,0,26.6,26.6,0,1,false,REACHABLE_SAME_FACILITY
+19,"Tarapur Colony",24.83515,93.06575,10323,49.7,4400,6400,"Emanuel Hospital, Pailapool","Emanuel Hospital, Pailapool",7.71,7.71,0,25.4,25.4,0,1,false,REACHABLE_SAME_FACILITY
+20,"Kanakpur",24.80264,92.57585,10340,103.6,4500,6500,"Nightingale Hospital","Valley Hospital, Silchar",8.12,18.75,10.63,27.3,70.4,43.1,2.31,true,REROUTED_ALT_FACILITY
+21,"Meherpur Bypass",24.86555,93.11461,10357,151.4,4600,6600,"BPHC, Udharbond","BPHC, Udharbond",7.63,7.63,0,24.4,24.4,0,1,false,REACHABLE_SAME_FACILITY
+22,"Rangirkhari",24.75527,92.56508,10374,136.1,4700,6700,"South City Hospital, Cachar","South City Hospital, Cachar",8.7,8.7,0,31.6,31.6,0,1,false,REACHABLE_SAME_FACILITY
+23,"Malugram",24.53387,92.57037,10391,99.2,4800,6800,"Silchar Medical College & Hospital (SMCH)","Silchar Medical College & Hospital (SMCH)",6,6,0,20.9,20.9,0,1,false,REACHABLE_SAME_FACILITY
+24,"Ambicapur",24.84137,92.75714,10408,100.6,4900,NULL,"Medinova, Silchar","None (Isolated by Inundation)",3.2,INF,INF,13.4,INF,INF,INF,false,MODEL_ISOLATED
+25,"Rongpur Riverbank",24.87775,92.75205,10425,200.4,5000,7000,"50 Bed Hospital, Lakhipur","50 Bed Hospital, Lakhipur",3.97,3.97,0,14.2,14.2,0,1,false,REACHABLE_SAME_FACILITY
+26,"Gungoor",24.80302,92.74178,10442,98.5,5100,7100,"50 Bed Hospital, Lakhipur","50 Bed Hospital, Lakhipur",11.96,11.96,0,40.3,40.3,0,1,false,REACHABLE_SAME_FACILITY
+27,"Dudhpatil",24.77718,92.91299,10459,34.9,5200,7200,"PHC, Algapur","PHC, Algapur",8.86,8.86,0,30.4,30.4,0,1,false,REACHABLE_SAME_FACILITY
+28,"Salchapra",24.96023,92.89235,10476,69.6,5300,7300,"Jiribam CHC","South City Hospital, Cachar",9.32,12.39,3.07,32.7,47,14.3,1.33,true,REROUTED_ALT_FACILITY
+29,"Borkhola Central",24.92647,92.805,10493,111.1,5400,7400,"South City Hospital, Cachar","South City Hospital, Cachar",10.28,10.28,0,35.3,35.3,0,1,false,REACHABLE_SAME_FACILITY
+30,"Bikrampur",24.95174,92.6314,10510,46.7,4000,6000,"Silchar Medical College & Hospital (SMCH)","Silchar Medical College & Hospital (SMCH)",9.57,9.57,0,32.4,32.4,0,1,false,REACHABLE_SAME_FACILITY
+31,"Kalain Bazaar",24.5459,92.63928,10527,200.7,4100,6100,"Medinova, Silchar","Medinova, Silchar",8.75,8.75,0,28.6,28.6,0,1,false,REACHABLE_SAME_FACILITY
+32,"Gumrah",24.82895,93.01531,10544,92.9,4200,NULL,"Silchar Medical College & Hospital (SMCH)","None (Isolated by Inundation)",11.51,INF,INF,37.1,INF,INF,INF,false,MODEL_ISOLATED
+33,"Jalalpur",24.52089,92.82615,10561,143.5,4300,6300,"Silchar Medical College & Hospital (SMCH)","Silchar Medical College & Hospital (SMCH)",10.49,10.49,0,35.7,35.7,0,1,false,REACHABLE_SAME_FACILITY
+34,"Siddheswar",24.74172,92.81847,10578,52.4,4400,6400,"SHC, Sonabarighat","SHC, Sonabarighat",9.37,9.37,0,33.6,33.6,0,1,false,REACHABLE_SAME_FACILITY
+35,"Panchgram Paper Mill",24.69143,92.61894,10595,59.7,4500,6500,"F.R.U, Kalain","F.R.U, Kalain",11.82,11.82,0,39.7,39.7,0,1,false,REACHABLE_SAME_FACILITY
+36,"Algapur",24.53004,92.97423,10612,45.3,4600,6600,"CHC, Vairengte Link","Valley Hospital, Silchar",10.5,19.69,9.19,35.9,73.2,37.3,1.88,true,REROUTED_ALT_FACILITY
+37,"Mohanpur",24.99961,92.96077,10629,125.5,4700,6700,"50 Bed Hospital, Lakhipur","50 Bed Hospital, Lakhipur",4.66,4.66,0,18.6,18.6,0,1,false,REACHABLE_SAME_FACILITY
+38,"Singerband",24.60044,93.06976,10646,161.9,4800,6800,"50 Bed Hospital, Lakhipur","50 Bed Hospital, Lakhipur",11.33,11.33,0,38.2,38.2,0,1,false,REACHABLE_SAME_FACILITY
+39,"Fulertol Ghat",24.89016,92.9869,10663,116.7,4900,6900,"Silchar Medical College & Hospital (SMCH)","Silchar Medical College & Hospital (SMCH)",10.57,10.57,0,34.8,34.8,0,1,false,REACHABLE_SAME_FACILITY
+40,"Hmarkhawlien",24.58876,92.89885,10680,49.8,5000,NULL,"Jiribam CHC","None (Isolated by Inundation)",6.04,INF,INF,21.6,INF,INF,INF,false,MODEL_ISOLATED
+41,"Joypur Roadhead",24.81626,92.99228,10697,201.2,5100,7100,"State Dispensary, Nityanandpur","State Dispensary, Nityanandpur",1.4,1.4,0,7.6,7.6,0,1,false,REACHABLE_SAME_FACILITY
+42,"Lakhinagar",24.77264,92.89387,10714,91,5200,7200,"Emanuel Hospital, Pailapool","Emanuel Hospital, Pailapool",11.34,11.34,0,37,37,0,1,false,REACHABLE_SAME_FACILITY
+43,"Rajnagar",24.61791,92.79026,10731,139,5300,7300,"50 Bed Hospital, Lakhipur","50 Bed Hospital, Lakhipur",6.5,6.5,0,21.4,21.4,0,1,false,REACHABLE_SAME_FACILITY
+44,"Chibitabichia",24.99207,92.86814,10748,45.5,5400,7400,"Jiribam CHC","BPHC, Udharbond",1.56,5.74,4.18,8.9,26,17.1,3.68,true,REROUTED_ALT_FACILITY
+45,"Ghilamura",24.64498,93.06857,10765,29.5,4000,6000,"Emanuel Hospital, Pailapool","Emanuel Hospital, Pailapool",2.67,2.67,0,8.7,8.7,0,1,false,REACHABLE_SAME_FACILITY
+46,"Narainpur",24.70136,92.80682,10782,136.7,4100,6100,"Valley Hospital, Silchar","Valley Hospital, Silchar",3.9,3.9,0,13.1,13.1,0,1,false,REACHABLE_SAME_FACILITY
+47,"Alambag",24.64663,93.09988,10799,42.3,4200,6200,"SHC, Sonabarighat","SHC, Sonabarighat",1.35,1.35,0,7.6,7.6,0,1,false,REACHABLE_SAME_FACILITY
+48,"Dolu Bagan",24.64079,93.01443,10816,166.2,4300,NULL,"BPHC, Udharbond","None (Isolated by Inundation)",9.71,INF,INF,32.6,INF,INF,INF,false,MODEL_ISOLATED
+49,"Chandranathpur",24.84384,92.73712,10833,28.5,4400,6400,"Medinova, Silchar","Medinova, Silchar",10.63,10.63,0,34.5,34.5,0,1,false,REACHABLE_SAME_FACILITY
+50,"Damchara",24.93578,93.01463,10850,49.1,4500,6500,"South City Hospital, Cachar","South City Hospital, Cachar",7.78,7.78,0,26.6,26.6,0,1,false,REACHABLE_SAME_FACILITY
+51,"Craigpark",24.59661,92.91362,10867,108,4600,6600,"CHC, Vairengte Link","CHC, Vairengte Link",4.82,4.82,0,17.9,17.9,0,1,false,REACHABLE_SAME_FACILITY
+52,"Cossipore",24.94632,92.62076,10884,85.3,4700,6700,"Jiribam CHC","BPHC, Udharbond",5.44,11.21,5.77,17.5,41.7,24.2,2.06,true,REROUTED_ALT_FACILITY
+53,"Jatinga Valley Link",24.86256,92.61508,10901,198,4800,6800,"50 Bed Hospital, Lakhipur","50 Bed Hospital, Lakhipur",5.25,5.25,0,17,17,0,1,false,REACHABLE_SAME_FACILITY
+54,"Banskandi",24.8145,93.00925,10918,166.1,4900,6900,"Silchar Medical College & Hospital (SMCH)","Silchar Medical College & Hospital (SMCH)",10.19,10.19,0,34.9,34.9,0,1,false,REACHABLE_SAME_FACILITY
+55,"Gobindapur",24.81533,93.02491,10935,172.5,5000,7000,"State Dispensary, Nityanandpur","State Dispensary, Nityanandpur",4.03,4.03,0,16.7,16.7,0,1,false,REACHABLE_SAME_FACILITY
+56,"Nutan Ramnagar",24.54505,92.84871,10952,97.3,5100,NULL,"PHC, Algapur","None (Isolated by Inundation)",1.44,INF,INF,6.9,INF,INF,INF,false,MODEL_ISOLATED
+57,"Bhagabazar",24.64365,92.66733,10969,180.4,5200,7200,"Silchar Medical College & Hospital (SMCH)","Silchar Medical College & Hospital (SMCH)",6.07,6.07,0,22.3,22.3,0,1,false,REACHABLE_SAME_FACILITY
+58,"Kabuganj",24.79114,92.66743,10986,121.8,5300,7300,"Emanuel Hospital, Pailapool","Emanuel Hospital, Pailapool",10.61,10.61,0,36.9,36.9,0,1,false,REACHABLE_SAME_FACILITY
+59,"Palonghat",24.66753,93.03568,11003,161.5,5400,7400,"Nightingale Hospital","Nightingale Hospital",7.71,7.71,0,28.6,28.6,0,1,false,REACHABLE_SAME_FACILITY
+60,"Motinagar",24.9128,92.83874,11020,179.6,4000,6000,"Silchar Medical College & Hospital (SMCH)","Valley Hospital, Silchar",12.04,18.2,6.16,41.7,66.7,25,1.51,true,REROUTED_ALT_FACILITY
+61,"Cleverhouse",24.73237,92.76695,11037,106.1,4100,6100,"BPHC, Harinagar","BPHC, Harinagar",2.3,2.3,0,7.5,7.5,0,1,false,REACHABLE_SAME_FACILITY
+62,"Rosekandy",24.97987,92.60372,11054,85.1,4200,6200,"South City Hospital, Cachar","South City Hospital, Cachar",9.13,9.13,0,32.3,32.3,0,1,false,REACHABLE_SAME_FACILITY
+63,"Kallinecherra",24.95625,92.80863,11071,162.3,4300,6300,"Valley Hospital, Silchar","Valley Hospital, Silchar",8.52,8.52,0,30.2,30.2,0,1,false,REACHABLE_SAME_FACILITY
+64,"Barakpar",24.82152,93.00836,11088,37.9,4400,NULL,"Jiribam CHC","None (Isolated by Inundation)",4.14,INF,INF,14.1,INF,INF,INF,false,MODEL_ISOLATED
+65,"Madhurband",24.73568,92.82958,11105,131.8,4500,6500,"PHC, Algapur","PHC, Algapur",10.66,10.66,0,36.5,36.5,0,1,false,REACHABLE_SAME_FACILITY
+66,"Chengcoorie",24.85873,93.01894,11122,144.1,4600,6600,"CHC, Vairengte Link","CHC, Vairengte Link",9.74,9.74,0,31.9,31.9,0,1,false,REACHABLE_SAME_FACILITY
+67,"National Highway Point",24.87067,92.64311,11139,134.7,4700,6700,"Jiribam CHC","Jiribam CHC",5.06,5.06,0,17.5,17.5,0,1,false,REACHABLE_SAME_FACILITY
+68,"Berenga",24.9315,93.00877,11156,163.6,4800,6800,"Silchar Medical College & Hospital (SMCH)","BPHC, Harinagar",11.28,17.34,6.06,37.5,60,22.5,1.54,true,REROUTED_ALT_FACILITY
+69,"Gossaipur",24.7744,93.01086,11173,128.8,4900,6900,"SHC, Sonabarighat","SHC, Sonabarighat",5.74,5.74,0,18.6,18.6,0,1,false,REACHABLE_SAME_FACILITY
+70,"Khelma",24.75745,92.75689,11190,88.6,5000,7000,"Emanuel Hospital, Pailapool","Emanuel Hospital, Pailapool",1.62,1.62,0,8.6,8.6,0,1,false,REACHABLE_SAME_FACILITY
+71,"Katigorah",24.62939,93.05773,11207,26.7,5100,7100,"Silchar Medical College & Hospital (SMCH)","Silchar Medical College & Hospital (SMCH)",4.73,4.73,0,16,16,0,1,false,REACHABLE_SAME_FACILITY
+72,"Sonapur",24.55022,92.98006,11224,183.1,5200,NULL,"PHC, Algapur","None (Isolated by Inundation)",7.73,INF,INF,26.5,INF,INF,INF,false,MODEL_ISOLATED
+73,"Bihara",24.67993,92.71053,11241,77.9,5300,7300,"Medinova, Silchar","Medinova, Silchar",3.3,3.3,0,14.1,14.1,0,1,false,REACHABLE_SAME_FACILITY
+74,"Kalaincherra",24.69854,92.99581,11258,130.9,5400,7400,"Jiribam CHC","Jiribam CHC",6.11,6.11,0,23,23,0,1,false,REACHABLE_SAME_FACILITY
+75,"Srikona",24.76603,92.90258,11275,42.4,4000,6000,"Jiribam CHC","Jiribam CHC",8.81,8.81,0,31.1,31.1,0,1,false,REACHABLE_SAME_FACILITY
+76,"Sadarghat Riverside",24.56242,92.6175,11292,52.1,4100,6100,"Jiribam CHC","BPHC, Udharbond",4.07,10.25,6.18,16.2,42,25.8,2.52,true,REROUTED_ALT_FACILITY
+77,"Binnākāndi West",24.54866,92.83348,11309,101.1,4200,6200,"CHC, Vairengte Link","CHC, Vairengte Link",5.49,5.49,0,18.5,18.5,0,1,false,REACHABLE_SAME_FACILITY
+78,"Kumbhir Basti",24.66726,92.95543,11326,191.7,4300,6300,"SHC, Sonabarighat","SHC, Sonabarighat",10.59,10.59,0,37.6,37.6,0,1,false,REACHABLE_SAME_FACILITY
+79,"Harinagar East Ghat",24.83476,92.69887,11343,140.6,4400,6400,"Medinova, Silchar","Medinova, Silchar",4.58,4.58,0,16.6,16.6,0,1,false,REACHABLE_SAME_FACILITY
+80,"Chotobekra Sector 2",24.73114,92.81045,11360,187.9,4500,NULL,"Emanuel Hospital, Pailapool","None (Isolated by Inundation)",2.14,INF,INF,8,INF,INF,INF,false,MODEL_ISOLATED
+81,"Ankhasuo Block 2",24.99641,92.91685,11377,33.5,4600,6600,"Nightingale Hospital","Nightingale Hospital",6.92,6.92,0,24.6,24.6,0,1,false,REACHABLE_SAME_FACILITY
+82,"Lakhipur Sub-Division North",24.83057,92.64472,11394,97.4,4700,6700,"South City Hospital, Cachar","South City Hospital, Cachar",11.61,11.61,0,40.5,40.5,0,1,false,REACHABLE_SAME_FACILITY
+83,"Pailapool Outpost South",24.87362,92.74075,11411,79.7,4800,6800,"Nightingale Hospital","Nightingale Hospital",8.86,8.86,0,29.4,29.4,0,1,false,REACHABLE_SAME_FACILITY
+84,"Sonāimukh North East",24.80556,92.83159,11428,40.2,4900,6900,"State Dispensary, Nityanandpur","BPHC, Udharbond",2.35,9.57,7.22,8.4,40.2,31.8,4.07,true,REROUTED_ALT_FACILITY
+85,"Badarpur Riverside West",24.57513,92.84147,11445,38,5000,7000,"50 Bed Hospital, Lakhipur","50 Bed Hospital, Lakhipur",2.46,2.46,0,10.3,10.3,0,1,false,REACHABLE_SAME_FACILITY
+86,"Katakhal Junction Basti",24.74929,92.68601,11462,49.4,5100,7100,"BPHC, Udharbond","BPHC, Udharbond",3.94,3.94,0,12.8,12.8,0,1,false,REACHABLE_SAME_FACILITY
+87,"Silkuri Border Enclave Ghat",24.65234,92.89871,11479,159.2,5200,7200,"Nightingale Hospital","Nightingale Hospital",8.99,8.99,0,31.5,31.5,0,1,false,REACHABLE_SAME_FACILITY
+88,"Umednagar Sector 2",24.92428,93.10621,11496,67.3,5300,NULL,"BPHC, Udharbond","None (Isolated by Inundation)",10.26,INF,INF,36.2,INF,INF,INF,false,MODEL_ISOLATED
+89,"Hailakandi Central Block 5",24.76511,92.9352,11513,193.7,5400,7400,"Jiribam CHC","Jiribam CHC",11.44,11.44,0,40.2,40.2,0,1,false,REACHABLE_SAME_FACILITY
+90,"Masimpur North",24.81482,92.57234,11530,58.4,4000,6000,"BPHC, Udharbond","BPHC, Udharbond",5.17,5.17,0,17.3,17.3,0,1,false,REACHABLE_SAME_FACILITY
+91,"Dholai South",24.75343,92.76429,11547,81.5,4100,6100,"BPHC, Udharbond","BPHC, Udharbond",6.14,6.14,0,23.6,23.6,0,1,false,REACHABLE_SAME_FACILITY
+92,"Moragang East",24.74092,92.57773,11564,142.9,4200,6200,"CHC, Vairengte Link","BPHC, Harinagar",7.01,16.9,9.89,25.2,62.9,37.7,2.41,true,REROUTED_ALT_FACILITY
+93,"Bilaipur West",24.89383,93.08149,11581,134.5,4300,6300,"Silchar Medical College & Hospital (SMCH)","Silchar Medical College & Hospital (SMCH)",8.58,8.58,0,28.7,28.7,0,1,false,REACHABLE_SAME_FACILITY
+94,"Tarapur Colony Basti",24.56355,93.11529,11598,36.7,4400,6400,"South City Hospital, Cachar","South City Hospital, Cachar",4.61,4.61,0,15.9,15.9,0,1,false,REACHABLE_SAME_FACILITY
+95,"Kanakpur Ghat",24.60215,92.58391,11615,97.3,4500,6500,"Silchar Medical College & Hospital (SMCH)","Silchar Medical College & Hospital (SMCH)",7.87,7.87,0,28.4,28.4,0,1,false,REACHABLE_SAME_FACILITY
+96,"Meherpur Bypass Sector 2",24.68964,92.79402,11632,196.2,4600,NULL,"BPHC, Harinagar","None (Isolated by Inundation)",11.03,INF,INF,36.2,INF,INF,INF,false,MODEL_ISOLATED
+97,"Rangirkhari Block 3",24.98603,92.81226,11649,33.5,4700,6700,"BPHC, Udharbond","BPHC, Udharbond",6.75,6.75,0,25,25,0,1,false,REACHABLE_SAME_FACILITY
+98,"Malugram North",24.6913,92.82533,11666,29.1,4800,6800,"BPHC, Udharbond","BPHC, Udharbond",9.71,9.71,0,31.1,31.1,0,1,false,REACHABLE_SAME_FACILITY
+99,"Ambicapur South",24.92546,93.01987,11683,63,4900,6900,"CHC, Vairengte Link","CHC, Vairengte Link",1.56,1.56,0,5.2,5.2,0,1,false,REACHABLE_SAME_FACILITY
+100,"Rongpur Riverbank East",24.88851,93.02257,11700,195.2,5000,7000,"State Dispensary, Nityanandpur","BPHC, Harinagar",7.98,14.38,6.4,26.8,54.8,28,1.8,true,REROUTED_ALT_FACILITY
+101,"Gungoor West",24.58475,93.04022,11717,45.5,5100,7100,"Valley Hospital, Silchar","Valley Hospital, Silchar",2.75,2.75,0,10.3,10.3,0,1,false,REACHABLE_SAME_FACILITY
+102,"Dudhpatil Basti",24.63002,92.60995,11734,168.6,5200,7200,"BPHC, Harinagar","BPHC, Harinagar",2.5,2.5,0,11,11,0,1,false,REACHABLE_SAME_FACILITY
+103,"Salchapra Ghat",24.72418,92.92116,11751,150,5300,7300,"BPHC, Harinagar","BPHC, Harinagar",2.15,2.15,0,6.9,6.9,0,1,false,REACHABLE_SAME_FACILITY
+104,"Borkhola Central Sector 2",24.54723,93.04052,11768,49.8,5400,NULL,"Jiribam CHC","None (Isolated by Inundation)",5.36,INF,INF,19.1,INF,INF,INF,false,MODEL_ISOLATED
+105,"Bikrampur Block 1",24.73917,92.5947,11785,107.8,4000,6000,"BPHC, Udharbond","BPHC, Udharbond",4.8,4.8,0,17.3,17.3,0,1,false,REACHABLE_SAME_FACILITY
+106,"Kalain Bazaar North",24.98,92.89035,11802,204.3,4100,6100,"Medinova, Silchar","Medinova, Silchar",4.14,4.14,0,14.8,14.8,0,1,false,REACHABLE_SAME_FACILITY
+107,"Gumrah South",24.94971,92.99416,11819,39,4200,6200,"State Dispensary, Nityanandpur","State Dispensary, Nityanandpur",7.04,7.04,0,24.5,24.5,0,1,false,REACHABLE_SAME_FACILITY
+108,"Jalalpur East",24.80832,93.09278,11836,32.1,4300,6300,"F.R.U, Kalain","Emanuel Hospital, Pailapool",6.18,12.15,5.97,20.3,44.5,24.2,1.97,true,REROUTED_ALT_FACILITY
+109,"Siddheswar West",24.64789,92.76432,11853,146.1,4400,6400,"F.R.U, Kalain","F.R.U, Kalain",7.9,7.9,0,29,29,0,1,false,REACHABLE_SAME_FACILITY
+110,"Panchgram Paper Mill Basti",24.98872,92.89664,11870,100,4500,6500,"F.R.U, Kalain","F.R.U, Kalain",9.53,9.53,0,32.6,32.6,0,1,false,REACHABLE_SAME_FACILITY
+111,"Algapur Ghat",24.57843,92.83711,11887,152.3,4600,6600,"SHC, Sonabarighat","SHC, Sonabarighat",3.73,3.73,0,13.3,13.3,0,1,false,REACHABLE_SAME_FACILITY
+112,"Mohanpur Sector 2",24.53704,92.7724,11904,182.9,4700,NULL,"South City Hospital, Cachar","None (Isolated by Inundation)",5.16,INF,INF,19.3,INF,INF,INF,false,MODEL_ISOLATED
+113,"Singerband Block 4",24.54453,92.88916,11921,71.8,4800,6800,"F.R.U, Kalain","F.R.U, Kalain",6.48,6.48,0,24.5,24.5,0,1,false,REACHABLE_SAME_FACILITY
+114,"Fulertol Ghat North",24.76092,92.81408,11938,59.1,4900,6900,"Silchar Medical College & Hospital (SMCH)","Silchar Medical College & Hospital (SMCH)",11.37,11.37,0,38,38,0,1,false,REACHABLE_SAME_FACILITY
+115,"Hmarkhawlien South",24.86619,92.73381,11955,204.6,5000,7000,"CHC, Vairengte Link","CHC, Vairengte Link",1.5,1.5,0,6.4,6.4,0,1,false,REACHABLE_SAME_FACILITY
+116,"Joypur Roadhead East",24.54035,92.83502,11972,28.6,5100,7100,"BPHC, Harinagar","F.R.U, Kalain",2.52,11.81,9.29,9.2,44.6,35.4,4.69,true,REROUTED_ALT_FACILITY
+117,"Lakhinagar West",24.64326,92.86045,11989,91.3,5200,7200,"South City Hospital, Cachar","South City Hospital, Cachar",2.94,2.94,0,9.6,9.6,0,1,false,REACHABLE_SAME_FACILITY
+118,"Rajnagar Basti",24.71964,92.90203,12006,26.1,5300,7300,"50 Bed Hospital, Lakhipur","50 Bed Hospital, Lakhipur",4.62,4.62,0,17.6,17.6,0,1,false,REACHABLE_SAME_FACILITY
+119,"Chibitabichia Ghat",24.68491,92.93843,12023,119.2,5400,7400,"Silchar Medical College & Hospital (SMCH)","Silchar Medical College & Hospital (SMCH)",2.54,2.54,0,11.7,11.7,0,1,false,REACHABLE_SAME_FACILITY
+120,"Ghilamura Sector 2",24.69907,92.59631,12040,70.6,4000,NULL,"State Dispensary, Nityanandpur","None (Isolated by Inundation)",11.35,INF,INF,40.3,INF,INF,INF,false,MODEL_ISOLATED
+121,"Narainpur Block 2",24.92212,92.62234,12057,120.3,4100,6100,"SHC, Sonabarighat","SHC, Sonabarighat",1.73,1.73,0,6.7,6.7,0,1,false,REACHABLE_SAME_FACILITY
+122,"Alambag North",24.55406,92.64318,12074,148.4,4200,6200,"Emanuel Hospital, Pailapool","Emanuel Hospital, Pailapool",10.33,10.33,0,33.6,33.6,0,1,false,REACHABLE_SAME_FACILITY
+123,"Dolu Bagan South",24.71488,92.8455,12091,34.9,4300,6300,"South City Hospital, Cachar","South City Hospital, Cachar",7.84,7.84,0,28.5,28.5,0,1,false,REACHABLE_SAME_FACILITY
+124,"Chandranathpur East",24.6046,92.85597,12108,199.6,4400,6400,"BPHC, Harinagar","SHC, Sonabarighat",8.91,17.49,8.58,31.7,65.8,34.1,1.96,true,REROUTED_ALT_FACILITY
+125,"Damchara West",24.61084,92.81529,12125,76.1,4500,6500,"Nightingale Hospital","Nightingale Hospital",10.79,10.79,0,37.6,37.6,0,1,false,REACHABLE_SAME_FACILITY
+126,"Craigpark Basti",24.82278,92.6728,12142,141.7,4600,6600,"Medinova, Silchar","Medinova, Silchar",10.69,10.69,0,35.5,35.5,0,1,false,REACHABLE_SAME_FACILITY
+127,"Cossipore Ghat",24.60361,92.71179,12159,65.6,4700,6700,"South City Hospital, Cachar","South City Hospital, Cachar",10.48,10.48,0,36.6,36.6,0,1,false,REACHABLE_SAME_FACILITY
+128,"Jatinga Valley Link Sector 2",24.59332,93.11892,12176,87.9,4800,NULL,"Valley Hospital, Silchar","None (Isolated by Inundation)",2.85,INF,INF,10.8,INF,INF,INF,false,MODEL_ISOLATED
+129,"Banskandi Block 5",24.95193,92.96088,12193,88.5,4900,6900,"F.R.U, Kalain","F.R.U, Kalain",2.44,2.44,0,10.2,10.2,0,1,false,REACHABLE_SAME_FACILITY
+130,"Gobindapur North",24.87942,92.98431,12210,127.4,5000,7000,"SHC, Sonabarighat","SHC, Sonabarighat",1.93,1.93,0,8.9,8.9,0,1,false,REACHABLE_SAME_FACILITY
+131,"Nutan Ramnagar South",24.5358,92.81589,12227,84.6,5100,7100,"Silchar Medical College & Hospital (SMCH)","Silchar Medical College & Hospital (SMCH)",4.99,4.99,0,19.8,19.8,0,1,false,REACHABLE_SAME_FACILITY
+132,"Bhagabazar East",24.56108,92.64229,12244,200.2,5200,7200,"PHC, Algapur","State Dispensary, Nityanandpur",4.28,8.82,4.54,16.9,34.2,17.3,2.06,true,REROUTED_ALT_FACILITY
+133,"Kabuganj West",24.59065,92.6755,12261,115.5,5300,7300,"State Dispensary, Nityanandpur","State Dispensary, Nityanandpur",10.36,10.36,0,34.1,34.1,0,1,false,REACHABLE_SAME_FACILITY
+134,"Palonghat Basti",24.85814,92.8156,12278,101.9,5400,7400,"Emanuel Hospital, Pailapool","Emanuel Hospital, Pailapool",6.64,6.64,0,23.3,23.3,0,1,false,REACHABLE_SAME_FACILITY
+135,"Motinagar Ghat",24.85453,92.76385,12295,186.7,4000,6000,"F.R.U, Kalain","F.R.U, Kalain",6.49,6.49,0,20.8,20.8,0,1,false,REACHABLE_SAME_FACILITY
+136,"Cleverhouse Sector 2",24.7398,92.70691,12312,69.8,4100,NULL,"Jiribam CHC","None (Isolated by Inundation)",2.57,INF,INF,8.4,INF,INF,INF,false,MODEL_ISOLATED
+137,"Rosekandy Block 3",24.67396,92.83146,12329,171.2,4200,6200,"Valley Hospital, Silchar","Valley Hospital, Silchar",9.55,9.55,0,34.4,34.4,0,1,false,REACHABLE_SAME_FACILITY
+138,"Kallinecherra North",24.81701,92.76415,12346,190.9,4300,6300,"50 Bed Hospital, Lakhipur","50 Bed Hospital, Lakhipur",9.09,9.09,0,29.5,29.5,0,1,false,REACHABLE_SAME_FACILITY
+139,"Barakpar South",24.84895,92.69166,12363,189,4400,6400,"Emanuel Hospital, Pailapool","Emanuel Hospital, Pailapool",4.87,4.87,0,18.7,18.7,0,1,false,REACHABLE_SAME_FACILITY
+140,"Madhurband East",24.92977,92.80065,12380,45.4,4500,6500,"Emanuel Hospital, Pailapool","CHC, Vairengte Link",11.54,17.93,6.39,38.3,63,24.7,1.55,true,REROUTED_ALT_FACILITY
+141,"Chengcoorie West",24.62268,93.04774,12397,44.4,4600,6600,"State Dispensary, Nityanandpur","State Dispensary, Nityanandpur",2.57,2.57,0,10.2,10.2,0,1,false,REACHABLE_SAME_FACILITY
+142,"National Highway Point Basti",24.86573,92.8171,12414,101.7,4700,6700,"South City Hospital, Cachar","South City Hospital, Cachar",4.41,4.41,0,15.4,15.4,0,1,false,REACHABLE_SAME_FACILITY
+143,"Berenga Ghat",24.99767,92.58128,12431,137.3,4800,6800,"Valley Hospital, Silchar","Valley Hospital, Silchar",2.47,2.47,0,10.8,10.8,0,1,false,REACHABLE_SAME_FACILITY
+144,"Gossaipur Sector 2",24.6985,93.08693,12448,31.2,4900,NULL,"CHC, Vairengte Link","None (Isolated by Inundation)",11.44,INF,INF,40.6,INF,INF,INF,false,MODEL_ISOLATED
+145,"Khelma Block 1",24.60821,92.84074,12465,203.5,5000,7000,"PHC, Algapur","PHC, Algapur",1.97,1.97,0,8.2,8.2,0,1,false,REACHABLE_SAME_FACILITY
+146,"Katigorah North",24.88682,92.58936,12482,174,5100,7100,"CHC, Vairengte Link","CHC, Vairengte Link",10.73,10.73,0,36.3,36.3,0,1,false,REACHABLE_SAME_FACILITY
+147,"Sonapur South",24.73431,93.07946,12499,183,5200,7200,"CHC, Vairengte Link","CHC, Vairengte Link",8.39,8.39,0,28.4,28.4,0,1,false,REACHABLE_SAME_FACILITY
+148,"Bihara East",24.79069,92.81771,12516,110.2,5300,7300,"50 Bed Hospital, Lakhipur","CHC, Vairengte Link",9.61,15.93,6.32,32.8,61.5,28.7,1.66,true,REROUTED_ALT_FACILITY
+149,"Kalaincherra West",24.74693,92.85869,12533,58,5400,7400,"Medinova, Silchar","Medinova, Silchar",10.34,10.34,0,35.6,35.6,0,1,false,REACHABLE_SAME_FACILITY
+150,"Srikona Basti",24.88554,92.72398,12550,156.1,4000,6000,"State Dispensary, Nityanandpur","State Dispensary, Nityanandpur",4.89,4.89,0,19.1,19.1,0,1,false,REACHABLE_SAME_FACILITY
+151,"Sadarghat Riverside Ghat",24.59303,92.77075,12567,112.5,4100,6100,"Silchar Medical College & Hospital (SMCH)","Silchar Medical College & Hospital (SMCH)",10.34,10.34,0,37,37,0,1,false,REACHABLE_SAME_FACILITY
+152,"Disāma Sector 2",24.98942,92.62566,12584,167.2,4200,NULL,"Nightingale Hospital","None (Isolated by Inundation)",8.36,INF,INF,28,INF,INF,INF,false,MODEL_ISOLATED
+153,"Binnākāndi Block 4",24.79469,93.03539,12601,200.3,4300,6300,"BPHC, Udharbond","BPHC, Udharbond",2.61,2.61,0,9.1,9.1,0,1,false,REACHABLE_SAME_FACILITY
+154,"Kumbhir North",24.64885,93.0666,12618,91.8,4400,6400,"Jiribam CHC","Jiribam CHC",7.75,7.75,0,28.6,28.6,0,1,false,REACHABLE_SAME_FACILITY
+155,"Harinagar East South",24.7119,92.90596,12635,81.5,4500,6500,"Emanuel Hospital, Pailapool","Emanuel Hospital, Pailapool",5.46,5.46,0,21.1,21.1,0,1,false,REACHABLE_SAME_FACILITY
+156,"Chotobekra East",24.66384,92.74014,12652,49.6,4600,6600,"Valley Hospital, Silchar","Emanuel Hospital, Pailapool",10.4,15.46,5.06,35,55.3,20.3,1.49,true,REROUTED_ALT_FACILITY
+157,"Ankhasuo West",24.52341,92.71501,12669,171.1,4700,6700,"SHC, Sonabarighat","SHC, Sonabarighat",1.59,1.59,0,8.1,8.1,0,1,false,REACHABLE_SAME_FACILITY
+158,"Lakhipur Sub-Division Basti",24.95757,92.58289,12686,100,4800,6800,"50 Bed Hospital, Lakhipur","50 Bed Hospital, Lakhipur",9.02,9.02,0,29.7,29.7,0,1,false,REACHABLE_SAME_FACILITY
+159,"Pailapool Outpost Ghat",24.64062,92.81892,12703,127.3,4900,6900,"Valley Hospital, Silchar","Valley Hospital, Silchar",9.02,9.02,0,32.4,32.4,0,1,false,REACHABLE_SAME_FACILITY
+160,"Sonāimukh North Sector 3",24.69256,93.04976,12720,132.9,5000,NULL,"50 Bed Hospital, Lakhipur","None (Isolated by Inundation)",5.26,INF,INF,17.3,INF,INF,INF,false,MODEL_ISOLATED
+161,"Badarpur Riverside Block 2",24.79338,92.90208,12737,176.8,5100,7100,"BPHC, Harinagar","BPHC, Harinagar",1.39,1.39,0,5.3,5.3,0,1,false,REACHABLE_SAME_FACILITY
+162,"Katakhal Junction North",24.6231,92.56255,12754,139,5200,7200,"BPHC, Udharbond","BPHC, Udharbond",12.09,12.09,0,40.8,40.8,0,1,false,REACHABLE_SAME_FACILITY
+163,"Silkuri Border Enclave South",24.82171,92.77784,12771,79.6,5300,7300,"Emanuel Hospital, Pailapool","Emanuel Hospital, Pailapool",8.01,8.01,0,27.2,27.2,0,1,false,REACHABLE_SAME_FACILITY
+164,"Umednagar East",24.5892,92.61461,12788,58.6,5400,7400,"50 Bed Hospital, Lakhipur","Jiribam CHC",3.84,7.15,3.31,12.8,27.5,14.7,1.86,true,REROUTED_ALT_FACILITY
+165,"Hailakandi Central West",24.95211,92.66337,12805,38.8,4000,6000,"State Dispensary, Nityanandpur","State Dispensary, Nityanandpur",10.22,10.22,0,36.4,36.4,0,1,false,REACHABLE_SAME_FACILITY
+166,"Masimpur Basti",24.64182,93.00051,12822,128.6,4100,6100,"F.R.U, Kalain","F.R.U, Kalain",6.71,6.71,0,23.3,23.3,0,1,false,REACHABLE_SAME_FACILITY
+167,"Dholai Ghat",24.70043,92.77246,12839,196.7,4200,6200,"CHC, Vairengte Link","CHC, Vairengte Link",10.43,10.43,0,35.4,35.4,0,1,false,REACHABLE_SAME_FACILITY
+168,"Moragang Sector 3",24.80792,92.72589,12856,123.1,4300,NULL,"CHC, Vairengte Link","None (Isolated by Inundation)",3.05,INF,INF,11.6,INF,INF,INF,false,MODEL_ISOLATED
+169,"Bilaipur Block 5",24.6443,93.04748,12873,147.8,4400,6400,"Silchar Medical College & Hospital (SMCH)","Silchar Medical College & Hospital (SMCH)",10.23,10.23,0,35.2,35.2,0,1,false,REACHABLE_SAME_FACILITY
+170,"Tarapur Colony North",24.84958,92.80387,12890,150.9,4500,6500,"F.R.U, Kalain","F.R.U, Kalain",2.64,2.64,0,9.8,9.8,0,1,false,REACHABLE_SAME_FACILITY
+171,"Kanakpur South",24.62374,92.74175,12907,192.3,4600,6600,"50 Bed Hospital, Lakhipur","50 Bed Hospital, Lakhipur",5.96,5.96,0,22.7,22.7,0,1,false,REACHABLE_SAME_FACILITY
+172,"Meherpur Bypass East",24.60679,93.04778,12924,152.1,4700,6700,"Nightingale Hospital","Medinova, Silchar",1.83,12.1,10.27,8.7,48.1,39.4,6.61,true,REROUTED_ALT_FACILITY
+173,"Rangirkhari West",24.63303,92.75043,12941,36.1,4800,6800,"SHC, Sonabarighat","SHC, Sonabarighat",4.16,4.16,0,14.2,14.2,0,1,false,REACHABLE_SAME_FACILITY
+174,"Malugram Basti",24.9383,92.90349,12958,76.7,4900,6900,"Silchar Medical College & Hospital (SMCH)","Silchar Medical College & Hospital (SMCH)",9.87,9.87,0,34.2,34.2,0,1,false,REACHABLE_SAME_FACILITY
+175,"Ambicapur Ghat",24.81246,92.67804,12975,155.6,5000,7000,"Silchar Medical College & Hospital (SMCH)","Silchar Medical College & Hospital (SMCH)",4.47,4.47,0,18.1,18.1,0,1,false,REACHABLE_SAME_FACILITY
+176,"Rongpur Riverbank Sector 3",24.89551,92.82073,12992,152.9,5100,NULL,"Emanuel Hospital, Pailapool","None (Isolated by Inundation)",2.64,INF,INF,10.2,INF,INF,INF,false,MODEL_ISOLATED
+177,"Gungoor Block 3",24.86745,92.95824,13009,128.5,5200,7200,"SHC, Sonabarighat","SHC, Sonabarighat",8.04,8.04,0,27.7,27.7,0,1,false,REACHABLE_SAME_FACILITY
+178,"Dudhpatil North",24.88827,92.71723,13026,142.4,5300,7300,"BPHC, Udharbond","BPHC, Udharbond",2.34,2.34,0,9.2,9.2,0,1,false,REACHABLE_SAME_FACILITY
+179,"Salchapra South",24.63799,92.84437,13043,74.6,5400,7400,"Jiribam CHC","Jiribam CHC",11.2,11.2,0,38.2,38.2,0,1,false,REACHABLE_SAME_FACILITY
+180,"Borkhola Central East",24.75659,92.96632,13060,165.2,4000,6000,"Medinova, Silchar","BPHC, Harinagar",5.3,14.96,9.66,18.1,54.5,36.4,2.82,true,REROUTED_ALT_FACILITY
+181,"Bikrampur West",24.56617,93.02286,13077,178,4100,6100,"F.R.U, Kalain","F.R.U, Kalain",6.33,6.33,0,23.3,23.3,0,1,false,REACHABLE_SAME_FACILITY
+182,"Kalain Bazaar Basti",24.927,92.89852,13094,139.4,4200,6200,"Emanuel Hospital, Pailapool","Emanuel Hospital, Pailapool",8.42,8.42,0,30.5,30.5,0,1,false,REACHABLE_SAME_FACILITY
+183,"Gumrah Ghat",24.53671,92.58232,13111,199.1,4300,6300,"State Dispensary, Nityanandpur","State Dispensary, Nityanandpur",3.08,3.08,0,10.9,10.9,0,1,false,REACHABLE_SAME_FACILITY
+184,"Jalalpur Sector 3",24.99532,92.82094,13128,57.2,4400,NULL,"CHC, Vairengte Link","None (Isolated by Inundation)",4.96,INF,INF,16.5,INF,INF,INF,false,MODEL_ISOLATED
+185,"Siddheswar Block 1",24.54281,92.68104,13145,133.7,4500,6500,"SHC, Sonabarighat","SHC, Sonabarighat",6.75,6.75,0,25.3,25.3,0,1,false,REACHABLE_SAME_FACILITY
+186,"Panchgram Paper Mill North",24.77919,92.90929,13162,128.4,4600,6600,"SHC, Sonabarighat","SHC, Sonabarighat",12.1,12.1,0,42.4,42.4,0,1,false,REACHABLE_SAME_FACILITY
+187,"Algapur South",24.90447,92.57236,13179,101.5,4700,6700,"Emanuel Hospital, Pailapool","Emanuel Hospital, Pailapool",2.68,2.68,0,10.5,10.5,0,1,false,REACHABLE_SAME_FACILITY
+188,"Mohanpur East",24.59863,92.9769,13196,112.9,4800,6800,"South City Hospital, Cachar","BPHC, Udharbond",4.16,14.84,10.68,16.9,56.1,39.2,3.57,true,REROUTED_ALT_FACILITY
+189,"Singerband West",24.79153,92.96733,13213,119.4,4900,6900,"BPHC, Harinagar","BPHC, Harinagar",6.64,6.64,0,23.6,23.6,0,1,false,REACHABLE_SAME_FACILITY
+190,"Fulertol Ghat Basti",24.64792,93.03225,13230,151.7,5000,7000,"Emanuel Hospital, Pailapool","Emanuel Hospital, Pailapool",3.28,3.28,0,11.7,11.7,0,1,false,REACHABLE_SAME_FACILITY
+191,"Hmarkhawlien Ghat",24.87319,93.09198,13247,162.3,5100,7100,"South City Hospital, Cachar","South City Hospital, Cachar",7.16,7.16,0,25.1,25.1,0,1,false,REACHABLE_SAME_FACILITY
+192,"Joypur Roadhead Sector 3",24.66735,92.77319,13264,31.2,5200,NULL,"Emanuel Hospital, Pailapool","None (Isolated by Inundation)",10.93,INF,INF,37.6,INF,INF,INF,false,MODEL_ISOLATED
+193,"Lakhinagar Block 4",24.6704,92.82255,13281,178.4,5300,7300,"Emanuel Hospital, Pailapool","Emanuel Hospital, Pailapool",7.26,7.26,0,23.3,23.3,0,1,false,REACHABLE_SAME_FACILITY
+194,"Rajnagar North",24.56234,92.86672,13298,124,5400,7400,"Jiribam CHC","Jiribam CHC",10.83,10.83,0,38.2,38.2,0,1,false,REACHABLE_SAME_FACILITY
+195,"Chibitabichia South",24.98316,93.09238,13315,108,4000,6000,"PHC, Algapur","PHC, Algapur",3.29,3.29,0,13.2,13.2,0,1,false,REACHABLE_SAME_FACILITY
+196,"Ghilamura East",24.65288,92.56618,13332,190.2,4100,6100,"Silchar Medical College & Hospital (SMCH)","South City Hospital, Cachar",10.32,15.86,5.54,35.6,55.9,20.3,1.54,true,REROUTED_ALT_FACILITY
+197,"Narainpur West",24.86912,92.6305,13349,55.5,4200,6200,"Jiribam CHC","Jiribam CHC",6.01,6.01,0,22.4,22.4,0,1,false,REACHABLE_SAME_FACILITY
+198,"Alambag Basti",24.62106,92.79134,13366,128.6,4300,6300,"Emanuel Hospital, Pailapool","Emanuel Hospital, Pailapool",6.37,6.37,0,24,24,0,1,false,REACHABLE_SAME_FACILITY
+199,"Dolu Bagan Ghat",24.90188,92.57367,13383,60,4400,6400,"Jiribam CHC","Jiribam CHC",6.63,6.63,0,24.7,24.7,0,1,false,REACHABLE_SAME_FACILITY
+200,"Chandranathpur Sector 3",24.9116,92.72414,13400,89.7,4500,NULL,"Silchar Medical College & Hospital (SMCH)","None (Isolated by Inundation)",10.45,INF,INF,33.7,INF,INF,INF,false,MODEL_ISOLATED
+201,"Damchara Block 2",24.81021,92.86942,13417,97.8,4600,6600,"50 Bed Hospital, Lakhipur","50 Bed Hospital, Lakhipur",10.5,10.5,0,36.8,36.8,0,1,false,REACHABLE_SAME_FACILITY
+202,"Craigpark North",24.7577,92.63619,13434,144.2,4700,6700,"F.R.U, Kalain","F.R.U, Kalain",10.45,10.45,0,35.1,35.1,0,1,false,REACHABLE_SAME_FACILITY
+203,"Cossipore South",24.91408,92.77111,13451,109,4800,6800,"Medinova, Silchar","Medinova, Silchar",2.97,2.97,0,10.5,10.5,0,1,false,REACHABLE_SAME_FACILITY
+204,"Jatinga Valley Link East",24.95935,92.90084,13468,52.1,4900,6900,"PHC, Algapur","Silchar Medical College & Hospital (SMCH)",2.71,6.16,3.45,11.1,24.5,13.4,2.27,true,REROUTED_ALT_FACILITY
+205,"Banskandi West",24.83893,92.61904,13485,181.1,5000,7000,"SHC, Sonabarighat","SHC, Sonabarighat",5.35,5.35,0,19.1,19.1,0,1,false,REACHABLE_SAME_FACILITY
+206,"Gobindapur Basti",24.88642,92.78248,13502,85,5100,7100,"Emanuel Hospital, Pailapool","Emanuel Hospital, Pailapool",7.6,7.6,0,27.6,27.6,0,1,false,REACHABLE_SAME_FACILITY
+207,"Nutan Ramnagar Ghat",24.6628,92.75406,13519,87.3,5200,7200,"F.R.U, Kalain","F.R.U, Kalain",2.4,2.4,0,9.1,9.1,0,1,false,REACHABLE_SAME_FACILITY
+208,"Bhagabazar Sector 3",24.80808,92.72046,13536,67.9,5300,NULL,"Jiribam CHC","None (Isolated by Inundation)",4.44,INF,INF,15.9,INF,INF,INF,false,MODEL_ISOLATED
+209,"Kabuganj Block 5",24.52224,92.86834,13553,86.8,5400,7400,"South City Hospital, Cachar","South City Hospital, Cachar",6.38,6.38,0,22,22,0,1,false,REACHABLE_SAME_FACILITY
+210,"Palonghat North",24.92529,92.82436,13570,204,4000,6000,"BPHC, Udharbond","BPHC, Udharbond",11.88,11.88,0,40.3,40.3,0,1,false,REACHABLE_SAME_FACILITY
+211,"Motinagar South",24.73722,92.7752,13587,119.6,4100,6100,"Nightingale Hospital","Nightingale Hospital",2.61,2.61,0,9.5,9.5,0,1,false,REACHABLE_SAME_FACILITY
+212,"Cleverhouse East",24.59805,92.90753,13604,73.5,4200,6200,"Nightingale Hospital","Jiribam CHC",4.25,9.37,5.12,17.2,38.7,21.5,2.2,true,REROUTED_ALT_FACILITY
+213,"Rosekandy West",24.74096,92.97962,13621,151.3,4300,6300,"Valley Hospital, Silchar","Valley Hospital, Silchar",5.59,5.59,0,20.8,20.8,0,1,false,REACHABLE_SAME_FACILITY
+214,"Kallinecherra Basti",24.52401,93.05232,13638,36.1,4400,6400,"Valley Hospital, Silchar","Valley Hospital, Silchar",7.88,7.88,0,25.7,25.7,0,1,false,REACHABLE_SAME_FACILITY
+215,"Barakpar Ghat",24.67595,93.11982,13655,79.1,4500,6500,"PHC, Algapur","PHC, Algapur",6.4,6.4,0,20.6,20.6,0,1,false,REACHABLE_SAME_FACILITY
+216,"Madhurband Sector 3",24.87677,92.80881,13672,160.6,4600,NULL,"CHC, Vairengte Link","None (Isolated by Inundation)",4.83,INF,INF,18.9,INF,INF,INF,false,MODEL_ISOLATED
+217,"Chengcoorie Block 3",24.80649,92.86595,13689,160.3,4700,6700,"Valley Hospital, Silchar","Valley Hospital, Silchar",6.82,6.82,0,25.3,25.3,0,1,false,REACHABLE_SAME_FACILITY
+218,"National Highway Point North",24.62509,92.91791,13706,138.4,4800,6800,"50 Bed Hospital, Lakhipur","50 Bed Hospital, Lakhipur",5.04,5.04,0,17.9,17.9,0,1,false,REACHABLE_SAME_FACILITY
+219,"Berenga South",24.97259,92.59134,13723,154.8,4900,6900,"BPHC, Harinagar","BPHC, Harinagar",3.15,3.15,0,13.6,13.6,0,1,false,REACHABLE_SAME_FACILITY
+220,"Gossaipur East",24.56897,92.63292,13740,89.6,5000,7000,"Emanuel Hospital, Pailapool","CHC, Vairengte Link",4.84,7.59,2.75,17.7,28.8,11.1,1.57,true,REROUTED_ALT_FACILITY
+221,"Khelma West",24.61521,92.63891,13757,161.1,5100,7100,"Silchar Medical College & Hospital (SMCH)","Silchar Medical College & Hospital (SMCH)",7.63,7.63,0,26.8,26.8,0,1,false,REACHABLE_SAME_FACILITY
+222,"Katigorah Basti",24.53382,93.08753,13774,176.7,5200,7200,"BPHC, Harinagar","BPHC, Harinagar",8.14,8.14,0,29.6,29.6,0,1,false,REACHABLE_SAME_FACILITY
+223,"Sonapur Ghat",24.98131,92.59763,13791,50.6,5300,7300,"SHC, Sonabarighat","SHC, Sonabarighat",8.55,8.55,0,27.5,27.5,0,1,false,REACHABLE_SAME_FACILITY
+224,"Bihara Sector 3",24.67769,93.03588,13808,202.8,5400,NULL,"BPHC, Udharbond","None (Isolated by Inundation)",1.52,INF,INF,6.5,INF,INF,INF,false,MODEL_ISOLATED
+225,"Kalaincherra Block 1",24.74297,92.90894,13825,153.4,4000,6000,"State Dispensary, Nityanandpur","State Dispensary, Nityanandpur",1.73,1.73,0,6.8,6.8,0,1,false,REACHABLE_SAME_FACILITY
+226,"Srikona North",24.85713,92.96348,13842,142.4,4100,6100,"Medinova, Silchar","Medinova, Silchar",1.83,1.83,0,6.3,6.3,0,1,false,REACHABLE_SAME_FACILITY
+227,"Sadarghat Riverside South",24.70017,92.82618,13859,49.6,4200,6200,"Silchar Medical College & Hospital (SMCH)","Silchar Medical College & Hospital (SMCH)",5.5,5.5,0,18.1,18.1,0,1,false,REACHABLE_SAME_FACILITY
+228,"Disāma East",24.91211,92.68369,13876,115.2,4300,6300,"BPHC, Udharbond","Emanuel Hospital, Pailapool",5.4,10.96,5.56,20,41.8,21.8,2.03,true,REROUTED_ALT_FACILITY
+229,"Binnākāndi West",24.98169,92.76356,13893,45.5,4400,6400,"Nightingale Hospital","Nightingale Hospital",1.39,1.39,0,5.3,5.3,0,1,false,REACHABLE_SAME_FACILITY
+230,"Kumbhir Basti",24.95585,92.93477,13910,161.9,4500,6500,"BPHC, Udharbond","BPHC, Udharbond",9.29,9.29,0,30.5,30.5,0,1,false,REACHABLE_SAME_FACILITY
+231,"Harinagar East Ghat",24.6589,92.91413,13927,196.6,4600,6600,"50 Bed Hospital, Lakhipur","50 Bed Hospital, Lakhipur",9.75,9.75,0,32.9,32.9,0,1,false,REACHABLE_SAME_FACILITY
+232,"Chotobekra Sector 4",24.73084,92.88831,13944,29.7,4700,NULL,"Valley Hospital, Silchar","None (Isolated by Inundation)",6.44,INF,INF,21.3,INF,INF,INF,false,MODEL_ISOLATED
+233,"Ankhasuo Block 4",24.85166,93.04396,13961,81.1,4800,6800,"South City Hospital, Cachar","South City Hospital, Cachar",3.03,3.03,0,13,13,0,1,false,REACHABLE_SAME_FACILITY
+234,"Lakhipur Sub-Division North",24.70138,93.00777,13978,50.9,4900,6900,"Medinova, Silchar","Medinova, Silchar",3.19,3.19,0,12.9,12.9,0,1,false,REACHABLE_SAME_FACILITY
+235,"Pailapool Outpost South",24.91998,92.96639,13995,179,5000,7000,"Silchar Medical College & Hospital (SMCH)","Silchar Medical College & Hospital (SMCH)",10.57,10.57,0,34.2,34.2,0,1,false,REACHABLE_SAME_FACILITY
+236,"Sonāimukh North East",24.70748,93.10649,14012,165.4,5100,7100,"Nightingale Hospital","Valley Hospital, Silchar",6.86,12.62,5.76,23.4,49.4,26,1.84,true,REROUTED_ALT_FACILITY
+237,"Badarpur Riverside West",24.92038,92.84025,14029,179.4,5200,7200,"Emanuel Hospital, Pailapool","Emanuel Hospital, Pailapool",9.8,9.8,0,33.8,33.8,0,1,false,REACHABLE_SAME_FACILITY
+238,"Katakhal Junction Basti",24.8701,92.64072,14046,186.7,5300,7300,"Silchar Medical College & Hospital (SMCH)","Silchar Medical College & Hospital (SMCH)",1.25,1.25,0,4.7,4.7,0,1,false,REACHABLE_SAME_FACILITY
+239,"Silkuri Border Enclave Ghat",24.70871,92.99601,14063,172.3,5400,7400,"South City Hospital, Cachar","South City Hospital, Cachar",10.92,10.92,0,36,36,0,1,false,REACHABLE_SAME_FACILITY
+240,"Umednagar Sector 4",24.5962,92.97277,14080,196.2,4000,NULL,"Nightingale Hospital","None (Isolated by Inundation)",9.5,INF,INF,31.5,INF,INF,INF,false,MODEL_ISOLATED
+241,"Hailakandi Central Block 2",24.69258,92.75769,14097,138.4,4100,6100,"Jiribam CHC","Jiribam CHC",11.64,11.64,0,39.1,39.1,0,1,false,REACHABLE_SAME_FACILITY
+242,"Masimpur North",24.67785,93.09742,14114,59,4200,6200,"Emanuel Hospital, Pailapool","Emanuel Hospital, Pailapool",10.01,10.01,0,32.9,32.9,0,1,false,REACHABLE_SAME_FACILITY
+243,"Dholai South",24.71201,93.05863,14131,197.9,4300,6300,"BPHC, Harinagar","BPHC, Harinagar",8.28,8.28,0,29.9,29.9,0,1,false,REACHABLE_SAME_FACILITY
+244,"Moragang East",24.95506,92.82799,14148,75.2,4400,6400,"50 Bed Hospital, Lakhipur","Medinova, Silchar",10.12,14.16,4.04,35.1,50,14.9,1.4,true,REROUTED_ALT_FACILITY
+245,"Bilaipur West",24.9513,92.91564,14165,38,4500,6500,"Jiribam CHC","Jiribam CHC",11.76,11.76,0,41.2,41.2,0,1,false,REACHABLE_SAME_FACILITY
+246,"Tarapur Colony Basti",24.79658,92.81204,14182,86,4600,6600,"Nightingale Hospital","Nightingale Hospital",6.93,6.93,0,25.6,25.6,0,1,false,REACHABLE_SAME_FACILITY
+247,"Kanakpur Ghat",24.69074,92.88992,14199,172.5,4700,6700,"50 Bed Hospital, Lakhipur","50 Bed Hospital, Lakhipur",1.99,1.99,0,9.1,9.1,0,1,false,REACHABLE_SAME_FACILITY
+248,"Meherpur Bypass Sector 4",24.79379,92.77595,14216,177.2,4800,NULL,"F.R.U, Kalain","None (Isolated by Inundation)",11.62,INF,INF,40.1,INF,INF,INF,false,MODEL_ISOLATED
+249,"Rangirkhari Block 5",24.78572,92.65679,14233,160.3,4900,6900,"SHC, Sonabarighat","SHC, Sonabarighat",6.48,6.48,0,22,22,0,1,false,REACHABLE_SAME_FACILITY
+250,"Malugram North",24.82655,92.71911,14250,181.7,5000,7000,"F.R.U, Kalain","F.R.U, Kalain",1.23,1.23,0,7.1,7.1,0,1,false,REACHABLE_SAME_FACILITY
+251,"Ambicapur South",24.59627,92.58958,14267,121.5,5100,7100,"F.R.U, Kalain","F.R.U, Kalain",10.55,10.55,0,35.7,35.7,0,1,false,REACHABLE_SAME_FACILITY
+252,"Rongpur Riverbank East",24.73487,93.01487,14284,39.6,5200,7200,"Silchar Medical College & Hospital (SMCH)","State Dispensary, Nityanandpur",5.11,14.74,9.63,19.3,59.3,40,2.88,true,REROUTED_ALT_FACILITY
+253,"Gungoor West",24.63445,93.03641,14301,176.1,5300,7300,"F.R.U, Kalain","F.R.U, Kalain",8.2,8.2,0,26.8,26.8,0,1,false,REACHABLE_SAME_FACILITY
+254,"Dudhpatil Basti",24.77527,92.9354,14318,55,5400,7400,"Valley Hospital, Silchar","Valley Hospital, Silchar",5.25,5.25,0,18.1,18.1,0,1,false,REACHABLE_SAME_FACILITY
+255,"Salchapra Ghat",24.64499,92.64254,14335,32.3,4000,6000,"50 Bed Hospital, Lakhipur","50 Bed Hospital, Lakhipur",5.87,5.87,0,21.7,21.7,0,1,false,REACHABLE_SAME_FACILITY
+256,"Borkhola Central Sector 4",24.88359,92.90449,14352,167.8,4100,NULL,"BPHC, Udharbond","None (Isolated by Inundation)",2.71,INF,INF,11.3,INF,INF,INF,false,MODEL_ISOLATED
+257,"Bikrampur Block 3",24.69109,92.78792,14369,161.8,4200,6200,"50 Bed Hospital, Lakhipur","50 Bed Hospital, Lakhipur",10.45,10.45,0,35.4,35.4,0,1,false,REACHABLE_SAME_FACILITY
+258,"Kalain Bazaar North",24.70747,93.0395,14386,74,4300,6300,"50 Bed Hospital, Lakhipur","50 Bed Hospital, Lakhipur",10.76,10.76,0,36.5,36.5,0,1,false,REACHABLE_SAME_FACILITY
+259,"Gumrah South",24.61274,92.7259,14403,144.6,4400,6400,"Medinova, Silchar","Medinova, Silchar",7.3,7.3,0,23.8,23.8,0,1,false,REACHABLE_SAME_FACILITY
+260,"Jalalpur East",24.5669,92.59378,14420,73.5,4500,6500,"F.R.U, Kalain","Nightingale Hospital",3.74,9.96,6.22,14.2,39.5,25.3,2.66,true,REROUTED_ALT_FACILITY
+261,"Siddheswar West",24.96981,92.68921,14437,68.8,4600,6600,"Jiribam CHC","Jiribam CHC",11.03,11.03,0,37.1,37.1,0,1,false,REACHABLE_SAME_FACILITY
+262,"Panchgram Paper Mill Basti",24.84619,93.05746,14454,108.5,4700,6700,"SHC, Sonabarighat","SHC, Sonabarighat",8.13,8.13,0,28.8,28.8,0,1,false,REACHABLE_SAME_FACILITY
+263,"Algapur Ghat",24.61147,92.86052,14471,126.6,4800,6800,"Medinova, Silchar","Medinova, Silchar",1.46,1.46,0,6.6,6.6,0,1,false,REACHABLE_SAME_FACILITY
+264,"Mohanpur Sector 4",24.90563,92.84507,14488,183,4900,NULL,"State Dispensary, Nityanandpur","None (Isolated by Inundation)",5.69,INF,INF,18.8,INF,INF,INF,false,MODEL_ISOLATED
+265,"Singerband Block 1",24.92867,92.63776,14505,157.8,5000,7000,"South City Hospital, Cachar","South City Hospital, Cachar",2.49,2.49,0,8.1,8.1,0,1,false,REACHABLE_SAME_FACILITY
+266,"Fulertol Ghat North",24.84061,92.98527,14522,110.9,5100,7100,"South City Hospital, Cachar","South City Hospital, Cachar",6.51,6.51,0,22.7,22.7,0,1,false,REACHABLE_SAME_FACILITY
+267,"Hmarkhawlien South",24.80144,92.95426,14539,102.3,5200,7200,"Silchar Medical College & Hospital (SMCH)","Silchar Medical College & Hospital (SMCH)",10.43,10.43,0,36.5,36.5,0,1,false,REACHABLE_SAME_FACILITY
+268,"Joypur Roadhead East",24.97116,92.7314,14556,192.1,5300,7300,"State Dispensary, Nityanandpur","South City Hospital, Cachar",6.92,9.95,3.03,23.3,39.6,16.3,1.44,true,REROUTED_ALT_FACILITY
+269,"Lakhinagar West",24.5574,93.04071,14573,91.1,5400,7400,"South City Hospital, Cachar","South City Hospital, Cachar",10.17,10.17,0,36.1,36.1,0,1,false,REACHABLE_SAME_FACILITY
+270,"Rajnagar Basti",24.56934,92.66489,14590,81.7,4000,6000,"50 Bed Hospital, Lakhipur","50 Bed Hospital, Lakhipur",5.49,5.49,0,17.7,17.7,0,1,false,REACHABLE_SAME_FACILITY
+271,"Chibitabichia Ghat",24.63016,93.03055,14607,110.6,4100,6100,"Nightingale Hospital","Nightingale Hospital",11.7,11.7,0,37.6,37.6,0,1,false,REACHABLE_SAME_FACILITY
+272,"Ghilamura Sector 4",24.89988,92.64435,14624,57.8,4200,NULL,"CHC, Vairengte Link","None (Isolated by Inundation)",10.48,INF,INF,34.7,INF,INF,INF,false,MODEL_ISOLATED
+273,"Narainpur Block 4",24.57848,92.81297,14641,163.4,4300,6300,"CHC, Vairengte Link","CHC, Vairengte Link",5.5,5.5,0,17.8,17.8,0,1,false,REACHABLE_SAME_FACILITY
+274,"Alambag North",24.78598,92.60307,14658,127.3,4400,6400,"F.R.U, Kalain","F.R.U, Kalain",11.4,11.4,0,39.3,39.3,0,1,false,REACHABLE_SAME_FACILITY
+275,"Dolu Bagan South",24.72236,92.76132,14675,189.6,4500,6500,"Medinova, Silchar","Medinova, Silchar",9.88,9.88,0,34,34,0,1,false,REACHABLE_SAME_FACILITY
+276,"Chandranathpur East",24.54763,92.91438,14692,50.2,4600,6600,"PHC, Algapur","Jiribam CHC",4.58,13.84,9.26,18.7,53.4,34.7,3.02,true,REROUTED_ALT_FACILITY
+277,"Damchara West",24.87721,93.01759,14709,77.9,4700,6700,"50 Bed Hospital, Lakhipur","50 Bed Hospital, Lakhipur",6.54,6.54,0,23.2,23.2,0,1,false,REACHABLE_SAME_FACILITY
+278,"Craigpark Basti",24.9447,92.92436,14726,169.4,4800,6800,"CHC, Vairengte Link","CHC, Vairengte Link",9.24,9.24,0,31.3,31.3,0,1,false,REACHABLE_SAME_FACILITY
+279,"Cossipore Ghat",24.74108,92.63927,14743,179.1,4900,6900,"50 Bed Hospital, Lakhipur","50 Bed Hospital, Lakhipur",4.5,4.5,0,16.4,16.4,0,1,false,REACHABLE_SAME_FACILITY
+280,"Jatinga Valley Link Sector 4",24.90635,92.909,14760,167.2,5000,NULL,"Medinova, Silchar","None (Isolated by Inundation)",7,INF,INF,22.9,INF,INF,INF,false,MODEL_ISOLATED
+281,"Banskandi Block 2",24.64051,92.80022,14777,193.6,5100,7100,"PHC, Algapur","PHC, Algapur",9.4,9.4,0,32.6,32.6,0,1,false,REACHABLE_SAME_FACILITY
+282,"Gobindapur North",24.58356,93.05958,14794,138.4,5200,7200,"Silchar Medical College & Hospital (SMCH)","Silchar Medical College & Hospital (SMCH)",4.36,4.36,0,15.3,15.3,0,1,false,REACHABLE_SAME_FACILITY
+283,"Nutan Ramnagar South",24.8955,92.75375,14811,61.5,5300,7300,"State Dispensary, Nityanandpur","State Dispensary, Nityanandpur",6.55,6.55,0,23.4,23.4,0,1,false,REACHABLE_SAME_FACILITY
+284,"Bhagabazar East",24.77633,92.62941,14828,202.9,5400,7400,"Nightingale Hospital","South City Hospital, Cachar",8.64,17.27,8.63,30.7,65.1,34.4,2,true,REROUTED_ALT_FACILITY
+285,"Kabuganj West",24.52924,92.6665,14845,44.4,4000,6000,"PHC, Algapur","PHC, Algapur",12.04,12.04,0,40.7,40.7,0,1,false,REACHABLE_SAME_FACILITY
+286,"Palonghat Basti",24.57229,92.76253,14862,26.7,4100,6100,"SHC, Sonabarighat","SHC, Sonabarighat",9.29,9.29,0,33.6,33.6,0,1,false,REACHABLE_SAME_FACILITY
+287,"Motinagar Ghat",24.98422,92.85337,14879,167.2,4200,6200,"Valley Hospital, Silchar","Valley Hospital, Silchar",2.77,2.77,0,12.6,12.6,0,1,false,REACHABLE_SAME_FACILITY
+288,"Cleverhouse Sector 4",24.96505,92.56569,14896,166.2,4300,NULL,"BPHC, Harinagar","None (Isolated by Inundation)",7.16,INF,INF,26,INF,INF,INF,false,MODEL_ISOLATED
+289,"Rosekandy Block 5",24.67477,92.64617,14913,83.4,4400,6400,"State Dispensary, Nityanandpur","State Dispensary, Nityanandpur",4.1,4.1,0,16.5,16.5,0,1,false,REACHABLE_SAME_FACILITY
+290,"Kallinecherra North",24.75337,92.72145,14930,159,4500,6500,"F.R.U, Kalain","F.R.U, Kalain",8.28,8.28,0,28.3,28.3,0,1,false,REACHABLE_SAME_FACILITY
+291,"Barakpar South",24.88087,92.97822,14947,92.9,4600,6600,"Valley Hospital, Silchar","Valley Hospital, Silchar",1.36,1.36,0,8.1,8.1,0,1,false,REACHABLE_SAME_FACILITY
+292,"Madhurband East",24.73725,93.04313,14964,125.2,4700,6700,"CHC, Vairengte Link","Jiribam CHC",9,19.34,10.34,31.4,74.4,43,2.15,true,REROUTED_ALT_FACILITY
+293,"Chengcoorie West",24.99349,92.59412,14981,185.4,4800,6800,"BPHC, Harinagar","BPHC, Harinagar",5.6,5.6,0,21.5,21.5,0,1,false,REACHABLE_SAME_FACILITY
+294,"National Highway Point Basti",24.93209,92.78607,14998,28.5,4900,6900,"BPHC, Harinagar","BPHC, Harinagar",6.57,6.57,0,23.8,23.8,0,1,false,REACHABLE_SAME_FACILITY
+295,"Berenga Ghat",24.91959,92.59951,15015,89.9,5000,7000,"South City Hospital, Cachar","South City Hospital, Cachar",7.44,7.44,0,25.4,25.4,0,1,false,REACHABLE_SAME_FACILITY
+296,"Gossaipur Sector 4",24.63597,92.78109,15032,69.7,5100,NULL,"Emanuel Hospital, Pailapool","None (Isolated by Inundation)",11.87,INF,INF,39.2,INF,INF,INF,false,MODEL_ISOLATED
+297,"Khelma Block 3",24.72124,92.95749,15049,27.8,5200,7200,"Medinova, Silchar","Medinova, Silchar",1.54,1.54,0,8,8,0,1,false,REACHABLE_SAME_FACILITY
+298,"Katigorah North",24.8554,92.75536,15066,204.2,5300,7300,"Jiribam CHC","Jiribam CHC",2.1,2.1,0,7.1,7.1,0,1,false,REACHABLE_SAME_FACILITY
+299,"Sonapur South",24.71845,92.92139,15083,119,5400,7400,"PHC, Algapur","PHC, Algapur",6.22,6.22,0,22.5,22.5,0,1,false,REACHABLE_SAME_FACILITY
+300,"Bihara East",24.95039,93.08223,15100,192.1,4000,6000,"Nightingale Hospital","Jiribam CHC",6.58,13.17,6.59,24.1,51.1,27,2,true,REROUTED_ALT_FACILITY
+301,"Kalaincherra West",24.86997,92.84711,15117,156.1,4100,6100,"BPHC, Harinagar","BPHC, Harinagar",10.14,10.14,0,35.3,35.3,0,1,false,REACHABLE_SAME_FACILITY
+302,"Srikona Basti",24.62413,93.04165,15134,190,4200,6200,"South City Hospital, Cachar","South City Hospital, Cachar",1.99,1.99,0,9.4,9.4,0,1,false,REACHABLE_SAME_FACILITY
+303,"Sadarghat Riverside Ghat",24.58717,93.04434,15151,142.2,4300,6300,"Emanuel Hospital, Pailapool","Emanuel Hospital, Pailapool",8.41,8.41,0,27,27,0,1,false,REACHABLE_SAME_FACILITY
+304,"Disāma Sector 4",24.91911,93.04185,15168,72.8,4400,NULL,"BPHC, Harinagar","None (Isolated by Inundation)",11.06,INF,INF,38.7,INF,INF,INF,false,MODEL_ISOLATED
+305,"Binnākāndi Block 1",24.81994,92.66084,15185,41.7,4500,6500,"F.R.U, Kalain","F.R.U, Kalain",2.61,2.61,0,10.4,10.4,0,1,false,REACHABLE_SAME_FACILITY
+306,"Kumbhir North",24.92966,92.64798,15202,109,4600,6600,"SHC, Sonabarighat","SHC, Sonabarighat",8.72,8.72,0,29.5,29.5,0,1,false,REACHABLE_SAME_FACILITY
+307,"Harinagar East South",24.92826,92.62993,15219,154.6,4700,6700,"Medinova, Silchar","Medinova, Silchar",11.07,11.07,0,38.8,38.8,0,1,false,REACHABLE_SAME_FACILITY
+308,"Chotobekra East",24.97576,92.79337,15236,58.5,4800,6800,"State Dispensary, Nityanandpur","Emanuel Hospital, Pailapool",2.31,8.92,6.61,8.1,34.1,26,3.86,true,REROUTED_ALT_FACILITY
+309,"Ankhasuo West",24.67866,92.91213,15253,151.3,4900,6900,"SHC, Sonabarighat","SHC, Sonabarighat",4.57,4.57,0,15,15,0,1,false,REACHABLE_SAME_FACILITY
+310,"Lakhipur Sub-Division Basti",24.64838,93.01593,15270,166,5000,7000,"Emanuel Hospital, Pailapool","Emanuel Hospital, Pailapool",7.47,7.47,0,24.7,24.7,0,1,false,REACHABLE_SAME_FACILITY
+311,"Pailapool Outpost Ghat",24.98698,93.11455,15287,159.1,5100,7100,"Silchar Medical College & Hospital (SMCH)","Silchar Medical College & Hospital (SMCH)",6.61,6.61,0,24.5,24.5,0,1,false,REACHABLE_SAME_FACILITY
+312,"Sonāimukh North Sector 5",24.89448,92.83465,15304,190.5,5200,NULL,"F.R.U, Kalain","None (Isolated by Inundation)",5.64,INF,INF,19.6,INF,INF,INF,false,MODEL_ISOLATED
+313,"Badarpur Riverside Block 4",24.53086,92.9229,15321,140.3,5300,7300,"Nightingale Hospital","Nightingale Hospital",8.24,8.24,0,26.9,26.9,0,1,false,REACHABLE_SAME_FACILITY
+314,"Katakhal Junction North",24.53613,93.00597,15338,68.4,5400,7400,"BPHC, Harinagar","BPHC, Harinagar",7.07,7.07,0,24.3,24.3,0,1,false,REACHABLE_SAME_FACILITY
+315,"Silkuri Border Enclave South",24.59029,92.71051,15355,34.8,4000,6000,"Medinova, Silchar","Medinova, Silchar",5.8,5.8,0,20.9,20.9,0,1,false,REACHABLE_SAME_FACILITY
+316,"Umednagar East",24.85334,92.78321,15372,99.6,4100,6100,"Medinova, Silchar","PHC, Algapur",8.09,10.68,2.59,29.8,42.2,12.4,1.32,true,REROUTED_ALT_FACILITY
+317,"Hailakandi Central West",24.93958,92.83586,15389,186.1,4200,6200,"Medinova, Silchar","Medinova, Silchar",11.8,11.8,0,38.2,38.2,0,1,false,REACHABLE_SAME_FACILITY
+318,"Masimpur Basti",24.56485,92.75559,15406,151.6,4300,6300,"South City Hospital, Cachar","South City Hospital, Cachar",1.92,1.92,0,6.6,6.6,0,1,false,REACHABLE_SAME_FACILITY
+319,"Dholai Ghat",24.71901,92.8568,15423,155.6,4400,6400,"CHC, Vairengte Link","CHC, Vairengte Link",2.94,2.94,0,13.3,13.3,0,1,false,REACHABLE_SAME_FACILITY

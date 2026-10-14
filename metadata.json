@@ -1,0 +1,7 @@
+{
+  "name": "Lifeline OS",
+  "description": "Deterministic Disaster Accessibility & Preventative Logistics Simulator for June 2022 Silchar Floods",
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
