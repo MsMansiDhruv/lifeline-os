@@ -1,0 +1,32 @@
+# Virtual environments & Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+Lib/
+Scripts/
+share/
+etc/
+cache/
+venv/
+.venv/
+env/
+.env
+
+# Sensitive credentials & API keys
+*key*.txt
+gemini api key.txt
+*.pem
+*.id_rsa
+
+# Large datasets / files exceeding GitHub limits (>50MB / redundant)
+datasets/north-eastern-zone-261011.osm.pbf
+cachar_graph.graphml
+datasets/SecFeedREE_20260310.csv
+~$*
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
