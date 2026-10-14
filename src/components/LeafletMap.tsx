@@ -189,16 +189,31 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
 
       if (m.type === 'isolated') {
         iconHtml = `<div style="background:#ff4d4d; width:16px; height:16px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 10px #ff4d4d;" class="pulse-danger"></div>`;
+      } else if (m.type === 'reachable') {
+        iconHtml = `<div style="background:#00e676; width:16px; height:16px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 12px #00e676;" class="pulse-success"></div>`;
       } else if (m.type === 'rerouted') {
         iconHtml = `<div style="background:#ffaa00; width:14px; height:14px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 8px #ffaa00;" class="pulse-warning"></div>`;
       } else if (m.type === 'chokepoint') {
-        iconHtml = `<div style="background:#ff1100; padding:4px 6px; border-radius:6px; border:2px solid #fff; color:#fff; font-size:10px; font-weight:900; display:flex; align-items:center; gap:3px; box-shadow:0 0 12px #ff1100;">⚡ CHOKE</div>`;
+        const isHardened = m.badge?.includes('HARDENED') || m.title.includes('HARDENED') || m.badge?.includes('OPERATIONAL');
+        if (isHardened) {
+          iconHtml = `<div style="background:#00e676; color:#0d1117; padding:4px 6px; border-radius:6px; border:2px solid #fff; font-size:10px; font-weight:900; display:flex; align-items:center; gap:3px; box-shadow:0 0 14px #00e676;">🛠️ HARDENED</div>`;
+        } else {
+          iconHtml = `<div style="background:#ff1100; padding:4px 6px; border-radius:6px; border:2px solid #fff; color:#fff; font-size:10px; font-weight:900; display:flex; align-items:center; gap:3px; box-shadow:0 0 12px #ff1100;">⚡ CHOKE</div>`;
+        }
       } else if (m.type === 'hub') {
         iconHtml = `<div style="background:#00e5ff; color:#0d1117; padding:4px 6px; border-radius:6px; border:2px solid #fff; font-size:10px; font-weight:900; display:flex; align-items:center; gap:3px;">⚓ ${m.badge || 'HUB'}</div>`;
       } else if (m.type === 'bridge') {
         iconHtml = `<div style="background:#00e676; color:#0d1117; padding:4px 6px; border-radius:6px; border:2px solid #fff; font-size:10px; font-weight:900;">🌉 BAILEY</div>`;
       } else if (m.type === 'facility') {
-        iconHtml = `<div style="background:#238636; color:#fff; padding:3px 5px; border-radius:50%; border:1.5px solid #fff; font-size:12px; font-weight:bold;">🏥</div>`;
+        const isSurge = m.badge?.includes('SURGE') || m.badge?.includes('OVERLOAD') || (m.description && m.description.includes('Surge'));
+        const isCutOff = m.badge?.includes('ISOLATED') || m.badge?.includes('INACCESSIBLE') || m.badge?.includes('CUT-OFF');
+        if (isSurge) {
+          iconHtml = `<div style="background:#e11d48; color:#fff; padding:4px 8px; border-radius:8px; border:2px solid #fff; font-size:10px; font-weight:900; box-shadow:0 0 14px #f43f5e; display:flex; align-items:center; gap:3px;">🏥 ${m.badge || 'SURGE >150%'}</div>`;
+        } else if (isCutOff) {
+          iconHtml = `<div style="background:#374151; color:#f87171; padding:4px 6px; border-radius:8px; border:2px solid #ef4444; font-size:10px; font-weight:bold;">🏥 FLOODED</div>`;
+        } else {
+          iconHtml = `<div style="background:#238636; color:#fff; padding:3px 5px; border-radius:50%; border:1.5px solid #fff; font-size:12px; font-weight:bold;">🏥</div>`;
+        }
       } else {
         iconHtml = `<div style="background:#388bfd; width:12px; height:12px; border-radius:50%; border:1.5px solid #fff;"></div>`;
       }

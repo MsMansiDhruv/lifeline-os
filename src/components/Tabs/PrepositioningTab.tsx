@@ -88,11 +88,11 @@ export const PrepositioningTab: React.FC = () => {
 
   displayHubs.forEach((hub, idx) => {
     const hubColor = colors[idx % colors.length];
-    const assignedNames = hub.assigned_villages_str.split(',').map((v) => v.trim().toLowerCase());
+    const assignedNames = hub.assigned_villages_str.split(',').map((v: string) => v.trim().toLowerCase());
 
     SETTLEMENTS_LIGHT.filter((s) => s.modeled_status === 'MODEL_ISOLATED').forEach((s) => {
       // Connect if matched
-      if (assignedNames.some((name) => s.village_name.toLowerCase().includes(name) || name.includes(s.village_name.toLowerCase()))) {
+      if (assignedNames.some((name: string) => s.village_name.toLowerCase().includes(name) || name.includes(s.village_name.toLowerCase()))) {
         lines.push({
           points: [
             [hub.lat, hub.lon],

@@ -3,6 +3,7 @@ import { Header } from './components/Header';
 import { CommandOverview } from './components/CommandOverview';
 import { TelemetryDrawer } from './components/TelemetryDrawer';
 import { PercolationTab } from './components/Tabs/PercolationTab';
+import { HealthcareSurgeTab } from './components/Tabs/HealthcareSurgeTab';
 import { PrepositioningTab } from './components/Tabs/PrepositioningTab';
 import { BridgeRoiTab } from './components/Tabs/BridgeRoiTab';
 import { TestcasesTab } from './components/Tabs/TestcasesTab';
@@ -23,6 +24,7 @@ import {
   BarChart3,
   MapPin,
   Bot,
+  Activity,
 } from 'lucide-react';
 
 export function App() {
@@ -30,6 +32,19 @@ export function App() {
   const [statusFilter, setStatusFilter] = useState<string>('All Critical');
   const [activeTab, setActiveTab] = useState<string>('percolation');
   const [isTelemetryOpen, setIsTelemetryOpen] = useState<boolean>(false);
+
+  // Critique D: Live Counterfactual Intervention State
+  const [hardenedCorridorIds, setHardenedCorridorIds] = useState<string[]>([]);
+
+  const handleToggleHardening = (corridorId: string) => {
+    setHardenedCorridorIds((prev) =>
+      prev.includes(corridorId) ? prev.filter((id) => id !== corridorId) : [...prev, corridorId]
+    );
+  };
+
+  const handleResetHardening = () => {
+    setHardenedCorridorIds([]);
+  };
 
   const baseSettlements = fleetMode === 'Light Emergency (Ambulance/4x4)' ? SETTLEMENTS_LIGHT : SETTLEMENTS_HEAVY;
 
@@ -48,8 +63,14 @@ export function App() {
     {
       id: 'percolation',
       label: '🔬 Vulnerability Profiler',
-      sublabel: 'Cut-Edge Percolation',
+      sublabel: 'Cut-Edge Percolation & Hardening',
       icon: ShieldAlert,
+    },
+    {
+      id: 'healthcare_surge',
+      label: '🏥 Healthcare Surge & Triage',
+      sublabel: 'Hospital Overload & MMUs',
+      icon: Activity,
     },
     {
       id: 'prepositioning',
@@ -102,7 +123,11 @@ export function App() {
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* Operational Overview & Metrics */}
-        <CommandOverview diag={diagnostics} settlements={baseSettlements} />
+        <CommandOverview
+          diag={diagnostics}
+          settlements={baseSettlements}
+          hardenedCorridorIds={hardenedCorridorIds}
+        />
 
         {/* Tab Navigation */}
         <div className="border-b border-[#30363d] overflow-x-auto scrollbar-none">
@@ -132,7 +157,20 @@ export function App() {
 
         {/* Tab Content Display */}
         <div className="pt-2">
-          {activeTab === 'percolation' && <PercolationTab fleetMode={fleetMode} />}
+          {activeTab === 'percolation' && (
+            <PercolationTab
+              fleetMode={fleetMode}
+              hardenedCorridorIds={hardenedCorridorIds}
+              onToggleHardening={handleToggleHardening}
+              onResetHardening={handleResetHardening}
+            />
+          )}
+          {activeTab === 'healthcare_surge' && (
+            <HealthcareSurgeTab
+              settlements={baseSettlements}
+              fleetMode={fleetMode}
+            />
+          )}
           {activeTab === 'prepositioning' && <PrepositioningTab />}
           {activeTab === 'bridge_roi' && <BridgeRoiTab />}
           {activeTab === 'testcases' && <TestcasesTab />}

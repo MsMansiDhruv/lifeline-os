@@ -3,6 +3,7 @@ export type FleetMode = 'Light Emergency (Ambulance/4x4)' | 'Heavy Supply (Truck
 export type SettlementFilter = 'All Critical' | 'Isolated Only' | 'Severe Detour (>10km)';
 
 export type ModeledStatus = 'MODEL_ISOLATED' | 'REROUTED_ALT_FACILITY' | 'REACHABLE_SAME_FACILITY';
+export type SettlementStatus = ModeledStatus;
 
 export interface SettlementRecord {
   village_id: number;
@@ -30,21 +31,26 @@ export interface SettlementRecord {
   scenario_route_coords?: [number, number][];
 }
 
-export interface CriticalChokePoint {
+export interface CriticalEdgeRecord {
   corridor_id: string;
   road_name: string;
   serving_settlement: string;
   segments_count: number;
+  critical_spans_count: number;
+  exposed_meters: number;
   highway_type: string;
   total_length_m: number;
   lat: number;
   lon: number;
   isolated_villages_count: number;
+  heavy_isolated_villages_count: number;
+  dissolved_badge: string;
   recommended_engineering_intervention: string;
   action_tier: 'CRITICAL_BOTTLENECK' | 'HIGH_VULNERABILITY' | 'MODERATE_RISK';
 }
+export type CriticalChokePoint = CriticalEdgeRecord;
 
-export interface StagingHub {
+export interface StagingHubRecord {
   hub_id: number;
   hub_name: string;
   nearest_roadhead: string;
@@ -59,8 +65,9 @@ export interface StagingHub {
   recommended_relief_assets: string;
   hub_tier: string;
 }
+export type StagingHub = StagingHubRecord;
 
-export interface BridgeIntervention {
+export interface BridgeInterventionRecord {
   rank: number;
   u: number;
   v: number;
@@ -77,18 +84,25 @@ export interface BridgeIntervention {
   recommended_structure: string;
   est_install_hrs: number;
 }
+export type BridgeIntervention = BridgeInterventionRecord;
 
-export interface Diagnostics {
+export interface DiagnosticsRecord {
   pruned_bridges: number;
   valid_settlements: number;
   total_settlements: number;
   fleet_mode: FleetMode;
   critical_cut_edges_count: number;
+  articulation_bridges: number;
+  max_cut_settlements: number;
+  isolated_villages_count: number;
+  axle_pruned_edges: number;
+  average_detour_km: number;
   max_villages_cut_by_single_road: number;
   optimal_staging_hubs_count: number;
   bridge_interventions_count: number;
   max_bridge_roi: number;
 }
+export type Diagnostics = DiagnosticsRecord;
 
 export interface RoutingIntelligencePayload {
   village_name: string;
