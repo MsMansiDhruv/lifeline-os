@@ -5,11 +5,13 @@ import { INTERVENTION_TOOLS, InterventionType, TheaterChokePoint } from '../data
 interface JuryScorecardProps {
   chokePoints: TheaterChokePoint[];
   interventions: Record<string, InterventionType>;
+  panelWidth?: number;
 }
 
 export const JuryScorecard: React.FC<JuryScorecardProps> = ({
   chokePoints,
   interventions,
+  panelWidth = 430,
 }) => {
   const activeEntries = Object.entries(interventions).filter(
     ([, tool]) => tool && tool !== 'none'
@@ -49,6 +51,8 @@ export const JuryScorecard: React.FC<JuryScorecardProps> = ({
       ? `₹${(totalBudgetLakhs / 100).toFixed(2)} Cr`
       : `₹${totalBudgetLakhs.toFixed(1)} L`;
 
+  const isWide = panelWidth >= 440;
+
   return (
     <div className="bg-slate-950/90 border border-slate-800 rounded-xl p-3 shadow-lg select-none">
       {/* Header bar */}
@@ -77,8 +81,8 @@ export const JuryScorecard: React.FC<JuryScorecardProps> = ({
         )}
       </div>
 
-      {/* REQUIREMENT 3: Clean 2x2 Grid with generous padding, 11px uppercase muted labels, 20px tabular numerals */}
-      <div className="grid grid-cols-2 gap-2.5">
+      {/* Auto-Adjusting Grid based on Panel Width: 2 cols when < 440px, 4 cols when >= 440px */}
+      <div className={`grid gap-2.5 ${isWide ? 'grid-cols-4' : 'grid-cols-2'}`}>
         {/* Cell 1: Active Deployments */}
         <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-800/80 flex flex-col justify-between">
           <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 flex items-center gap-1.5">

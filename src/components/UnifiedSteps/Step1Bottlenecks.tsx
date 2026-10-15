@@ -31,6 +31,7 @@ interface Step1BottlenecksProps {
   selectedChokeIdx: number;
   onSelectChokeIdx: (idx: number) => void;
   fleetMode: string;
+  panelWidth?: number;
   interactiveTourTask?: number;
   opsMode?: 'day' | 'night';
 }
@@ -43,6 +44,7 @@ export const Step1Bottlenecks: React.FC<Step1BottlenecksProps> = ({
   selectedChokeIdx,
   onSelectChokeIdx,
   fleetMode,
+  panelWidth = 430,
   interactiveTourTask = 0,
   opsMode = 'day',
 }) => {
@@ -89,8 +91,8 @@ export const Step1Bottlenecks: React.FC<Step1BottlenecksProps> = ({
         )}
       </div>
 
-      {/* Live Simulation Scorecard (Clean 2x2 Grid) */}
-      <JuryScorecard chokePoints={chokePoints} interventions={interventions} />
+      {/* Live Simulation Scorecard (Auto-adjusts 2x2 or 4x1 based on panel width) */}
+      <JuryScorecard chokePoints={chokePoints} interventions={interventions} panelWidth={panelWidth} />
 
       {/* Bottlenecks List */}
       <div className="space-y-2.5">
@@ -256,7 +258,7 @@ export const Step1Bottlenecks: React.FC<Step1BottlenecksProps> = ({
                   )}
                 </div>
 
-                <div className="grid grid-cols-4 gap-1.5 text-[10px] font-mono">
+                <div className={`grid gap-1.5 text-[10px] font-mono ${panelWidth >= 440 ? 'grid-cols-4' : 'grid-cols-2'}`}>
                   {/* Tool 1: Bailey Bridge */}
                   <div className="relative">
                     <button

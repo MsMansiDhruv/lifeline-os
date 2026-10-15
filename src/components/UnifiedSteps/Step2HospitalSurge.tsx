@@ -16,12 +16,16 @@ interface Step2HospitalSurgeProps {
   currentTheater: TheaterData;
   interventions: Record<string, InterventionType>;
   onGoToStep1: () => void;
+  onFocusHospital?: (hospital: { lat: number; lon: number; name: string }) => void;
+  panelWidth?: number;
 }
 
 export const Step2HospitalSurge: React.FC<Step2HospitalSurgeProps> = ({
   currentTheater,
   interventions,
   onGoToStep1,
+  onFocusHospital,
+  panelWidth = 430,
 }) => {
   const [selectedHospitalId, setSelectedHospitalId] = useState<string>(
     currentTheater.hospitals[0]?.id || ''
@@ -215,7 +219,10 @@ export const Step2HospitalSurge: React.FC<Step2HospitalSurgeProps> = ({
           return (
             <div
               key={hosp.id}
-              onClick={() => setSelectedHospitalId(hosp.id)}
+              onClick={() => {
+                setSelectedHospitalId(hosp.id);
+                onFocusHospital?.({ lat: hosp.lat, lon: hosp.lon, name: hosp.name });
+              }}
               className={`p-3.5 rounded-xl border transition-all cursor-pointer ${
                 isSelected
                   ? 'bg-[#1c2128] border-cyan-500 shadow-md ring-1 ring-cyan-500/50'

@@ -11,38 +11,31 @@ export interface InteractiveTask {
 export const INTERACTIVE_TASKS: InteractiveTask[] = [
   {
     taskNum: 1,
-    title: 'Step 1: Choke Points & Cut-Edge Crisis',
+    title: 'Step 1: Diagnose Road Breaches & Cut-Edges',
     instruction:
-      'The map isolates single-point bridge washouts using Tarjan cut-edge graph math. At JT Road, 27 villages are completely severed (74 across theater), and trauma transit is delayed to ❌ 65 Mins (Critical Delay).',
-    actionHint: 'Step 1 active: Review JT Road Cut & 74 Trapped Villages on map',
+      'Cloud Run executes Tarjan O(V+E) cut-edge math to isolate single-point severed corridors. At JT Road, 27 villages are cut off, and trauma transit is delayed to ❌ 65 Mins (Critical Delay).',
+    actionHint: 'Step 1: Review SRTM elevation & breach diagnoses on the map',
   },
   {
     taskNum: 2,
-    title: 'Bailey Bridge Snapping (48m Gap Restored)',
+    title: 'Step 2: Assess Hospital ICU Surge & Cohort Triage',
     instruction:
-      'Deploy the Class-40 Bailey Bridge across the 48m Barak River gap. The solid green route connects from Binnākāndi all the way to Valley Hospital, updating Golden Hour to ✅ 22 Mins and reconnecting 27 villages!',
-    actionHint: 'Click [Bailey Bridge] on Card #1 (JT Road)',
+      'Road cuts forcibly divert casualties into un-flooded urban facilities: Valley Hospital suffers 191% critical ICU overload, 14 dialysis and 38 maternal cases are trapped, and cold-chain batteries have only 3.5h left.',
+    actionHint: 'Step 2: Review clinical overload & vulnerable cohort requirements',
   },
   {
     taskNum: 3,
-    title: 'Step 2: Hospital Surge & Emergency Stabilization',
+    title: 'Step 3: Counterfactual Sandbox & Physical Fixes',
     instruction:
-      'With the JT Road arterial reconnected, patient influx diversions cease: Valley Hospital ICU overload drops from 148% (Critical) down to 82% (Stable Green), with 73% surge relieved.',
-    actionHint: 'Step 2 active: Inspect Valley Hospital dropping to safe green zone',
+      'Civil engineering rules apply: 310m causeways exceed 60m Bailey bridge limits! Deploy the Class-40 Bailey Bridge across JT Road (38m gap) to reconnect 27 villages, dropping Valley Hospital surge to 108% safe green!',
+    actionHint: 'Step 3: Test Bailey Bridge, Dry Clinic, Ferry, and Drone assets',
   },
   {
     taskNum: 4,
-    title: 'Step 3: Relief Camps & Vulnerable Cohorts',
+    title: 'Step 4: Gemini 2.5 Flash MCP Work-Orders & DM Sanction',
     instruction:
-      'Prioritizes 14 critical dialysis patients and 31 high-risk maternal cases across severed hamlets, mobilizing 18.5 Tons/Day FCI ration demand across 4 dry Government School Relief Camps (41m–45m ASL).',
-    actionHint: 'Step 3 active: Review high-ground relief camps & patient cohorts',
-  },
-  {
-    taskNum: 5,
-    title: 'Step 4 & 5: ₹ Lakh ROI Proof & Official DM Sanction',
-    instruction:
-      'Open-Meteo & SRTM verify dry village ridges (41m ASL) vs flooded culverts (18m ASL). Click "Sign & Sanction Order" to affix District Magistrate approval on the official SDRF Form-3B Requisition Ticket.',
-    actionHint: 'Step 5 active: Sign SDRF Form-3B Requisition Ticket to execute',
+      'Gemini 2.5 Flash MCP converts verified graph outputs into deterministic engineering dispatch orders. Review exact GPS coordinates and click "Digitally Sign & Lock" to execute the SDRF Form-3B order.',
+    actionHint: 'Step 4: Sign & Lock the official SDRF Form-3B Sanction Order',
   },
 ];
 
@@ -59,11 +52,11 @@ export const InteractiveTourCoach: React.FC<InteractiveTourCoachProps> = ({
 }) => {
   if (currentTask <= 0) return null;
 
-  const isCompleted = currentTask > 5;
+  const isCompleted = currentTask > 4;
   const taskInfo = !isCompleted ? INTERACTIVE_TASKS[currentTask - 1] : null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 max-w-md w-[calc(100%-3rem)] bg-slate-950/95 border-2 border-emerald-400 rounded-2xl p-4 shadow-[0_0_40px_rgba(16,185,129,0.35)] backdrop-blur-md text-white select-none pointer-events-auto transition-all duration-300">
+    <div className="fixed top-16 right-4 z-40 w-[420px] max-w-[calc(100vw-32px)] bg-slate-950/95 border-2 border-emerald-400 rounded-2xl p-4 shadow-[0_0_40px_rgba(16,185,129,0.35)] backdrop-blur-md text-white select-none pointer-events-auto transition-all duration-300">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-3">
         <div className="flex items-center gap-2">
@@ -72,7 +65,7 @@ export const InteractiveTourCoach: React.FC<InteractiveTourCoachProps> = ({
           </div>
           <div>
             <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 font-bold block">
-              {isCompleted ? 'COACHING COMPLETE' : `TOUR STOP ${currentTask} OF 5 • SEOC BRIEFING`}
+              {isCompleted ? 'COACHING COMPLETE' : `TOUR STOP ${currentTask} OF 4 • SEOC BRIEFING`}
             </span>
             <h3 className="text-xs font-bold text-white tracking-tight">
               {isCompleted ? 'Command Readiness Verified' : taskInfo?.title}
@@ -91,7 +84,7 @@ export const InteractiveTourCoach: React.FC<InteractiveTourCoachProps> = ({
 
       {/* Progress Dots */}
       <div className="flex items-center gap-1.5 mb-3">
-        {[1, 2, 3, 4, 5].map((t) => (
+        {[1, 2, 3, 4].map((t) => (
           <div
             key={t}
             className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${

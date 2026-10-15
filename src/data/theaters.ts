@@ -18,6 +18,7 @@ export interface TheaterChokePoint {
   lon: number;
   trapped_villages_count: number;
   exposed_meters: number;
+  breachWidthMeters?: number;
   spans_count: number;
   baseline_km: number;
   detour_km: number;
@@ -25,6 +26,18 @@ export interface TheaterChokePoint {
   villages: TheaterVillage[];
   nearest_hospital_id: string;
   failure_type?: string;
+
+  // Real-world Dry/Wet physical GPS coordinates & SRTM elevation (m ASL)
+  villageOriginCoords?: [number, number]; // 41m ASL - Dry High Ground
+  villageElevationAsl?: number;
+  dryRoadheadNorthCoords?: [number, number]; // 29m ASL - Dry Road Edge 600m before water
+  dryRoadheadElevationAsl?: number;
+  wetBreachCenterCoords?: [number, number]; // 17m ASL - Submerged Channel
+  wetBreachElevationAsl?: number;
+  dryAbutmentSouthCoords?: [number, number]; // 28m ASL - Dry Road Edge after water
+  dryAbutmentElevationAsl?: number;
+  hospitalDestCoords?: [number, number]; // 34m ASL - Dry City Trauma Center
+  hospitalElevationAsl?: number;
 }
 
 export interface TheaterHospital {
@@ -151,6 +164,33 @@ export const INTERVENTION_TOOLS = {
   },
 } as const;
 
+export function getChokePhysicsCoords(cp: TheaterChokePoint, hosp?: TheaterHospital) {
+  const villageOriginCoords: [number, number] =
+    cp.villageOriginCoords || (cp.villages?.[0] ? [cp.villages[0].lat, cp.villages[0].lon] : [cp.lat + 0.014, cp.lon + 0.012]);
+  const dryRoadheadNorthCoords: [number, number] =
+    cp.dryRoadheadNorthCoords || [cp.lat + 0.0035, cp.lon + 0.003];
+  const wetBreachCenterCoords: [number, number] =
+    cp.wetBreachCenterCoords || [cp.lat, cp.lon];
+  const dryAbutmentSouthCoords: [number, number] =
+    cp.dryAbutmentSouthCoords || [cp.lat - 0.0035, cp.lon - 0.003];
+  const hospitalDestCoords: [number, number] =
+    cp.hospitalDestCoords || (hosp ? [hosp.lat, hosp.lon] : [cp.lat - 0.04, cp.lon - 0.03]);
+
+  return {
+    villageOriginCoords,
+    villageElevationAsl: cp.villageElevationAsl ?? 41,
+    dryRoadheadNorthCoords,
+    dryRoadheadElevationAsl: cp.dryRoadheadElevationAsl ?? 29,
+    wetBreachCenterCoords,
+    wetBreachElevationAsl: cp.wetBreachElevationAsl ?? 17,
+    dryAbutmentSouthCoords,
+    dryAbutmentElevationAsl: cp.dryAbutmentElevationAsl ?? 28,
+    hospitalDestCoords,
+    hospitalElevationAsl: cp.hospitalElevationAsl ?? 34,
+    breachWidthMeters: cp.breachWidthMeters ?? cp.exposed_meters ?? 48,
+  };
+}
+
 export const THEATERS: Record<string, TheaterData> = {
   silchar: {
     id: 'silchar',
@@ -184,12 +224,13 @@ export const THEATERS: Record<string, TheaterData> = {
         lat: 24.872,
         lon: 92.845,
         trapped_villages_count: 27,
-        exposed_meters: 48,
+        exposed_meters: 38,
+        breachWidthMeters: 38,
         spans_count: 3,
         baseline_km: 7.76,
         detour_km: 19.44,
         priority_tier: 'P1 - Immediate',
-        failure_type: 'Bridge Abutment Washout (48m Span Gap)',
+        failure_type: 'Bridge Abutment Washout (38m River Gap)',
         villages: [
           { id: 'v_bin', name: 'Binnākāndi', lat: 24.885, lon: 92.855, population: 4200 },
           { id: 'v_tol', name: 'Tolengram', lat: 24.892, lon: 92.861, population: 3100 },
@@ -197,64 +238,107 @@ export const THEATERS: Record<string, TheaterData> = {
           { id: 'v_son', name: 'Sonāimukh', lat: 24.865, lon: 92.862, population: 2800 },
         ],
         nearest_hospital_id: 'valley',
+        villageOriginCoords: [24.885, 92.855],
+        villageElevationAsl: 41,
+        dryRoadheadNorthCoords: [24.876, 92.848],
+        dryRoadheadElevationAsl: 29,
+        wetBreachCenterCoords: [24.872, 92.845],
+        wetBreachElevationAsl: 17,
+        dryAbutmentSouthCoords: [24.868, 92.841],
+        dryAbutmentElevationAsl: 28,
+        hospitalDestCoords: [24.812, 92.791],
+        hospitalElevationAsl: 34,
+      },
+      {
+        id: 'korkoli_causeway',
+        road_name: 'Korkoli Submerged Causeway',
+        rank: 2,
+        lat: 24.845,
+        lon: 92.812,
+        trapped_villages_count: 14,
+        exposed_meters: 310,
+        breachWidthMeters: 310,
+        spans_count: 2,
+        baseline_km: 4.5,
+        detour_km: 16.8,
+        priority_tier: 'P1 - Immediate',
+        failure_type: 'Submerged Causeway (310m Floodplain Inundation)',
+        villages: [
+          { id: 'v_kor_1', name: 'Korkoli East', lat: 24.851, lon: 92.818, population: 2200 },
+          { id: 'v_kor_2', name: 'Korkoli Tea Garden', lat: 24.858, lon: 92.825, population: 1750 },
+        ],
+        nearest_hospital_id: 'south_city',
+        villageOriginCoords: [24.851, 92.818],
+        villageElevationAsl: 42,
+        dryRoadheadNorthCoords: [24.848, 92.815],
+        dryRoadheadElevationAsl: 27,
+        wetBreachCenterCoords: [24.845, 92.812],
+        wetBreachElevationAsl: 16,
+        dryAbutmentSouthCoords: [24.840, 92.808],
+        dryAbutmentElevationAsl: 26,
+        hospitalDestCoords: [24.798, 92.788],
+        hospitalElevationAsl: 33,
       },
       {
         id: 'harinagar',
         road_name: 'Sonai Road Corridor',
-        rank: 2,
+        rank: 3,
         lat: 24.895,
         lon: 92.868,
         trapped_villages_count: 22,
-        exposed_meters: 310,
+        exposed_meters: 45,
+        breachWidthMeters: 45,
         spans_count: 2,
         baseline_km: 8.2,
         detour_km: 21.3,
-        priority_tier: 'P1 - Immediate',
-        failure_type: 'Submerged Highway Causeway (1.4m Overtopping Water)',
+        priority_tier: 'P2 - Secondary',
+        failure_type: 'Submerged Highway Causeway (45m Overtopping Water)',
         villages: [
           { id: 'v_har_baz', name: 'Harinagar Bazar', lat: 24.905, lon: 92.875, population: 3800 },
           { id: 'v_dalu', name: 'Dalu Gaon', lat: 24.912, lon: 92.880, population: 2900 },
           { id: 'v_dig', name: 'Digarkhal Outpost', lat: 24.899, lon: 92.889, population: 1950 },
         ],
         nearest_hospital_id: 'valley',
-      },
-      {
-        id: 'korkoli_causeway',
-        road_name: 'Badarpur Ghat Link',
-        rank: 3,
-        lat: 24.845,
-        lon: 92.812,
-        trapped_villages_count: 14,
-        exposed_meters: 32,
-        spans_count: 2,
-        baseline_km: 4.5,
-        detour_km: 16.8,
-        priority_tier: 'P2 - Secondary',
-        failure_type: 'Culvert Scour & Embankment Breach (32m Gap)',
-        villages: [
-          { id: 'v_kor_1', name: 'Korkoli East', lat: 24.851, lon: 92.818, population: 2200 },
-          { id: 'v_kor_2', name: 'Korkoli Tea Garden', lat: 24.858, lon: 92.825, population: 1750 },
-        ],
-        nearest_hospital_id: 'smch',
+        villageOriginCoords: [24.905, 92.875],
+        villageElevationAsl: 40,
+        dryRoadheadNorthCoords: [24.898, 92.871],
+        dryRoadheadElevationAsl: 29,
+        wetBreachCenterCoords: [24.895, 92.868],
+        wetBreachElevationAsl: 18,
+        dryAbutmentSouthCoords: [24.891, 92.864],
+        dryAbutmentElevationAsl: 28,
+        hospitalDestCoords: [24.812, 92.791],
+        hospitalElevationAsl: 34,
       },
       {
         id: 'borkhola_link',
-        road_name: 'Udharbond Link',
+        road_name: 'Borkhola Feeder Culvert',
         rank: 4,
         lat: 24.920,
         lon: 92.795,
         trapped_villages_count: 11,
-        exposed_meters: 60,
+        exposed_meters: 42,
+        breachWidthMeters: 42,
         spans_count: 1,
         baseline_km: 5.1,
         detour_km: 18.2,
         priority_tier: 'P2 - Secondary',
-        failure_type: 'Flash Mudflow & Road Slip (60m Blockage)',
+        failure_type: 'Culvert Scour & Road Slip (42m Gap)',
         villages: [
           { id: 'v_bor_1', name: 'Borkhola Bazar', lat: 24.931, lon: 92.805, population: 3100 },
           { id: 'v_bor_2', name: 'Rani Colony', lat: 24.939, lon: 92.812, population: 1400 },
         ],
-        nearest_hospital_id: 'valley',
+        nearest_hospital_id: 'smch',
+        villageOriginCoords: [24.931, 92.805],
+        villageElevationAsl: 39,
+        dryRoadheadNorthCoords: [24.924, 92.799],
+        dryRoadheadElevationAsl: 28,
+        wetBreachCenterCoords: [24.920, 92.795],
+        wetBreachElevationAsl: 17,
+        dryAbutmentSouthCoords: [24.915, 92.792],
+        dryAbutmentElevationAsl: 27,
+        hospitalDestCoords: [24.776, 92.795],
+        hospitalElevationAsl: 35,
       },
     ],
     hospitals: [

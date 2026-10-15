@@ -148,6 +148,9 @@ interface Step3ReliefCohortsProps {
   onAdvanceToStep4?: () => void;
   showCampsOnMap?: boolean;
   onToggleShowCamps?: () => void;
+  onFocusVillage?: (village: { lat: number; lon: number; name: string }) => void;
+  onFocusCamp?: (camp: { lat: number; lon: number; name: string }) => void;
+  panelWidth?: number;
 }
 
 export const Step3ReliefCohorts: React.FC<Step3ReliefCohortsProps> = ({
@@ -155,6 +158,9 @@ export const Step3ReliefCohorts: React.FC<Step3ReliefCohortsProps> = ({
   onAdvanceToStep4,
   showCampsOnMap = true,
   onToggleShowCamps,
+  onFocusVillage,
+  onFocusCamp,
+  panelWidth = 430,
 }) => {
   const [filterType, setFilterType] = useState<'all' | 'dialysis' | 'maternal' | 'camps'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -311,7 +317,8 @@ export const Step3ReliefCohorts: React.FC<Step3ReliefCohortsProps> = ({
           {DRY_RELIEF_CAMPS.map((camp) => (
             <div
               key={camp.id}
-              className="p-3 bg-slate-900/90 border border-slate-800 rounded-xl space-y-1.5"
+              onClick={() => onFocusCamp?.({ lat: camp.lat, lon: camp.lon, name: camp.name })}
+              className="p-3 bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800 hover:border-emerald-500/60 rounded-xl space-y-1.5 cursor-pointer transition-colors"
             >
               <div className="flex items-start justify-between">
                 <div>
@@ -351,7 +358,8 @@ export const Step3ReliefCohorts: React.FC<Step3ReliefCohortsProps> = ({
           {filteredVillages.map((v) => (
             <div
               key={v.id}
-              className="p-3 bg-slate-900/80 border border-slate-800 rounded-xl space-y-2"
+              onClick={() => onFocusVillage?.({ lat: v.lat, lon: v.lon, name: v.name })}
+              className="p-3 bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-amber-500/60 rounded-xl space-y-2 cursor-pointer transition-colors"
             >
               <div className="flex items-start justify-between">
                 <div>

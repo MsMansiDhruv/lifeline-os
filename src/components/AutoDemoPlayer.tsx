@@ -21,43 +21,35 @@ export interface DemoScene {
 export const AUTO_DEMO_SCENES: DemoScene[] = [
   {
     id: 1,
-    timeRange: 'Scene 1 • 0:00 - 0:12',
-    durationSeconds: 12,
-    title: 'The Cut-Edge Crisis: JT Road Breach',
+    timeRange: 'Scene 1 • 0:00 - 0:14',
+    durationSeconds: 14,
+    title: 'Step 1: Diagnose Breaches & Tarjan Cut-Edges',
     script:
-      'Standard flood maps only show static blue water. Lifeline OS isolates single-point-of-failure bridges using Tarjan cut-edge graph math. At JT Road here, a single breach cuts off 27 villages and causes a critical 65-minute trauma delay.',
+      'Standard flood maps only show static blue water. Lifeline OS isolates single-point-of-failure bridges using Tarjan cut-edge graph math. At JT Road here, a 38-meter breach leaves 27 villages trapped with a critical 65-minute trauma delay.',
   },
   {
     id: 2,
-    timeRange: 'Scene 2 • 0:12 - 0:24',
-    durationSeconds: 12,
-    title: '16T Heavy Truck Axle Breakdown',
+    timeRange: 'Scene 2 • 0:14 - 0:28',
+    durationSeconds: 14,
+    title: 'Step 2: Hospital ICU Surge & Vulnerable Cohorts',
     script:
-      'Vehicle axle physics matter in disaster relief. Switching to 16-ton food trucks causes weak rural mud tracks in Korkoli and Borkhola to fail, compounding bottlenecks from 4 up to 6 critical severed corridors across the district.',
+      'Road cuts forcibly divert casualties into un-flooded facilities. Valley Hospital suffers 191% critical ICU overload. 14 renal dialysis patients and 38 high-risk maternal cases are stranded, while PHC cold-chain batteries have only 3.5 hours remaining.',
   },
   {
     id: 3,
-    timeRange: 'Scene 3 • 0:24 - 0:38',
-    durationSeconds: 14,
-    title: 'Deploy ₹72L PWD Bailey Bridge',
+    timeRange: 'Scene 3 • 0:28 - 0:44',
+    durationSeconds: 16,
+    title: 'Step 3: Physical Counterfactuals & 60m Rule',
     script:
-      'Commanders test fixes live in the sandbox. Deploying a ₹72 Lakh Indian Army Bailey Bridge across JT Road instantly reconnects 27 villages with a continuous green route to Valley Hospital, dropping trapped villages from 74 to 47.',
+      'Civil engineering physics are enforced: a 310m causeway cannot build a Bailey bridge! But at JT Road, deploying a ₹72 Lakh Class-40 Bailey bridge across the 38-meter gap anchors between dry abutments, restoring Golden Hour to 22 minutes and dropping hospital overload to safe green.',
   },
   {
     id: 4,
-    timeRange: 'Scene 4 • 0:38 - 0:52',
-    durationSeconds: 14,
-    title: 'Deploy Mobile Medical Health Booth',
+    timeRange: 'Scene 4 • 0:44 - 1:00',
+    durationSeconds: 16,
+    title: 'Step 4: Gemini 2.5 Flash MCP Work-Orders & DM Sanction',
     script:
-      'To prevent urban hospital collapse, commanders deploy a ₹15 Lakh Mobile Health Booth at Harinagar. Treating displaced flood patients at the bridgehead relieves Valley Hospital to 100% stable safe capacity, turning its status emerald green.',
-  },
-  {
-    id: 5,
-    timeRange: 'Scene 5 • 0:52 - 1:10',
-    durationSeconds: 18,
-    title: 'Full Sanction & Dispatch Ticket with NDMA Approval',
-    script:
-      'Finally, Lifeline OS synthesizes the operational plan into an official State Disaster Response Fund requisition ticket with NDMA digital approval seal, locking engineering, marine, and drone assets directly onto the tactical map.',
+      'Finally, Gemini 2.5 Flash executes deterministic Model Context Protocol tool calls with zero coordinate hallucination. The District Magistrate digitally signs SDRF Form-3B, locking engineering, marine, and drone assets directly into motion.',
   },
 ];
 
@@ -158,7 +150,7 @@ export const AutoDemoPlayer: React.FC<AutoDemoPlayerProps> = ({
   };
 
   return (
-    <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 w-[720px] max-w-[94vw] bg-slate-950/95 border-2 border-cyan-400 rounded-2xl p-4 shadow-[0_0_50px_rgba(34,211,238,0.35)] backdrop-blur-md text-white select-none pointer-events-auto animate-in fade-in slide-in-from-bottom-3">
+    <div className="fixed top-16 right-4 z-40 w-[420px] max-w-[calc(100vw-32px)] bg-slate-950/95 border-2 border-cyan-400 rounded-2xl p-4 shadow-[0_0_50px_rgba(34,211,238,0.35)] backdrop-blur-md text-white select-none pointer-events-auto animate-in fade-in slide-in-from-top-3">
       {/* Header Bar */}
       <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2.5">
         <div className="flex items-center gap-2">

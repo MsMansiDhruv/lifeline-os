@@ -17,6 +17,7 @@ import {
   Clock,
   Sun,
   Moon,
+  Cloud,
 } from 'lucide-react';
 import { FleetMode } from '../types';
 import { THEATERS, TheaterData, createCustomTheater, InterventionType } from '../data/theaters';
@@ -29,6 +30,7 @@ interface HeaderProps {
   statusFilter: string;
   onFilterChange: (filter: string) => void;
   onOpenTelemetry: () => void;
+  onOpenCloudArchitecture?: () => void;
   activeTheaterId: string;
   onSelectTheater: (theaterId: string) => void;
   customTheater: TheaterData | null;
@@ -52,6 +54,7 @@ export const Header: React.FC<HeaderProps> = ({
   statusFilter,
   onFilterChange,
   onOpenTelemetry,
+  onOpenCloudArchitecture,
   activeTheaterId,
   onSelectTheater,
   customTheater,
@@ -302,48 +305,46 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 min-h-16 max-h-16 z-30 bg-slate-950/95 backdrop-blur-xl border-b border-slate-800 px-3 sm:px-4 flex items-center justify-between gap-2.5 shadow-xl select-none overflow-x-auto scrollbar-none flex-nowrap">
-      {/* Left Section: Logo, Title, Theater Switcher & Search Bar */}
-      <div className="flex items-center gap-2 shrink-0">
-        {/* Logo & Title */}
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="w-8 h-8 rounded-xl bg-slate-900 border border-slate-700/80 flex items-center justify-center shadow-md text-cyan-400 shrink-0">
-            <Shield className="w-4 h-4 text-cyan-400" />
+    <header className="fixed top-0 left-0 right-0 h-14 min-h-14 max-h-14 z-40 bg-slate-950/95 backdrop-blur-xl border-b border-slate-800 px-3 flex items-center justify-between gap-2 shadow-xl select-none flex-nowrap">
+      {/* Left Zone (shrink-0 flex items-center gap-2): Logo + Theater Dropdown + Live Search */}
+      <div className="shrink-0 flex items-center gap-2">
+        {/* App Logo */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <div className="w-7 h-7 rounded-lg bg-slate-900 border border-slate-700/80 flex items-center justify-center shadow-md text-cyan-400 shrink-0">
+            <Shield className="w-3.5 h-3.5 text-cyan-400" />
           </div>
-          <div>
-            <h1 className="text-sm font-extrabold text-white tracking-tight flex items-center gap-1.5 leading-none">
+          <div className="flex items-center gap-1">
+            <h1 className="text-xs sm:text-sm font-extrabold text-white tracking-tight flex items-center gap-1 leading-none">
               Lifeline OS
-              <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-blue-950 text-blue-400 border border-blue-800 uppercase">
-                Defense GIS
-              </span>
             </h1>
-            <p className="text-[9px] text-slate-400 truncate max-w-[150px] font-mono leading-tight mt-0.5">
-              {currentTheater.authorityShortName || 'Civil Defense'}
-            </p>
+            <span className="text-[8px] font-mono px-1 py-0.2 rounded bg-blue-950 text-blue-400 border border-blue-800 uppercase hidden sm:inline">
+              Defense GIS
+            </span>
           </div>
         </div>
 
-        <div className="h-6 w-px bg-slate-800 hidden md:block" />
+        <div className="h-5 w-px bg-slate-800 hidden md:block" />
 
-        {/* Theater Dropdown (No Cartoon Emojis) */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          <Globe className="w-3.5 h-3.5 text-blue-400" />
+        {/* Compact Theater Dropdown (w-48 truncate) */}
+        <div className="flex items-center gap-1 shrink-0">
+          <Globe className="w-3 h-3 text-blue-400 shrink-0" />
           <select
             value={activeTheaterId}
             onChange={(e) => onSelectTheater(e.target.value)}
-            className="bg-slate-900 text-white border border-slate-700 rounded-lg px-2 py-1 text-xs font-mono font-semibold cursor-pointer focus:outline-none focus:border-blue-500"
+            className="w-40 sm:w-48 truncate bg-slate-900 text-white border border-slate-700 rounded-lg px-2 py-1 text-xs font-mono font-semibold cursor-pointer focus:outline-none focus:border-cyan-500"
+            title="Switch Operational Disaster Theater"
           >
-            <option value="silchar">Silchar, Assam (Barak River)</option>
+            <option value="silchar">Silchar, Assam (Barak)</option>
             <option value="nepal">Gorkha, Nepal (Budhi Gandaki)</option>
-            <option value="wayanad">Wayanad, Kerala (Chaliyar Basin)</option>
+            <option value="wayanad">Wayanad, Kerala (Chaliyar)</option>
             {customTheater && <option value="custom">{customTheater.name}</option>}
           </select>
         </div>
 
-        {/* Real-Time Location Search with Autocomplete */}
-        <div ref={dropdownRef} className="relative hidden xl:block min-w-[170px] max-w-xs">
+        {/* Compact Live City Search Input (w-44) */}
+        <div ref={dropdownRef} className="relative hidden lg:block w-36 sm:w-44">
           <form onSubmit={handleSearchSubmit} className="flex items-center gap-1">
-            <div className="relative flex-1">
+            <div className="relative w-full">
               <Search className="w-3 h-3 text-slate-400 absolute left-2 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
@@ -353,7 +354,7 @@ export const Header: React.FC<HeaderProps> = ({
                   if (suggestions.length > 0) setShowSuggestions(true);
                 }}
                 placeholder="Search city/river..."
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-7 pr-2 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono"
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-6 pr-2 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono"
               />
             </div>
             {isSearching && (
@@ -389,170 +390,149 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Middle & Right Section: Compact KPI Pills & Interactive Controls */}
-      <div className="flex items-center gap-2 shrink-0">
-        {/* KPI Pill 1: Bottlenecks (Dynamic Critical / Total) */}
-        <div className="bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg text-xs font-mono flex items-center gap-1.5 shadow-sm shrink-0">
-          <ShieldAlert className={`w-3.5 h-3.5 ${dynamicBottlenecksCritical > 0 ? 'text-rose-400' : 'text-emerald-400'}`} />
-          <span className="text-slate-400 hidden sm:inline">Bottlenecks:</span>
+      {/* Center Zone: Compact Unified Telemetry Strip (hidden xl:flex items-center gap-1.5) */}
+      <div className="hidden xl:flex items-center gap-1.5 shrink-0">
+        {/* 1. Chokes */}
+        <div className="text-[11px] px-2 py-1 rounded bg-slate-900 border border-slate-800 whitespace-nowrap font-mono flex items-center gap-1 text-slate-300">
+          <span>🌉</span>
+          <span className="text-slate-400">Chokes:</span>
           <strong className={dynamicBottlenecksCritical > 0 ? 'text-rose-400 font-bold' : 'text-emerald-400 font-bold'}>
-            {dynamicBottlenecksCritical} Critical
+            {dynamicBottlenecksCritical}
           </strong>
-          <span className="text-slate-500 text-[10px]">/ {baseTotalRoads} {isHeavy ? '(+63 Axle)' : 'Total'}</span>
         </div>
 
-        {/* KPI Pill 2: Villages Trapped & Saved across ALL corridors */}
-        <div className="bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg text-xs font-mono flex items-center gap-1.5 shadow-sm shrink-0">
-          <Users className="w-3.5 h-3.5 text-slate-400" />
-          <span className="text-slate-400 hidden sm:inline">Trapped:</span>
+        {/* 2. Trapped & Reconnected */}
+        <div className="text-[11px] px-2 py-1 rounded bg-slate-900 border border-slate-800 whitespace-nowrap font-mono flex items-center gap-1 text-slate-300">
+          <span>🏘️</span>
+          <span className="text-slate-400">Trapped:</span>
           <strong className={dynamicTrappedLeft === 0 ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
-            {dynamicTrappedLeft === 0 ? '0 Left' : `${dynamicTrappedLeft} Left`}
+            {dynamicTrappedLeft}
           </strong>
-          {totalSavedVillages > 0 && (
-            <span className="flex items-center gap-1 text-[10px] text-emerald-300 font-bold bg-emerald-950/90 px-1.5 py-0.2 rounded border border-emerald-600 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.3)]">
-              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-              {totalSavedVillages} Reconnected
-            </span>
-          )}
+          <span className="text-emerald-400 font-semibold text-[10px]">
+            (✅ {totalSavedVillages})
+          </span>
         </div>
 
-        {/* KPI Pill 3: Influx (Hospital Overload >130% Capacity) */}
-        <div className="bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg text-xs font-mono hidden md:flex items-center gap-1.5 shadow-sm shrink-0">
-          <Activity className={`w-3.5 h-3.5 ${overloadedHospitalsCount > 0 ? 'text-rose-400' : 'text-emerald-400'}`} />
-          <span className="text-slate-400">Influx:</span>
-          <strong className={overloadedHospitalsCount === 0 ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
-            {overloadedHospitalsCount > 0 ? `${overloadedHospitalsCount} Critical` : '0 Critical'}
+        {/* 3. ER Surge & Golden Hour */}
+        <div className="text-[11px] px-2 py-1 rounded bg-slate-900 border border-slate-800 whitespace-nowrap font-mono flex items-center gap-1 text-slate-300">
+          <span>🏥</span>
+          <span className="text-slate-400">ER Surge:</span>
+          <strong className={overloadedHospitalsCount > 0 ? 'text-rose-400 font-bold' : 'text-emerald-400 font-bold'}>
+            {overloadedHospitalsCount} Critical
           </strong>
-          {relievedClinics > 0 && (
-            <span className="flex items-center gap-1 text-[10px] text-emerald-400 font-bold bg-emerald-950/80 px-1.5 py-0.2 rounded border border-emerald-700">
-              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-              {relievedClinics} Relieved
-            </span>
-          )}
+          <span className="text-slate-600">|</span>
+          <span>⏱️</span>
+          <span className={dynamicTrappedLeft > 0 ? 'text-rose-400 font-bold' : 'text-emerald-400 font-bold'}>
+            {dynamicTrappedLeft > 0 ? (isHeavy ? '95m' : '65m') : (isHeavy ? '35m' : '22m')}
+          </span>
         </div>
+      </div>
 
-        {/* KPI Pill 4: Golden Hour Trauma / Heavy Supply Access (NDMA Standard) */}
-        <div className="bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg text-xs font-mono hidden lg:flex items-center gap-1.5 shadow-sm shrink-0">
-          <Clock className="w-3.5 h-3.5 text-slate-400" />
-          <span className="text-slate-400">Access:</span>
-          {dynamicTrappedLeft > 0 ? (
-            <span className="text-rose-400 font-bold flex items-center gap-1 text-[11px]">
-              ❌ {isHeavy ? '95 Mins (IRC Detour)' : '65 Mins (Trauma Delay)'}
-            </span>
-          ) : (
-            <span className="text-emerald-400 font-bold flex items-center gap-1 text-[11px]">
-              ✅ {isHeavy ? '35 Mins (16T Restored)' : '22 Mins (Golden Hour)'}
-            </span>
-          )}
-        </div>
-
-        {/* Day / Night Disaster Ops Mode Toggle */}
-        {onToggleOpsMode && (
-          <button
-            onClick={onToggleOpsMode}
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] font-bold font-mono transition-all cursor-pointer border shrink-0 ${
-              opsMode === 'night'
-                ? 'bg-indigo-950 text-indigo-300 border-indigo-500 shadow-[0_0_12px_rgba(99,102,241,0.4)]'
-                : 'bg-amber-950/60 hover:bg-amber-900/80 text-amber-300 border-amber-600/70'
-            }`}
-            title={
-              opsMode === 'night'
-                ? 'Night Operations: Boat Ferries Grounded due to zero river visibility; FLIR Thermal Drones & 24x7 Health Booths active'
-                : 'Day Operations: All surface routes, boat ferries, and air assets authorized'
-            }
-          >
-            {opsMode === 'night' ? (
-              <>
-                <Moon className="w-3.5 h-3.5 text-indigo-400" />
-                <span className="hidden sm:inline">🌙 Night</span>
-              </>
-            ) : (
-              <>
-                <Sun className="w-3.5 h-3.5 text-amber-400" />
-                <span className="hidden sm:inline">☀️ Day</span>
-              </>
-            )}
-          </button>
-        )}
-
-        {/* Fleet Mode Selector Toggle (4x4 Ambulance vs 16T Truck) */}
+      {/* Right Zone (shrink-0 flex items-center gap-1.5 — NEVER HIDDEN OR PUSHED OFF-SCREEN!) */}
+      <div className="shrink-0 flex items-center gap-1.5">
+        {/* 1. Vehicle Toggle: [ 🚑 4x4 | 🚛 16T ] */}
         <div className="flex items-center bg-slate-900 p-0.5 rounded-lg border border-slate-800 text-xs font-mono shrink-0">
           <button
             onClick={() => onFleetChange('Light Emergency (Ambulance/4x4)')}
-            className={`px-2 py-0.5 rounded font-semibold text-[11px] transition-all cursor-pointer flex items-center gap-1 ${
+            className={`px-2 py-1 rounded font-semibold text-[11px] transition-all cursor-pointer flex items-center gap-1 ${
               !isHeavy
                 ? 'bg-blue-600 text-white shadow-sm'
                 : 'text-slate-400 hover:text-white'
             }`}
-            title="Light Vehicle Axle (Ambulance/4x4) — 183 Total Roads, 4 Critical"
+            title="4x4 Ambulance Mode (183 Roads, 4 Critical)"
           >
-            <Truck className="w-3 h-3" />
-            <span>4x4</span>
+            <span>🚑 4x4</span>
           </button>
           <div className="relative">
             <button
               onClick={() => onFleetChange('Heavy Supply (Truck/Bus)')}
-              className={`px-2 py-0.5 rounded font-semibold text-[11px] transition-all cursor-pointer flex items-center gap-1 ${
+              className={`px-2 py-1 rounded font-semibold text-[11px] transition-all cursor-pointer flex items-center gap-1 ${
                 isHeavy
                   ? 'bg-amber-600 text-white shadow-sm'
                   : 'text-slate-400 hover:text-white'
               } ${
                 interactiveTourTask === 2
-                  ? 'ring-4 ring-emerald-400 shadow-[0_0_20px_#10b981] animate-pulse bg-emerald-950 text-emerald-300'
+                  ? 'ring-2 ring-emerald-400 shadow-[0_0_15px_#10b981] animate-pulse bg-emerald-950 text-emerald-300'
                   : ''
               }`}
-              title="16T Heavy Truck Axle (IRC:6 Weight Limit) — 246 Total Roads, 6 Critical"
+              title="16T Heavy Truck Mode (IRC:6 Weight Limit — 246 Roads, 6 Critical)"
             >
-              <Truck className="w-3 h-3" />
-              <span>16T</span>
+              <span>🚛 16T</span>
             </button>
             {interactiveTourTask === 2 && (
               <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 z-50 bg-emerald-400 text-slate-950 font-mono font-bold text-[9px] px-2 py-0.5 rounded-full shadow-[0_0_12px_#10b981] whitespace-nowrap animate-bounce flex items-center gap-1">
-                <span>👆 CLICK 16T TRUCK</span>
+                <span>👆 CLICK 16T</span>
               </div>
             )}
           </div>
         </div>
 
-        {/* Button A: [ 🎯 Interactive Tour ] */}
+        {/* 2. Prominent Emerald Button: [ 🎯 Guided Tour ] */}
         {(onStartInteractiveTour || onStartTour) && (
           <button
             onClick={onStartInteractiveTour || onStartTour}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold font-mono transition-all cursor-pointer border shrink-0 ${
-              isInteractiveTourActive
-                ? 'bg-emerald-600 text-slate-950 border-emerald-400 shadow-[0_0_15px_#10b981]'
-                : 'bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border-emerald-600/80 shadow-[0_0_12px_rgba(16,185,129,0.25)]'
+            className={`bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-3 py-1.5 rounded-lg text-xs shadow-lg shrink-0 flex items-center gap-1.5 cursor-pointer transition-all ${
+              isInteractiveTourActive ? 'ring-2 ring-white shadow-[0_0_15px_#10b981]' : ''
             }`}
-            title="Hands-on interactive coaching where you click highlighted buttons"
+            title="Hands-on interactive guided tour walking through all 5 steps"
           >
-            <Target className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="hidden sm:inline">Interactive Tour</span>
-            <span className="sm:hidden">Tour</span>
+            <Target className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline font-mono">Guided Tour</span>
+            <span className="sm:hidden font-mono">Tour</span>
           </button>
         )}
 
-        {/* Button B: [ ▶️ Run Auto-Demo ] */}
+        {/* 3. Prominent Cyan Button: [ ▶️ Auto-Demo ] */}
         {onStartAutoDemo && (
           <button
             onClick={onStartAutoDemo}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold font-mono transition-all cursor-pointer border shrink-0 ${
-              isAutoDemoActive
-                ? 'bg-cyan-500 text-slate-950 border-cyan-300 shadow-[0_0_15px_#06b6d4]'
-                : 'bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 border-cyan-600/80 shadow-[0_0_12px_rgba(6,182,212,0.25)]'
+            className={`bg-cyan-600 hover:bg-cyan-500 text-white font-semibold px-3 py-1.5 rounded-lg text-xs shadow-lg shrink-0 flex items-center gap-1.5 cursor-pointer transition-all ${
+              isAutoDemoActive ? 'ring-2 ring-white shadow-[0_0_15px_#06b6d4]' : ''
             }`}
-            title="100% hands-free self-playing presentation with Teleprompter & Voice"
+            title="100% hands-free autonomous presentation with speech narration"
           >
-            <Play className="w-3.5 h-3.5 fill-current text-cyan-400" />
-            <span className="hidden sm:inline">Run Auto-Demo</span>
-            <span className="sm:hidden">Demo</span>
+            <Play className="w-3.5 h-3.5 fill-current" />
+            <span className="hidden sm:inline font-mono">Auto-Demo</span>
+            <span className="sm:hidden font-mono">Demo</span>
+          </button>
+        )}
+
+        {/* 4. Cloud Stack Icon Button: [ ☁️ Stack ] */}
+        {onOpenCloudArchitecture && (
+          <button
+            onClick={onOpenCloudArchitecture}
+            className="bg-blue-950/80 hover:bg-blue-900 text-cyan-300 border border-cyan-500/60 px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer shrink-0 transition-all shadow-sm"
+            title="Inspect 4-Tier Cloud Run, Firestore, and Gemini MCP Architecture"
+          >
+            <Cloud className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden md:inline">Stack</span>
+          </button>
+        )}
+
+        {/* Day / Night Ops Mode Toggle */}
+        {onToggleOpsMode && (
+          <button
+            onClick={onToggleOpsMode}
+            className={`p-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer border shrink-0 ${
+              opsMode === 'night'
+                ? 'bg-indigo-950 text-indigo-300 border-indigo-500'
+                : 'bg-amber-950/60 hover:bg-amber-900 text-amber-300 border-amber-600/70'
+            }`}
+            title={opsMode === 'night' ? 'Night Operations Active' : 'Day Operations Active'}
+          >
+            {opsMode === 'night' ? (
+              <Moon className="w-3.5 h-3.5 text-indigo-400" />
+            ) : (
+              <Sun className="w-3.5 h-3.5 text-amber-400" />
+            )}
           </button>
         )}
 
         {/* Telemetry Button */}
         <button
           onClick={onOpenTelemetry}
-          className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 text-[11px] cursor-pointer font-mono shrink-0"
-          title="Spatial Graph Telemetry (EPSG:32646)"
+          className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 text-xs cursor-pointer font-mono shrink-0"
+          title="Spatial Graph Telemetry"
         >
           <Cpu className="w-3.5 h-3.5 text-cyan-400" />
         </button>

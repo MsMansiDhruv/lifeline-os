@@ -29,6 +29,16 @@ export interface MapMarker {
 
 export type MapStyleMode = 'vector' | 'street' | 'satellite';
 
+export interface CameraCommand {
+  id: string;
+  type: 'overview' | 'bounds' | 'point';
+  center?: [number, number];
+  zoom?: number;
+  bounds?: [[number, number], [number, number]];
+  duration?: number;
+  paddingLeft?: number;
+}
+
 interface LeafletMapProps {
   theaterId?: string;
   center?: [number, number];
@@ -55,6 +65,9 @@ interface LeafletMapProps {
     costStr?: string;
     timeStr?: string;
   } | null;
+  cameraCommand?: CameraCommand | null;
+  panelWidth?: number;
+  pulsingTarget?: [number, number] | null;
   onResetOverview?: () => void;
 }
 
@@ -71,6 +84,9 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   showLayerControls = true,
   activeChokeId,
   activeInterventionBanner = null,
+  cameraCommand = null,
+  panelWidth = 430,
+  pulsingTarget = null,
   onResetOverview,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -170,12 +186,77 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     };
   }, [theaterId]);
 
-  // Smooth camera fly when theater or focus changes (duration 1.2s per NDMA Commander standard)
+  // Initial Camera Fly when Theater changes
   useEffect(() => {
     if (mapInstanceRef.current) {
       mapInstanceRef.current.flyTo(center, zoom, { duration: 1.2 });
     }
-  }, [center[0], center[1], zoom]);
+  }, [theaterId]);
+
+  // STRICT CAMERA DISCIPLINE: Moves ONLY when an explicit CameraCommand is received!
+  // Rule 1: Step Tab Switching = ZERO Camera Movement
+  // Rule 2: Zoom in ONLY when clicking a specific item
+  // Rule 3: Overview zoom on [Zoom Out: Theater Overview]
+  // Rule 4: Offset target longitude/padding so pin is centered in visible right-hand map canvas!
+  useEffect(() => {
+    if (!mapInstanceRef.current || !cameraCommand) return;
+
+    if (cameraCommand.type === 'overview') {
+      const targetCenter = cameraCommand.center || center;
+      const targetZoom = cameraCommand.zoom || 12;
+      mapInstanceRef.current.flyTo(targetCenter, targetZoom, {
+        duration: cameraCommand.duration ?? 1.1,
+      });
+      return;
+    }
+
+    if (cameraCommand.type === 'bounds' && cameraCommand.bounds) {
+      const padLeft = cameraCommand.paddingLeft ?? (panelWidth + 40);
+      mapInstanceRef.current.flyToBounds(cameraCommand.bounds, {
+        paddingTopLeft: [padLeft, 80],
+        paddingBottomRight: [40, 40],
+        maxZoom: cameraCommand.zoom || 14,
+        duration: cameraCommand.duration ?? 1.1,
+      });
+      return;
+    }
+
+    if (cameraCommand.type === 'point' && cameraCommand.center) {
+      const targetZoom = cameraCommand.zoom || 15;
+      const padLeft = cameraCommand.paddingLeft ?? (panelWidth + 40);
+      const pt = mapInstanceRef.current.project(cameraCommand.center, targetZoom);
+      // Shift center so point appears in visible right half
+      const shiftedPt = pt.subtract([(padLeft - 40) / 2, 0]);
+      const shiftedCenter = mapInstanceRef.current.unproject(shiftedPt, targetZoom);
+      mapInstanceRef.current.flyTo(shiftedCenter, targetZoom, {
+        duration: cameraCommand.duration ?? 0.9,
+      });
+    }
+  }, [cameraCommand?.id]);
+
+  // Pulse effect when a specific marker/coordinate is selected
+  useEffect(() => {
+    if (!mapInstanceRef.current || !pulsingTarget || !markersLayerRef.current) return;
+    const pulseMarker = L.circleMarker([pulsingTarget[0], pulsingTarget[1]], {
+      radius: 18,
+      color: '#38bdf8',
+      weight: 3,
+      fillColor: '#0ea5e9',
+      fillOpacity: 0.35,
+    });
+    pulseMarker.addTo(markersLayerRef.current);
+    const timer = setTimeout(() => {
+      if (markersLayerRef.current && markersLayerRef.current.hasLayer(pulseMarker)) {
+        markersLayerRef.current.removeLayer(pulseMarker);
+      }
+    }, 2800);
+    return () => {
+      clearTimeout(timer);
+      if (markersLayerRef.current && markersLayerRef.current.hasLayer(pulseMarker)) {
+        markersLayerRef.current.removeLayer(pulseMarker);
+      }
+    };
+  }, [pulsingTarget?.[0], pulsingTarget?.[1]]);
 
   // Handle Base Tile Switching
   useEffect(() => {
