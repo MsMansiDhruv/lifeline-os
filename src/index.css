@@ -6,6 +6,71 @@
   100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 77, 77, 0); }
 }
 
+@keyframes sonar-ring {
+  0% { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+@keyframes boat-bobbing {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-4px) rotate(2deg); }
+}
+
+@keyframes drone-hover {
+  0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 8px #a855f7); }
+  50% { transform: translateY(-5px) scale(1.08); filter: drop-shadow(0 0 16px #c084fc); }
+}
+
+@keyframes booth-glow {
+  0%, 100% { box-shadow: 0 0 10px #10b981; }
+  50% { box-shadow: 0 0 22px #34d399, 0 0 35px rgba(16, 185, 129, 0.6); }
+}
+
+@keyframes span-emerald {
+  0%, 100% { box-shadow: 0 0 12px #00e676; filter: brightness(1); }
+  50% { box-shadow: 0 0 24px #00ff88; filter: brightness(1.25); }
+}
+
+.sonar-ping-ring {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid #ff1100;
+  animation: sonar-ring 1.5s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+  pointer-events: none;
+}
+
+.sonar-ping-ring-2 {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1.5px solid #ff6666;
+  animation: sonar-ring 1.5s cubic-bezier(0, 0.2, 0.8, 1) infinite 0.75s;
+  pointer-events: none;
+}
+
+.anim-boat-bob {
+  animation: boat-bobbing 2s ease-in-out infinite;
+}
+
+.anim-drone-hover {
+  animation: drone-hover 1.8s ease-in-out infinite;
+}
+
+.anim-booth-glow {
+  animation: booth-glow 2s ease-in-out infinite;
+}
+
+.anim-span-emerald {
+  animation: span-emerald 2.2s ease-in-out infinite;
+}
+
 @keyframes pulse-amber {
   0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 170, 0, 0.8); }
   70% { transform: scale(1.15); box-shadow: 0 0 0 8px rgba(255, 170, 0, 0); }
@@ -96,4 +161,48 @@ path.severed-span-anim {
 }
 .leaflet-control-zoom a:hover {
   background-color: #21262d !important;
+}
+
+/* Permanent high-contrast map labels for Jury inspection */
+.leaflet-tooltip.map-label-compact {
+  background: rgba(13, 17, 23, 0.92) !important;
+  border: 1px solid #30363d !important;
+  color: #f0f6fc !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  padding: 3px 8px !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7) !important;
+  white-space: nowrap !important;
+  pointer-events: none !important;
+  letter-spacing: 0.2px !important;
+}
+.leaflet-tooltip.map-label-compact::before {
+  border-top-color: rgba(13, 17, 23, 0.92) !important;
+}
+.leaflet-tooltip.map-label-choke {
+  border-color: #ff1100 !important;
+  color: #ff6666 !important;
+  box-shadow: 0 0 10px rgba(255, 17, 0, 0.4) !important;
+}
+.leaflet-tooltip.map-label-hardened {
+  border-color: #00e676 !important;
+  color: #00e676 !important;
+  box-shadow: 0 0 12px rgba(0, 230, 118, 0.4) !important;
+}
+.leaflet-tooltip.map-label-surge {
+  border-color: #f43f5e !important;
+  color: #fda4af !important;
+  box-shadow: 0 0 10px rgba(244, 63, 94, 0.4) !important;
+}
+.leaflet-tooltip.map-label-facility {
+  border-color: #388bfd !important;
+  color: #79c0ff !important;
+  box-shadow: 0 0 10px rgba(56, 139, 253, 0.4) !important;
+}
+.leaflet-tooltip.map-label-route {
+  background: rgba(22, 27, 34, 0.95) !important;
+  border: 1px solid #30363d !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
 }

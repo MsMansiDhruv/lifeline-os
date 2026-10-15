@@ -1,15 +1,28 @@
 import React, { useState } from 'react';
 import { STAGING_HUBS, SETTLEMENTS_LIGHT } from '../../data/disasterData';
 import { StagingHubRecord } from '../../types';
+import { TheaterData } from '../../data/theaters';
 import { LeafletMap } from '../LeafletMap';
 import { Anchor, Download, Navigation, Shield, CheckCircle } from 'lucide-react';
 
-export const PrepositioningTab: React.FC = () => {
+interface PrepositioningTabProps {
+  currentTheater?: TheaterData;
+}
+
+export const PrepositioningTab: React.FC<PrepositioningTabProps> = ({ currentTheater }) => {
   const [selectedHubId, setSelectedHubId] = useState<number | 'all'>('all');
 
+  const theaterHubs: StagingHubRecord[] =
+    currentTheater?.stagingHubs && currentTheater.stagingHubs.length > 0
+      ? currentTheater.stagingHubs
+      : STAGING_HUBS;
+
   const displayHubs = selectedHubId === 'all'
-    ? STAGING_HUBS
-    : STAGING_HUBS.filter((h) => h.hub_id === selectedHubId);
+    ? theaterHubs
+    : theaterHubs.filter((h) => h.hub_id === selectedHubId);
+
+  const authorityName = currentTheater?.authorityName || 'Assam State Disaster Management Authority (ASDMA)';
+  const authorityShort = currentTheater?.authorityShortName || 'Civil Defense';
 
   // Download CSV
   const handleDownloadCsv = () => {
@@ -28,7 +41,7 @@ export const PrepositioningTab: React.FC = () => {
       'Hub Tier',
     ];
 
-    const rows = STAGING_HUBS.map((h) => [
+    const rows = theaterHubs.map((h) => [
       h.hub_id,
       `"${h.hub_name}"`,
       h.node,
@@ -47,7 +60,7 @@ export const PrepositioningTab: React.FC = () => {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', 'asdma_silchar_prepositioned_hubs.csv');
+    link.setAttribute('download', `${currentTheater?.id || 'theater'}_prepositioned_hubs.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -64,15 +77,26 @@ export const PrepositioningTab: React.FC = () => {
       type: 'hub' as const,
       badge: `Base #${h.hub_id}`,
     })),
-    // Isolated Settlements
-    ...SETTLEMENTS_LIGHT.filter((s) => s.modeled_status === 'MODEL_ISOLATED').map((s) => ({
-      lat: s.lat,
-      lon: s.lon,
-      title: `Cut-Off Habitat: ${s.village_name}`,
-      description: `Complete land-route isolation. Requires water/air rescue.`,
-      type: 'isolated' as const,
-      badge: 'ISOLATED',
-    })),
+    // Dynamic Isolated Settlements from currentTheater or Silchar
+    ...(currentTheater && currentTheater.id !== 'silchar'
+      ? currentTheater.chokePoints.flatMap((cp) =>
+          cp.villages.map((v) => ({
+            lat: v.lat,
+            lon: v.lon,
+            title: `Cut-Off Habitat: ${v.name}`,
+            description: `Complete land-route isolation behind ${cp.road_name}.`,
+            type: 'isolated' as const,
+            badge: 'ISOLATED',
+          }))
+        )
+      : SETTLEMENTS_LIGHT.filter((s) => s.modeled_status === 'MODEL_ISOLATED').map((s) => ({
+          lat: s.lat,
+          lon: s.lon,
+          title: `Cut-Off Habitat: ${s.village_name}`,
+          description: `Complete land-route isolation. Requires water/air rescue.`,
+          type: 'isolated' as const,
+          badge: 'ISOLATED',
+        }))),
   ];
 
   // Map Lines: dashed lines from each hub to its assigned settlements
@@ -84,28 +108,51 @@ export const PrepositioningTab: React.FC = () => {
     label?: string;
   }> = [];
 
-  const colors = ['#ffaa00', '#00e5ff', '#00e676'];
+  const colors = ['#ffaa00', '#00e5ff', '#00e676', '#a855f7'];
 
-  displayHubs.forEach((hub, idx) => {
-    const hubColor = colors[idx % colors.length];
-    const assignedNames = hub.assigned_villages_str.split(',').map((v: string) => v.trim().toLowerCase());
-
-    SETTLEMENTS_LIGHT.filter((s) => s.modeled_status === 'MODEL_ISOLATED').forEach((s) => {
-      // Connect if matched
-      if (assignedNames.some((name: string) => s.village_name.toLowerCase().includes(name) || name.includes(s.village_name.toLowerCase()))) {
-        lines.push({
-          points: [
-            [hub.lat, hub.lon],
-            [s.lat, s.lon],
-          ],
-          color: hubColor,
-          dashArray: '6, 8',
-          weight: 3,
-          label: `Rescue Vector: ${hub.hub_name} ➔ ${s.village_name}`,
+  if (currentTheater && currentTheater.id !== 'silchar') {
+    displayHubs.forEach((hub, idx) => {
+      const hubColor = colors[idx % colors.length];
+      const targetChoke = currentTheater.chokePoints[idx % currentTheater.chokePoints.length];
+      if (targetChoke) {
+        targetChoke.villages.forEach((v) => {
+          lines.push({
+            points: [
+              [hub.lat, hub.lon],
+              [v.lat, v.lon],
+            ],
+            color: hubColor,
+            dashArray: '6, 8',
+            weight: 3,
+            label: `Supply Vector: ${hub.hub_name} ➔ ${v.name}`,
+          });
         });
       }
     });
-  });
+  } else {
+    displayHubs.forEach((hub, idx) => {
+      const hubColor = colors[idx % colors.length];
+      const assignedNames = hub.assigned_villages_str.split(',').map((v: string) => v.trim().toLowerCase());
+
+      SETTLEMENTS_LIGHT.filter((s) => s.modeled_status === 'MODEL_ISOLATED').forEach((s) => {
+        if (assignedNames.some((name: string) => s.village_name.toLowerCase().includes(name) || name.includes(s.village_name.toLowerCase()))) {
+          lines.push({
+            points: [
+              [hub.lat, hub.lon],
+              [s.lat, s.lon],
+            ],
+            color: hubColor,
+            dashArray: '6, 8',
+            weight: 3,
+            label: `Rescue Vector: ${hub.hub_name} ➔ ${s.village_name}`,
+          });
+        }
+      });
+    });
+  }
+
+  const mapCenter = currentTheater?.center || [24.83, 92.85];
+  const mapZoom = currentTheater?.zoom || 10;
 
   return (
     <div className="space-y-6">
@@ -116,17 +163,22 @@ export const PrepositioningTab: React.FC = () => {
             <Anchor className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-white">
-              Feature 2: Pre-Positioning Supply Hub Optimization (k-Medoids / Facility Location)
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-bold text-white">
+                ⚓ Pre-Positioning Supply Hub Optimization (k-Medoids / Facility Location)
+              </h3>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-700 font-bold">
+                {authorityShort}
+              </span>
+            </div>
             <p className="text-xs text-[#8b949e] mt-1 leading-relaxed">
               <strong className="text-[#c9d1d9]">Preventative Operations Engine:</strong> When settlements are completely cut off (
-              <span className="text-red-400 font-mono">MODEL_ISOLATED</span>), standard road ambulances cannot navigate through floodwaters.
-              Lifeline OS executes combinatorial <strong className="text-cyan-400">k-Medoids facility location optimization</strong> across non-flooded roadhead nodes along the flood perimeter:
+              <span className="text-red-400 font-mono">MODEL_ISOLATED</span>), standard road ambulances cannot navigate through severed corridors.
+              Lifeline OS executes combinatorial <strong className="text-cyan-400">k-Medoids facility location optimization</strong> across non-flooded roadhead nodes along the crisis perimeter to support <span className="text-cyan-300 font-semibold">{authorityName}</span>:
               <br />
               <span className="font-mono text-cyan-300">min_(S ⊆ V_dry, |S|=k) Σ_(v ∈ V_iso) min_(s ∈ S) d(v, s)</span>
               <br />
-              This identifies optimal dry staging bases to position <strong className="text-white">SDRF Zodiac rescue craft, 4x4 mobile intensive care units, and airdrop pads</strong>, minimizing water transit distance and maximizing survival windows.
+              This identifies optimal dry staging bases to position <strong className="text-white">rescue craft, 4x4 mobile intensive care units, and airdrop pads</strong>, minimizing transit distance and maximizing survival windows.
             </p>
           </div>
         </div>
@@ -136,7 +188,7 @@ export const PrepositioningTab: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-[#161b22] border border-[#30363d] p-4 rounded-xl">
           <div className="text-xs text-[#8b949e] uppercase font-semibold">Staging Bases</div>
-          <div className="text-2xl font-bold text-[#00BFFF] mt-1">{STAGING_HUBS.length} Strategic Hubs</div>
+          <div className="text-2xl font-bold text-[#00BFFF] mt-1">{theaterHubs.length} Strategic Hubs</div>
           <div className="text-[11px] text-[#8b949e] mt-1">High-elevation dry roadheads</div>
         </div>
 
@@ -145,23 +197,33 @@ export const PrepositioningTab: React.FC = () => {
             <span>Cut-Off Settlements Serviced</span>
             <span className="pulse-success" />
           </div>
-          <div className="text-2xl font-bold text-[#00e676] mt-1">12 (100% Coverage)</div>
+          <div className="text-2xl font-bold text-[#00e676] mt-1">
+            {currentTheater && currentTheater.id !== 'silchar'
+              ? `${currentTheater.chokePoints.reduce((acc, c) => acc + c.trapped_villages_count, 0)} (100% Coverage)`
+              : '12 (100% Coverage)'}
+          </div>
           <div className="text-[11px] text-emerald-400/80 mt-1">Zero unassigned cut-off settlements</div>
         </div>
 
         <div className="bg-[#161b22] border border-[#30363d] p-4 rounded-xl">
-          <div className="text-xs text-[#8b949e] uppercase font-semibold">Avg Water Rescue Transit</div>
-          <div className="text-2xl font-bold text-white mt-1">5.5 km</div>
-          <div className="text-[11px] text-[#8b949e] mt-1">Max cluster distance: 9.8 km</div>
+          <div className="text-xs text-[#8b949e] uppercase font-semibold">Avg Rescue Transit</div>
+          <div className="text-2xl font-bold text-white mt-1">
+            {displayHubs[0]?.avg_boat_transit_km || 5.5} km
+          </div>
+          <div className="text-[11px] text-[#8b949e] mt-1">
+            Max cluster distance: {displayHubs[0]?.max_boat_transit_km || 9.8} km
+          </div>
         </div>
 
         <div className="bg-[#161b22] border border-[#30363d] p-4 rounded-xl">
           <div className="flex items-center justify-between text-xs text-[#8b949e] uppercase font-semibold">
-            <span>Avg Boat Response Window</span>
+            <span>Avg Response Window</span>
             <span className="pulse-warning" />
           </div>
-          <div className="text-2xl font-bold text-[#ffaa00] mt-1">~18.3 min</div>
-          <div className="text-[11px] text-amber-400/80 mt-1">@ 18 km/h SDRF Zodiac transit speed</div>
+          <div className="text-2xl font-bold text-[#ffaa00] mt-1">
+            ~{displayHubs[0]?.est_boat_transit_min || 18} min
+          </div>
+          <div className="text-[11px] text-amber-400/80 mt-1">Direct amphibious / air transit</div>
         </div>
       </div>
 
@@ -181,7 +243,7 @@ export const PrepositioningTab: React.FC = () => {
               className="bg-[#161b22] text-xs text-[#c9d1d9] border border-[#30363d] rounded-lg px-2.5 py-1 focus:outline-none cursor-pointer"
             >
               <option value="all">All Staging Bases</option>
-              {STAGING_HUBS.map((h) => (
+              {theaterHubs.map((h) => (
                 <option key={h.hub_id} value={h.hub_id}>
                   Base #{h.hub_id} ({h.nearest_roadhead})
                 </option>
@@ -216,7 +278,7 @@ export const PrepositioningTab: React.FC = () => {
                     <span className="text-amber-400 font-medium">{hub.assigned_villages_str}</span>
                   </div>
                   <div className="flex gap-4 text-[#8b949e] pt-1">
-                    <span>Avg Boat Transit: <strong className="text-white">{hub.avg_boat_transit_km} km</strong> (Max: {hub.max_boat_transit_km} km)</span>
+                    <span>Avg Transit: <strong className="text-white">{hub.avg_boat_transit_km} km</strong> (Max: {hub.max_boat_transit_km} km)</span>
                     <span>Est Transit: <strong className="text-emerald-400">~{hub.est_boat_transit_min} min</strong></span>
                   </div>
                 </div>
@@ -235,27 +297,29 @@ export const PrepositioningTab: React.FC = () => {
             className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-[#21262d] hover:bg-[#30363d] text-white text-xs font-semibold border border-[#30363d] shadow-md transition-all cursor-pointer"
           >
             <Download className="w-4 h-4 text-cyan-400" />
-            <span>Export ASDMA Pre-Positioning Operational Plan (CSV)</span>
+            <span>Export {authorityShort} Pre-Positioning Operational Plan (CSV)</span>
           </button>
         </div>
 
         {/* Right Column: Tactical Map */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs text-[#8b949e]">
-            <span className="font-medium text-white">Tactical Staging Hubs & Water Transit Corridors</span>
-            <span>BARAK RIVER BASIN</span>
+            <span className="font-medium text-white">Tactical Staging Hubs & Water/Air Transit Corridors</span>
+            <span className="uppercase">{currentTheater?.name.split('(')[0] || 'CRISIS BASIN'}</span>
           </div>
 
           <LeafletMap
-            center={[24.83, 92.85]}
-            zoom={10}
+            key={currentTheater?.id || 'silchar'}
+            center={mapCenter}
+            zoom={mapZoom}
             height="520px"
             markers={mapMarkers}
             lines={lines}
+            floodPolygon={currentTheater?.floodPolygon}
           />
           <div className="text-[11px] text-[#8b949e] italic flex items-center justify-between">
             <span>⚓ Blue/Orange markers = Dry roadhead hubs</span>
-            <span>Dashed lines = Water rescue vectors</span>
+            <span>Dashed lines = Rescue vectors</span>
           </div>
         </div>
       </div>

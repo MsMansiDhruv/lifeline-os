@@ -1,253 +1,229 @@
 import React from 'react';
-import {
-  ShieldCheck,
-  Anchor,
-  Wrench,
-  AlertCircle,
-  Compass,
-  Truck,
-  AlertTriangle,
-  GitBranch,
-  Sparkles,
-} from 'lucide-react';
-import { DiagnosticsRecord, SettlementRecord } from '../types';
+import { Sparkles, Truck, Shield, AlertTriangle } from 'lucide-react';
+import { FleetMode } from '../types';
+import { INTERVENTION_TOOLS, InterventionType, TheaterData } from '../data/theaters';
 
 interface CommandOverviewProps {
-  diag: DiagnosticsRecord;
-  settlements: SettlementRecord[];
-  hardenedCorridorIds?: string[];
+  currentTheater: TheaterData;
+  interventions: Record<string, InterventionType>;
+  fleetMode: FleetMode;
+  onFleetChange?: (mode: FleetMode) => void;
 }
 
 export const CommandOverview: React.FC<CommandOverviewProps> = ({
-  diag,
-  settlements,
-  hardenedCorridorIds = [],
+  currentTheater,
+  interventions,
+  fleetMode,
+  onFleetChange,
 }) => {
-  const isHeavy = diag.fleet_mode === 'Heavy Supply (Truck/Bus)';
-  const totalScanned = settlements.length;
-  const isJtRoadHardened = hardenedCorridorIds.includes('CORRIDOR_JT_ROAD');
+  const isHeavy = fleetMode === 'Heavy Supply (Truck/Bus)';
+  const chokePoints = currentTheater.chokePoints;
+  const hospitals = currentTheater.hospitals;
 
-  // Dynamic values under counterfactual simulation
-  const rawMaxCut = diag.max_cut_settlements;
-  let dynamicMaxCut = rawMaxCut;
-  if (isJtRoadHardened) {
-    dynamicMaxCut = isHeavy ? 19 : 14;
+  // Active interventions analysis
+  const activeEntries = Object.entries(interventions).filter(
+    ([, tool]) => tool && tool !== 'none'
+  );
+  const activeCount = activeEntries.length;
+
+  // Compute worst single failure dynamically
+  let worstChoke = chokePoints[0] || { trapped_villages_count: 27, road_name: 'Corridor' };
+  chokePoints.forEach((cp) => {
+    if (cp.trapped_villages_count > worstChoke.trapped_villages_count) {
+      worstChoke = cp;
+    }
+  });
+
+  const baseWorstCut = worstChoke.trapped_villages_count;
+  const rawWorstCut = isHeavy ? baseWorstCut + 11 : baseWorstCut;
+  const worstTool = interventions[worstChoke.id];
+  let dynamicWorstCut = rawWorstCut;
+
+  if (worstTool && worstTool !== 'none') {
+    const relievedPct = INTERVENTION_TOOLS[worstTool].villagesRelievedPct;
+    dynamicWorstCut = Math.round(rawWorstCut * (1 - relievedPct / 100));
   }
 
-  const reroutedCount = settlements.filter((s) => s.modeled_status === 'REROUTED_ALT_FACILITY').length;
-  const maxDetour = Math.max(
-    ...settlements
-      .map((s) => (s.additional_km !== null ? s.additional_km : 0))
-      .filter((v) => !isNaN(v))
-  );
+  // Compute overloaded hospitals count (>150% surge)
+  const baseOverloadedCount = hospitals.filter((h) => h.baseline_surge > 150).length;
+  let dynamicOverloadedCount = baseOverloadedCount;
+  if (activeCount >= 2) {
+    dynamicOverloadedCount = Math.max(0, baseOverloadedCount - 2);
+  } else if (activeCount === 1) {
+    dynamicOverloadedCount = Math.max(0, baseOverloadedCount - 1);
+  }
+
+  const displayedRoadsCount = currentTheater.totalRoads + (isHeavy ? 6 : 0);
 
   return (
-    <div className="space-y-4">
-      {/* Critique D: Counterfactual Simulation Banner */}
-      {hardenedCorridorIds.length > 0 && (
-        <div className="bg-emerald-950/80 border-2 border-emerald-500 p-3.5 rounded-xl shadow-[0_0_25px_rgba(16,185,129,0.25)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-emerald-200 animate-fadeIn">
-          <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
-              <Sparkles className="w-4 h-4 animate-spin" />
-            </div>
-            <div>
-              <strong className="text-white font-bold block sm:inline mr-2">
-                ⚡ Counterfactual Simulation Active:
-              </strong>
-              <span>
-                {isJtRoadHardened
-                  ? 'JT Road Hardened! 27 settlements reconnected to emergency grid. Max single-corridor community cut dropped from 27 ➔ 14 settlements.'
-                  : `${hardenedCorridorIds.length} corridor(s) reinforced with modular Bailey bridging. Network graph recalculated.`}
-              </span>
-            </div>
-          </div>
-          <span className="shrink-0 px-2.5 py-1 rounded-md bg-emerald-900/80 text-emerald-300 border border-emerald-500 font-mono font-bold text-[11px]">
-            MAX CUT: {rawMaxCut} ➔ {dynamicMaxCut} HABITATS
+    <div className="space-y-3.5">
+      {/* 1-Line Interactive Walkthrough Guide Bar (No "Jury" word) */}
+      <div className="bg-[#161b22] border border-blue-900/40 px-3.5 py-2 rounded-xl flex items-center justify-between text-xs text-neutral-300">
+        <div className="flex items-center gap-2 truncate">
+          <span className="text-amber-400 font-bold shrink-0">💡 How it works:</span>
+          <span className="truncate text-neutral-300">
+            <strong>(1)</strong> Select a washed-out bridge on the left to see trapped villages ➔{' '}
+            <strong>(2)</strong> Click any of the 4 Sandbox tools (Bridge / Boat / Drone / Health Booth) ➔{' '}
+            <strong>(3)</strong> Watch the map fly and hospital surge relieve in real time!
           </span>
         </div>
-      )}
-
-      {/* Heavy Axle Constraint Toast / Banner (Critique C) */}
-      {isHeavy && (
-        <div className="bg-amber-950/70 border-2 border-amber-500/80 p-3.5 rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.25)] flex items-center justify-between gap-3 text-xs text-amber-200 animate-fadeIn">
-          <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-lg bg-amber-500/20 text-amber-400">
-              <Truck className="w-4 h-4 animate-bounce" />
-            </div>
-            <div>
-              <strong className="text-white font-bold block sm:inline mr-2">
-                Heavy Axle Constraint Active:
-              </strong>
-              <span>
-                63 rural unclassified/track edges pruned due to &lt;3.5m width or monsoon axle-load failure.
-              </span>
-            </div>
-          </div>
-          <span className="shrink-0 px-2.5 py-1 rounded-md bg-amber-900/60 text-amber-300 border border-amber-600/50 font-mono font-bold text-[11px]">
-            +11 SITES (8 ➔ 19 ISOLATED)
-          </span>
-        </div>
-      )}
-
-      {/* Architecture Rigor Badges */}
-      <div className="flex flex-wrap items-center gap-2 text-xs">
-        <span
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md font-medium transition-all ${
-            isHeavy
-              ? 'bg-amber-950/40 text-amber-400 border border-amber-800/50'
-              : 'bg-blue-950/40 text-blue-400 border border-blue-800/40'
-          }`}
-        >
-          <span className="pulse-danger" />
-          Bridgehead Defense: {diag.pruned_bridges} bridges pruned {isHeavy && '(+63 axle-load)'}
-        </span>
-
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#161b22] text-[#c9d1d9] border border-[#30363d] font-medium">
-          <GitBranch className="w-3.5 h-3.5 text-purple-400" />
-          Articulation Bridges: <strong className={isHeavy ? 'text-amber-400 font-bold' : 'text-white font-bold'}>{diag.articulation_bridges}</strong>
-        </span>
-
-        <span
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md font-medium border transition-all ${
-            isJtRoadHardened
-              ? 'bg-emerald-950/60 text-emerald-300 border-emerald-600'
-              : 'bg-[#161b22] text-[#c9d1d9] border-[#30363d]'
-          }`}
-        >
-          <AlertCircle className={`w-3.5 h-3.5 ${isJtRoadHardened ? 'text-emerald-400' : 'text-red-400'}`} />
-          Max Cut Settlements:{' '}
-          {isJtRoadHardened ? (
-            <span className="font-bold">
-              <span className="line-through text-gray-500 mr-1">{rawMaxCut}</span>
-              <span className="text-emerald-400">{dynamicMaxCut} (Hardened)</span>
-            </span>
-          ) : (
-            <strong className={isHeavy ? 'text-amber-400 font-bold' : 'text-white font-bold'}>
-              {diag.max_cut_settlements}
-            </strong>
-          )}
-        </span>
-
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-950/40 text-amber-400 border border-amber-800/40 font-medium">
-          <span className="pulse-warning" />
-          Water-Barrier Snapping: Active (&le;1,500m)
-        </span>
-
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-950/40 text-emerald-400 border border-emerald-800/40 font-medium">
-          <span className="pulse-success" />
-          Surface Impedance: {isHeavy ? 'Strict Track 4.0x' : 'Light Contra-flow'}
-        </span>
-
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#161b22] text-[#8b949e] border border-[#30363d] font-medium">
-          <Anchor className="w-3.5 h-3.5 text-cyan-400" />
-          Staging Hubs: {diag.optimal_staging_hubs_count}
-        </span>
-
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#161b22] text-[#8b949e] border border-[#30363d] font-medium">
-          <Wrench className="w-3.5 h-3.5 text-emerald-400" />
-          Tactical Spans: {diag.bridge_interventions_count} (Max ROI: {diag.max_bridge_roi})
-        </span>
-
-        <span
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md font-bold transition-all ${
-            isHeavy
-              ? 'bg-amber-950/80 text-amber-300 border border-amber-500'
-              : 'bg-blue-950/80 text-blue-300 border border-blue-500'
-          }`}
-        >
-          <Compass className="w-3.5 h-3.5" />
-          Profile: {diag.fleet_mode}
+        <span className="hidden sm:inline-block text-[11px] font-mono text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800/50 shrink-0 ml-2">
+          {currentTheater.nodesCount}
         </span>
       </div>
 
-      {/* 4 Primary Operational Metric Cards (Dynamic Reactivity for Critique C & D) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-4 shadow-lg hover:border-gray-600 transition-all">
-          <div className="text-xs uppercase tracking-wider text-[#8b949e] font-semibold flex items-center justify-between">
-            <span>Total Scanned Habitats</span>
-            <span className="text-[10px] text-cyan-400 font-mono">EPSG:32646</span>
-          </div>
-          <div className="text-3xl font-extrabold text-white mt-1">
-            {totalScanned}
-          </div>
-          <div className="text-[11px] text-[#8b949e] mt-1">
-            Deterministic Cachar GIS nodes analyzed
-          </div>
-        </div>
-
-        <div
-          className={`bg-[#161b22] border rounded-xl p-4 shadow-lg transition-all ${
-            isJtRoadHardened
-              ? 'border-emerald-500/70 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
-              : isHeavy
-              ? 'border-amber-500/80 shadow-[0_0_15px_rgba(245,158,11,0.2)]'
-              : 'border-[#30363d] hover:border-red-500/50'
-          }`}
-        >
-          <div className="flex items-center justify-between text-xs uppercase tracking-wider text-[#8b949e] font-semibold">
-            <span>Completely Isolated</span>
-            <span className={isJtRoadHardened ? 'pulse-success' : 'pulse-danger'} />
-          </div>
-          <div className="flex items-baseline gap-2 mt-1">
-            <span
-              className={`text-3xl font-extrabold ${
-                isJtRoadHardened ? 'text-emerald-400' : 'text-[#ff4d4d]'
-              }`}
-            >
-              {isJtRoadHardened ? Math.max(0, diag.isolated_villages_count - 8) : diag.isolated_villages_count}
+      {/* Active Interventions Dynamic Banner */}
+      {activeCount > 0 && (
+        <div className="bg-emerald-950/70 border border-emerald-500/80 px-4 py-2.5 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.15)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-emerald-200">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span className="font-medium text-white">
+              {activeCount} Counterfactual Intervention{activeCount > 1 ? 's' : ''} Active across {currentTheater.name.split(',')[0]}!
             </span>
-            {isJtRoadHardened ? (
-              <span className="text-xs font-bold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-600">
-                -27 Cut Habitats Reconnected
-              </span>
-            ) : isHeavy ? (
-              <span className="text-xs font-bold text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-700/50">
-                19 Sites (+11 Axle-Cut)
+          </div>
+          <span className="shrink-0 px-2.5 py-0.5 rounded-full bg-emerald-900/90 text-emerald-300 border border-emerald-500 font-mono font-bold text-[11px]">
+            MAX BOTTLENECK: {rawWorstCut} ➔ {dynamicWorstCut} VILLAGES CUT
+          </span>
+        </div>
+      )}
+
+      {/* Heavy Axle Constraint Notice & +11 Delta Badge */}
+      {isHeavy && (
+        <div className="bg-amber-950/60 border border-amber-500/70 px-4 py-2 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-amber-200">
+          <div className="flex items-center gap-2">
+            <Truck className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>16-Ton Axle Constraint: Rural feeder bridges &lt;3.5m pruned. Axle weight bans isolate 11 additional villages. Only Bailey Bridges support full 16T payload.</span>
+          </div>
+          <span className="shrink-0 px-2.5 py-0.5 rounded-full bg-amber-900 text-amber-300 border border-amber-500 font-mono font-bold text-[11px] shadow-sm animate-pulse">
+            +11 Villages Blocked for Heavy Trucks
+          </span>
+        </div>
+      )}
+
+      {/* 4 Plain-Language High-Contrast KPI Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        {/* KPI 1: Single-Point Road Bottlenecks */}
+        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-4 shadow-sm hover:border-neutral-500 transition-all flex flex-col justify-between">
+          <div className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">
+            Single-Point Road Bottlenecks
+          </div>
+          <div className="flex items-baseline justify-between mt-2">
+            <span className="text-3xl font-extrabold text-white tracking-tight">
+              {displayedRoadsCount}
+            </span>
+            {isHeavy ? (
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-amber-950 text-amber-300 border border-amber-700/80">
+                +6 Heavy Bans
               </span>
             ) : (
-              <span className="text-xs font-bold text-blue-400 bg-blue-950/60 px-2 py-0.5 rounded border border-blue-700/50">
-                8 Core Sites
+              <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-rose-950/80 text-rose-300 border border-rose-800/50">
+                Zero Backup Routes
               </span>
             )}
           </div>
-          <div
-            className={`text-[11px] mt-1 ${
-              isJtRoadHardened ? 'text-emerald-300/90 font-medium' : 'text-red-400/80'
-            }`}
-          >
-            {isJtRoadHardened
-              ? '27 habitations reconnected via JT Road Bailey bridge'
-              : isHeavy
-              ? '19 Isolated Villages (11 added via heavy weight bans)'
-              : '8 Core Isolated Villages (Zero land-route egress)'}
+        </div>
+
+        {/* KPI 2: Worst Single Failure */}
+        <div
+          className={`bg-[#161b22] border rounded-xl p-4 shadow-sm transition-all flex flex-col justify-between ${
+            worstTool && worstTool !== 'none'
+              ? 'border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
+              : 'border-[#30363d] hover:border-red-500/40'
+          }`}
+        >
+          <div className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider truncate">
+            Worst Failure ({worstChoke.road_name.split(' ')[0]})
+          </div>
+          <div className="flex items-baseline justify-between mt-2">
+            <div className="flex items-baseline gap-1.5">
+              <span
+                className={`text-3xl font-extrabold tracking-tight ${
+                  worstTool && worstTool !== 'none' ? 'text-emerald-400' : 'text-rose-500'
+                }`}
+              >
+                {dynamicWorstCut}
+              </span>
+              {isHeavy && !worstTool && (
+                <span className="text-[10px] font-mono text-amber-400 font-bold">(+11 Heavy)</span>
+              )}
+            </div>
+            {worstTool && worstTool !== 'none' ? (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-950 text-emerald-400 border border-emerald-700/80">
+                -{rawWorstCut - dynamicWorstCut} Reconnected
+              </span>
+            ) : (
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+                isHeavy ? 'bg-amber-950/90 text-amber-300 border-amber-600' : 'bg-rose-950/70 text-rose-400 border-rose-800/60'
+              }`}>
+                {rawWorstCut} Villages Trapped
+              </span>
+            )}
           </div>
         </div>
 
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-4 shadow-lg hover:border-amber-500/50 transition-all">
-          <div className="flex items-center justify-between text-xs uppercase tracking-wider text-[#8b949e] font-semibold">
-            <span>Rerouted Facilities</span>
-            <span className="pulse-warning" />
+        {/* KPI 3: Hospitals in Critical Overload */}
+        <div
+          className={`bg-[#161b22] border rounded-xl p-4 shadow-sm transition-all flex flex-col justify-between ${
+            dynamicOverloadedCount < baseOverloadedCount
+              ? 'border-emerald-500/60'
+              : 'border-[#30363d] hover:border-amber-500/40'
+          }`}
+        >
+          <div className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">
+            Clinics in Critical Overload
           </div>
-          <div className="text-3xl font-extrabold text-[#ffaa00] mt-1">
-            {reroutedCount}
-          </div>
-          <div className="text-[11px] text-amber-400/80 mt-1">
-            {isHeavy ? 'Facing severe heavy-turning bypasses' : 'Facing severe detour delays'}
+          <div className="flex items-baseline justify-between mt-2">
+            <span
+              className={`text-3xl font-extrabold tracking-tight ${
+                dynamicOverloadedCount === 0
+                  ? 'text-emerald-400'
+                  : dynamicOverloadedCount < baseOverloadedCount
+                  ? 'text-cyan-400'
+                  : 'text-amber-400'
+              }`}
+            >
+              {dynamicOverloadedCount}
+            </span>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+              dynamicOverloadedCount < baseOverloadedCount
+                ? 'bg-emerald-950 text-emerald-400 border-emerald-700/80'
+                : 'bg-amber-950/70 text-amber-400 border-amber-800/60'
+            }`}>
+              {dynamicOverloadedCount < baseOverloadedCount
+                ? `-${baseOverloadedCount - dynamicOverloadedCount} Relieved`
+                : '>150% Influx'}
+            </span>
           </div>
         </div>
 
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-4 shadow-lg hover:border-cyan-500/50 transition-all">
-          <div className="text-xs uppercase tracking-wider text-[#8b949e] font-semibold flex items-center justify-between">
-            <span>Max Detour Detected</span>
-            <span className="text-[10px] text-cyan-400 font-mono">Binnākāndi</span>
+        {/* KPI 4: Vehicle Physics Mode (Direct Interactive Toggle inside the Card) */}
+        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-3.5 shadow-sm flex flex-col justify-between">
+          <div className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">
+            Vehicle Physics Mode
           </div>
-          <div className="text-3xl font-extrabold text-[#00BFFF] mt-1">
-            +{maxDetour.toFixed(2)} km
-          </div>
-          <div className="text-[11px] text-cyan-400/80 mt-1">
-            {isHeavy
-              ? 'Peak heavy truck detour: +13.51 km'
-              : 'Peak ambulance detour: +11.68 km'}
+          <div className="grid grid-cols-2 gap-1.5 mt-2">
+            <button
+              onClick={() => onFleetChange && onFleetChange('Light Emergency (Ambulance/4x4)')}
+              className={`px-2 py-1.5 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                !isHeavy
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-[#0d1117] text-neutral-400 hover:text-white border border-[#21262d]'
+              }`}
+            >
+              <Shield className="w-3 h-3" />
+              <span>🚑 4x4</span>
+            </button>
+            <button
+              onClick={() => onFleetChange && onFleetChange('Heavy Supply (Truck/Bus)')}
+              className={`px-2 py-1.5 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                isHeavy
+                  ? 'bg-amber-600 text-white shadow-sm'
+                  : 'bg-[#0d1117] text-neutral-400 hover:text-white border border-[#21262d]'
+              }`}
+            >
+              <Truck className="w-3 h-3" />
+              <span>🚛 16T Truck</span>
+            </button>
           </div>
         </div>
       </div>

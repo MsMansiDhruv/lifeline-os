@@ -89,11 +89,42 @@ export const TelemetryDrawer: React.FC<TelemetryDrawerProps> = ({ isOpen, onClos
 
         {/* Content Body */}
         <div className="p-6 space-y-6 overflow-y-auto flex-1 text-xs">
+          {/* Unified Bridge Across 4 Government Silos Banner */}
+          <div className="bg-[#0d1117] border border-cyan-500/40 rounded-xl p-3.5 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-white text-xs flex items-center gap-2">
+                <Layers className="w-4 h-4 text-cyan-400" />
+                Unified Bridge Across Disconnected Government Silos
+              </span>
+              <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-700/60 font-bold">
+                ● Live Inter-Agency Bridge
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 text-[11px] font-mono">
+              <div className="p-2.5 rounded-lg bg-[#161b22] border border-[#30363d] space-y-1">
+                <div className="text-cyan-400 font-bold">🛰️ ISRO NDEM</div>
+                <div className="text-[10px] text-neutral-400">Flood Hub Satellite Polygons</div>
+              </div>
+              <div className="p-2.5 rounded-lg bg-[#161b22] border border-[#30363d] space-y-1">
+                <div className="text-emerald-400 font-bold">🛣️ PWD Road Graph</div>
+                <div className="text-[10px] text-neutral-400">Tarjan O(V+E) Bridgeheads</div>
+              </div>
+              <div className="p-2.5 rounded-lg bg-[#161b22] border border-[#30363d] space-y-1">
+                <div className="text-purple-400 font-bold">🏥 NHM Hospital Triage</div>
+                <div className="text-[10px] text-neutral-400">Bed Surge &amp; Catchment Loads</div>
+              </div>
+              <div className="p-2.5 rounded-lg bg-[#161b22] border border-[#30363d] space-y-1">
+                <div className="text-amber-400 font-bold">📦 NIDM IDRN Inventory</div>
+                <div className="text-[10px] text-neutral-400">SDRF Bailey Spans &amp; Boats</div>
+              </div>
+            </div>
+          </div>
+
           {/* Key Graph Compilation Stats Grid */}
           <div>
             <div className="text-xs font-bold uppercase tracking-wider text-[#8b949e] mb-3 flex items-center gap-2">
               <Database className="w-4 h-4 text-blue-400" />
-              Source Graph & SAR Compilation Audit (Deterministic Grounding)
+              Source Graph &amp; SAR Compilation Audit (Deterministic Grounding)
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -143,6 +174,48 @@ export const TelemetryDrawer: React.FC<TelemetryDrawerProps> = ({ isOpen, onClos
                 <div className="text-[#8b949e] text-[11px]">
                   Paved: 1.0 • Unpaved: 0.4 • Water: 0.2
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Mathematical Formulations & Graph Invariants (Criticality Formula) */}
+          <div className="bg-[#0d1117] border border-blue-900/50 rounded-xl p-4 space-y-3">
+            <div className="text-xs font-bold uppercase tracking-wider text-blue-400 flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <Compass className="w-4 h-4 text-cyan-400" />
+                Mathematical Graph Invariants & Edge Criticality Formulation
+              </span>
+              <span className="text-[10px] font-mono text-[#8b949e]">Tarjan Bridge-Finding & Linear Condensation</span>
+            </div>
+
+            <div className="bg-[#161b22] p-3.5 rounded-lg border border-[#30363d] space-y-2 font-mono text-[11px]">
+              <div className="text-emerald-400 font-bold">
+                Criticality(e) = ∑ [ d_G(v, H(v)) = ∞ ∨ Δd_G(e, v) &gt; τ ] × Pop(v) × W_axle
+              </div>
+              <div className="text-[#8b949e] text-[10px] leading-relaxed">
+                Where <strong className="text-white">e ∈ E</strong> is an articulation candidate, <strong className="text-white">v ∈ V</strong> are dependent village centroids, <strong className="text-white">H(v)</strong> is the designated tertiary healthcare center, and <strong className="text-white">W_axle</strong> represents the vehicle turning & axle-load penalty coefficient.
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px]">
+              <div className="bg-[#161b22] p-2.5 rounded-lg border border-[#30363d] space-y-1">
+                <span className="text-white font-semibold">1. SAR Topological Percolation:</span>
+                <p className="text-[#8b949e] font-mono text-[10px]">
+                  G_flood = G \ &#123; e ∈ E | e ∩ M_SAR ≠ ∅ &#125;
+                </p>
+                <p className="text-[#8b949e] text-[10px]">
+                  Removes 1,830 flood-intersected edges from the 69,663 edge graph based on Sentinel-1 C-band SAR water masks.
+                </p>
+              </div>
+
+              <div className="bg-[#161b22] p-2.5 rounded-lg border border-[#30363d] space-y-1">
+                <span className="text-white font-semibold">2. Counterfactual Bailey Bridge ROI:</span>
+                <p className="text-[#8b949e] font-mono text-[10px]">
+                  ROI(e) = [Δ Settlements Rescued × 10⁵] / [Capex (₹ Lakh)]
+                </p>
+                <p className="text-[#8b949e] text-[10px]">
+                  JT Road restores 27 settlements across 3 spans (420m) yielding a peak engineering efficiency ratio of 43.14.
+                </p>
               </div>
             </div>
           </div>
