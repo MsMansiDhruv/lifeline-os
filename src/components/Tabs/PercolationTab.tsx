@@ -67,16 +67,16 @@ export const PercolationTab: React.FC<PercolationTabProps> = ({
     if (toolMeta) {
       if (toolKey === 'bridge') {
         markerType = 'bridge';
-        badge = '🛠️ BAILEY BRIDGE ACTIVE';
+        badge = 'BAILEY BRIDGE ACTIVE';
       } else if (toolKey === 'boat') {
         markerType = 'boat';
-        badge = '🚤 FERRY EVACUATION';
+        badge = 'FERRY EVACUATION';
       } else if (toolKey === 'drone') {
         markerType = 'drone';
-        badge = '🚁 MED-DRONE AIR CORRIDOR';
+        badge = 'MED-DRONE AIR CORRIDOR';
       } else if (toolKey === 'booth') {
         markerType = 'booth';
-        badge = '⛺ FIELD CLINIC BOOTH';
+        badge = 'FIELD CLINIC BOOTH';
       }
     }
 
@@ -168,9 +168,9 @@ export const PercolationTab: React.FC<PercolationTabProps> = ({
         [selectedChoke.lat - spanHalfLen, selectedChoke.lon - spanHalfLen],
         [selectedChoke.lat + spanHalfLen, selectedChoke.lon + spanHalfLen],
       ],
-      color: '#00e676',
+      color: '#10b981',
       weight: 8,
-      label: `🛠️ HARDENED: Deployable Modular Bailey Bridge across ${selectedChoke.road_name} (Traffic Egress Restored)`,
+      label: `BAILEY BRIDGE ACTIVE: Full Highway & 16T Truck Access Restored`,
       layerType: 'baseline',
     });
   } else if (activeTool === 'boat') {
@@ -180,10 +180,10 @@ export const PercolationTab: React.FC<PercolationTabProps> = ({
         [selectedChoke.lat - spanHalfLen * 2, selectedChoke.lon - spanHalfLen * 2],
         [selectedChoke.lat + spanHalfLen * 2, selectedChoke.lon + spanHalfLen * 2],
       ],
-      color: '#00e5ff',
-      dashArray: '6, 6',
+      color: '#06b6d4',
+      dashArray: '4, 4',
       weight: 5,
-      label: `🚤 WATER FERRY ROUTE: Zodiac Evacuation across ${selectedChoke.road_name} breach`,
+      label: `MARINE FERRY SHUTTLE: Critical Patient Water Transfer Active`,
       layerType: 'boat',
     });
   } else if (activeTool === 'drone') {
@@ -199,10 +199,10 @@ export const PercolationTab: React.FC<PercolationTabProps> = ({
           [nearestHosp.lat, nearestHosp.lon],
           [selectedChoke.lat, selectedChoke.lon],
         ],
-        color: '#c084fc',
+        color: '#a855f7',
         weight: 4,
         dashArray: '4, 4',
-        label: `🚁 MED-DRONE AIR CORRIDOR: Direct Hospital Supply line (12 min delivery)`,
+        label: `UAV AIRBRIDGE: 12-Min Emergency Medical Supply Line`,
         layerType: 'drone',
       });
 
@@ -212,7 +212,7 @@ export const PercolationTab: React.FC<PercolationTabProps> = ({
       mapMarkers.push({
         lat: midLat,
         lon: midLon,
-        title: '🚁 Med-Drone In-Flight',
+        title: 'Med-Drone In-Flight',
         description: 'Air-dropping blood units, antivenom & emergency insulin',
         type: 'drone',
         badge: 'FLIGHT TIME: 12 MINS',
@@ -222,10 +222,10 @@ export const PercolationTab: React.FC<PercolationTabProps> = ({
     mapMarkers.push({
       lat: selectedChoke.lat + 0.0015,
       lon: selectedChoke.lon + 0.0015,
-      title: '⛺ Mobile Field Clinic Booth',
-      description: 'Treating 70% of casualties on-site to relieve hospital emergency rooms',
+      title: 'Mobile Field Clinic Booth',
+      description: 'Treating 75% of casualties on-site to relieve hospital emergency rooms',
       type: 'booth',
-      badge: '⛺ TRIAGE OPERATIONAL (-80% SURGE)',
+      badge: 'TRIAGE OPERATIONAL (-80% SURGE)',
     });
   } else {
     // Severed Breach line
@@ -235,9 +235,9 @@ export const PercolationTab: React.FC<PercolationTabProps> = ({
         [selectedChoke.lat - spanHalfLen, selectedChoke.lon - spanHalfLen],
         [selectedChoke.lat + spanHalfLen, selectedChoke.lon + spanHalfLen],
       ],
-      color: '#ff1100',
+      color: '#f43f5e',
       weight: 7,
-      label: `⚡ EXACT BREACH SPAN: ${selectedChoke.road_name} (${selectedChoke.exposed_meters}m Exposed Span)`,
+      label: `Severed Bridge Breach: ${selectedChoke.road_name} (${selectedChoke.exposed_meters}m Exposed Span)`,
       className: 'severed-span-anim',
       layerType: 'severed',
     });
@@ -251,12 +251,12 @@ export const PercolationTab: React.FC<PercolationTabProps> = ({
       [selectedChoke.lat, selectedChoke.lon],
       [selectedChoke.lat - 0.015, selectedChoke.lon - 0.022],
     ],
-    color: '#00FF66',
+    color: '#10b981',
     weight: activeTool === 'bridge' ? 7 : 4,
     label:
       activeTool === 'bridge'
-        ? `🟢 REOPENED CORRIDOR: Baseline ${selectedChoke.baseline_km} km Restored`
-        : `🟢 Baseline Arterial Route: ${selectedChoke.baseline_km} km [SEVERED]`,
+        ? `Direct Highway Restored: Baseline ${selectedChoke.baseline_km} km Operational`
+        : `Normal Pre-Flood Primary Route: ${selectedChoke.baseline_km} km (Blocked at Breach)`,
     layerType: 'baseline',
   });
 
@@ -269,10 +269,10 @@ export const PercolationTab: React.FC<PercolationTabProps> = ({
         [selectedChoke.lat + 0.045, selectedChoke.lon + 0.012],
         [selectedChoke.lat - 0.015, selectedChoke.lon - 0.022],
       ],
-      color: '#FF3300',
+      color: '#f43f5e',
       dashArray: '6, 8',
       weight: 3.5,
-      label: `🔴 High-Delay Mountain/Basin Detour: ${selectedChoke.detour_km} km (+${(
+      label: `Forced Emergency Flood Detour Route: ${selectedChoke.detour_km} km (+${(
         selectedChoke.detour_km - selectedChoke.baseline_km
       ).toFixed(1)} km surcharge)`,
       layerType: 'detour',
@@ -382,10 +382,10 @@ export const PercolationTab: React.FC<PercolationTabProps> = ({
                           }`}
                         >
                           <span className="flex items-center gap-1 font-bold">
-                            🛠️ Bailey Bridge
+                            Bailey Bridge
                           </span>
                           <span className="text-[9px] text-neutral-400 font-mono">
-                            $85k | 48h (-73% Surge)
+                            ₹72L | 48h (16T Capable)
                           </span>
                         </button>
 
@@ -403,10 +403,10 @@ export const PercolationTab: React.FC<PercolationTabProps> = ({
                           }`}
                         >
                           <span className="flex items-center gap-1 font-bold">
-                            🚤 Rescue Boat
+                            Rescue Boat
                           </span>
                           <span className="text-[9px] text-neutral-400 font-mono">
-                            $4k | 3h (-35% Surge)
+                            ₹3.5L | 3h (-35% Surge)
                           </span>
                         </button>
 
@@ -424,10 +424,10 @@ export const PercolationTab: React.FC<PercolationTabProps> = ({
                           }`}
                         >
                           <span className="flex items-center gap-1 font-bold">
-                            🚁 Med-Drone
+                            Med-Drone
                           </span>
                           <span className="text-[9px] text-neutral-400 font-mono">
-                            $12k | 45m (-45% Surge)
+                            ₹8L | 45m (-45% Surge)
                           </span>
                         </button>
 
@@ -445,10 +445,10 @@ export const PercolationTab: React.FC<PercolationTabProps> = ({
                           }`}
                         >
                           <span className="flex items-center gap-1 font-bold">
-                            ⛺ Health Booth
+                            Field Clinic
                           </span>
                           <span className="text-[9px] text-neutral-400 font-mono">
-                            $25k | 6h (-80% Surge)
+                            ₹15L | 6h (-80% Surge)
                           </span>
                         </button>
                       </div>
@@ -493,7 +493,7 @@ export const PercolationTab: React.FC<PercolationTabProps> = ({
                                   : 'bg-rose-950/70 text-rose-300 border-rose-800'
                               }`}
                             >
-                              📍 {v.name}
+                              {v.name}
                             </span>
                           ))}
                         </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sliders, CheckCircle2, Clock, Activity } from 'lucide-react';
+import { Sliders, CheckCircle2, Clock, Activity, Coins, ShieldCheck, Radio } from 'lucide-react';
 import { INTERVENTION_TOOLS, InterventionType, TheaterChokePoint } from '../data/theaters';
 
 interface JuryScorecardProps {
@@ -21,7 +21,7 @@ export const JuryScorecard: React.FC<JuryScorecardProps> = ({
   let totalTrappedVillages = 0;
   let totalBudgetLakhs = 0;
   let fastestMinutes: number | null = null;
-  let fastestLabel = 'None';
+  let fastestLabel = 'Standby';
   let totalSurgeReliefSum = 0;
 
   chokePoints.forEach((cp) => {
@@ -50,94 +50,113 @@ export const JuryScorecard: React.FC<JuryScorecardProps> = ({
       : `₹${totalBudgetLakhs.toFixed(1)} L`;
 
   return (
-    <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-3 shadow-md">
-      <div className="flex items-center justify-between border-b border-[#21262d] pb-2 mb-2">
+    <div className="bg-slate-950/90 border border-slate-800 rounded-xl p-3 shadow-lg select-none">
+      {/* Header bar */}
+      <div className="flex items-center justify-between border-b border-slate-800/80 pb-2 mb-3">
         <div className="flex items-center gap-2">
-          <span className="p-1 rounded-md bg-blue-950 text-blue-400 border border-blue-800/60">
+          <span className="p-1 rounded bg-slate-900 text-slate-300 border border-slate-700/60">
             <Sliders className="w-3.5 h-3.5" />
           </span>
-          <span className="text-xs font-bold text-white uppercase tracking-wider">
-            🎛️ Live Simulation Scorecard
+          <span className="text-xs font-mono font-bold text-slate-200 uppercase tracking-wider">
+            Live Simulation Scorecard
           </span>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#0d1117] text-neutral-400 border border-[#30363d]">
-            Counterfactual Sandbox
+          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-900 text-slate-400 border border-slate-800">
+            Counterfactual
           </span>
         </div>
 
         {activeDeploymentsCount > 0 ? (
-          <span className="text-[11px] font-mono font-bold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-700/60">
-            ● {activeDeploymentsCount} Intervention{activeDeploymentsCount > 1 ? 's' : ''} Active
+          <span className="flex items-center gap-1.5 text-[11px] font-mono font-semibold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/50">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            {activeDeploymentsCount} Active
           </span>
         ) : (
-          <span className="text-[11px] font-mono text-neutral-500">
-            Select a tool on any bottleneck card to simulate
+          <span className="text-[10px] font-mono text-slate-500">
+            Select a counterfactual tool
           </span>
         )}
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
-        {/* Metric 1: Active Deployments */}
-        <div className="bg-[#0d1117] p-2 rounded-lg border border-[#21262d] flex flex-col justify-between">
-          <span className="text-[10px] text-neutral-400 uppercase font-semibold">Active Deployments</span>
-          <div className="flex items-baseline gap-1 mt-1">
-            <strong className="text-sm font-bold text-white font-mono">{activeDeploymentsCount}</strong>
-            <span className="text-[10px] text-neutral-500">/ {chokePoints.length} Bottlenecks</span>
+      {/* REQUIREMENT 3: Clean 2x2 Grid with generous padding, 11px uppercase muted labels, 20px tabular numerals */}
+      <div className="grid grid-cols-2 gap-2.5">
+        {/* Cell 1: Active Deployments */}
+        <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-800/80 flex flex-col justify-between">
+          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+            <Radio className="w-3.5 h-3.5 text-blue-400" />
+            Deployments
+          </span>
+          <div className="mt-1.5 flex items-baseline gap-1">
+            <span className="font-mono font-semibold text-[20px] text-white tabular-nums leading-none">
+              {activeDeploymentsCount}
+            </span>
+            <span className="font-mono text-xs text-slate-500">/ {chokePoints.length}</span>
           </div>
         </div>
 
-        {/* Metric 2: Villages Reached */}
-        <div className="bg-[#0d1117] p-2 rounded-lg border border-[#21262d] flex flex-col justify-between">
-          <span className="text-[10px] text-neutral-400 uppercase font-semibold flex items-center gap-1">
-            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-            Villages Reached
+        {/* Cell 2: Villages Reconnected */}
+        <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-800/80 flex flex-col justify-between">
+          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            Reconnected
           </span>
-          <div className="flex items-baseline gap-1 mt-1">
-            <strong className={`text-sm font-bold font-mono ${totalVillagesReached > 0 ? 'text-emerald-400' : 'text-neutral-400'}`}>
+          <div className="mt-1.5 flex items-baseline gap-1">
+            <span
+              className={`font-mono font-semibold text-[20px] tabular-nums leading-none ${
+                totalVillagesReached > 0 ? 'text-emerald-400' : 'text-slate-400'
+              }`}
+            >
               {totalVillagesReached}
-            </strong>
-            <span className="text-[10px] text-neutral-500">/ {totalTrappedVillages} Trapped</span>
+            </span>
+            <span className="font-mono text-xs text-slate-500">/ {totalTrappedVillages}</span>
           </div>
         </div>
 
-        {/* Metric 3: Hospital Surge Relieved */}
-        <div className="bg-[#0d1117] p-2 rounded-lg border border-[#21262d] flex flex-col justify-between">
-          <span className="text-[10px] text-neutral-400 uppercase font-semibold flex items-center gap-1">
-            <Activity className="w-3 h-3 text-cyan-400" />
-            Surge Relieved
+        {/* Cell 3: Clinical Surge Relief */}
+        <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-800/80 flex flex-col justify-between">
+          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+            <Activity className="w-3.5 h-3.5 text-cyan-400" />
+            ER Relief
           </span>
-          <div className="flex items-baseline gap-1 mt-1">
-            <strong className={`text-sm font-bold font-mono ${avgSurgeRelief > 0 ? 'text-cyan-400' : 'text-neutral-400'}`}>
+          <div className="mt-1.5 flex items-baseline gap-1">
+            <span
+              className={`font-mono font-semibold text-[20px] tabular-nums leading-none ${
+                avgSurgeRelief > 0 ? 'text-cyan-400' : 'text-slate-400'
+              }`}
+            >
               {avgSurgeRelief > 0 ? `-${avgSurgeRelief}%` : '0%'}
-            </strong>
-            <span className="text-[10px] text-neutral-500">Avg Crisis Relief</span>
+            </span>
+            <span className="font-mono text-[10px] text-slate-500">Peak ICU</span>
           </div>
         </div>
 
-        {/* Metric 4: Fastest Response Time */}
-        <div className="bg-[#0d1117] p-2 rounded-lg border border-[#21262d] flex flex-col justify-between">
-          <span className="text-[10px] text-neutral-400 uppercase font-semibold flex items-center gap-1">
-            <Clock className="w-3 h-3 text-purple-400" />
-            Fastest Response
+        {/* Cell 4: Sanctioned Budget */}
+        <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-800/80 flex flex-col justify-between">
+          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+            <Coins className="w-3.5 h-3.5 text-amber-400" />
+            Sanction
           </span>
-          <div className="mt-1 truncate">
-            <strong className={`text-xs font-bold font-mono truncate block ${fastestMinutes !== null ? 'text-purple-300' : 'text-neutral-500'}`}>
-              {fastestLabel}
-            </strong>
-          </div>
-        </div>
-
-        {/* Metric 5: Total Budget Spent in INR */}
-        <div className="bg-[#0d1117] p-2 rounded-lg border border-[#21262d] flex flex-col justify-between col-span-2 sm:col-span-1">
-          <span className="text-[10px] text-neutral-400 uppercase font-semibold flex items-center gap-1">
-            <span className="text-amber-400 font-bold">₹</span>
-            Total Budget
-          </span>
-          <div className="mt-1">
-            <strong className={`text-sm font-bold font-mono ${totalBudgetLakhs > 0 ? 'text-amber-400' : 'text-neutral-400'}`}>
+          <div className="mt-1.5 flex items-baseline gap-1">
+            <span
+              className={`font-mono font-semibold text-[20px] tabular-nums leading-none ${
+                totalBudgetLakhs > 0 ? 'text-amber-400' : 'text-slate-400'
+              }`}
+            >
               {totalBudgetLakhs > 0 ? budgetDisplay : '₹0.0 L'}
-            </strong>
+            </span>
+            <span className="font-mono text-[10px] text-slate-500">Capex</span>
           </div>
         </div>
+      </div>
+
+      {/* Subtle Bottom Status Strip: Fastest Response Time */}
+      <div className="mt-2.5 pt-2 border-t border-slate-800/60 flex items-center justify-between text-[11px] font-mono text-slate-400">
+        <span className="flex items-center gap-1.5">
+          <Clock className="w-3 h-3 text-purple-400" />
+          <span>Fastest Vector:</span>
+        </span>
+        <span className={fastestMinutes !== null ? 'text-purple-300 font-semibold' : 'text-slate-500'}>
+          {fastestLabel}
+        </span>
       </div>
     </div>
   );

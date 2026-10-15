@@ -19,8 +19,9 @@ import {
   Activity,
   Send,
   Compass,
-  AlertTriangle,
   FileCheck,
+  Construction,
+  Radio,
 } from 'lucide-react';
 
 interface Step4AutoOptimizerProps {
@@ -373,38 +374,37 @@ export const Step4AutoOptimizer: React.FC<Step4AutoOptimizerProps> = ({
           </span>
         </div>
 
-        {/* 4 Silos Data Connectors */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-1.5 text-[11px] font-mono">
-          <div className="p-2 rounded-lg bg-[#161b22] border border-[#30363d] flex items-center justify-between text-neutral-300">
-            <span className="truncate">🛰️ ISRO NDEM Flood</span>
-            <span className="text-[9px] text-emerald-400 font-bold">POLYGONS</span>
-          </div>
-          <div className="p-2 rounded-lg bg-[#161b22] border border-[#30363d] flex items-center justify-between text-neutral-300">
-            <span className="truncate">🛣️ PWD Road Graph</span>
-            <span className="text-[9px] text-cyan-400 font-bold">TARJAN O(V+E)</span>
-          </div>
-          <div className="p-2 rounded-lg bg-[#161b22] border border-[#30363d] flex items-center justify-between text-neutral-300">
-            <span className="truncate">🏥 NHM Hospital Triage</span>
-            <span className="text-[9px] text-purple-400 font-bold">SURGE MATRIX</span>
-          </div>
-          <div className="p-2 rounded-lg bg-[#161b22] border border-[#30363d] flex items-center justify-between text-neutral-300">
-            <span className="truncate">📦 NIDM IDRN Inventory</span>
-            <span className="text-[9px] text-amber-400 font-bold">INR SDRF</span>
-          </div>
+        {/* 1 Clean Single-Line Status Bar (Requirement 5) */}
+        <div className="p-2.5 rounded-lg bg-slate-900/90 border border-slate-800 text-[11px] font-mono flex items-center justify-between text-slate-200 overflow-x-auto scrollbar-none whitespace-nowrap">
+          <span className="flex items-center gap-1 text-sky-400 font-semibold">
+            <span>🛰️</span> ISRO SAR
+          </span>
+          <span className="text-slate-600 font-bold px-1">➔</span>
+          <span className="flex items-center gap-1 text-cyan-400 font-semibold">
+            <span>🛣️</span> PWD Roads
+          </span>
+          <span className="text-slate-600 font-bold px-1">➔</span>
+          <span className="flex items-center gap-1 text-purple-400 font-semibold">
+            <span>🏥</span> NHM Triage
+          </span>
+          <span className="text-slate-600 font-bold px-1">➔</span>
+          <span className="flex items-center gap-1 text-amber-400 font-semibold">
+            <span>📦</span> IDRN Stock
+          </span>
         </div>
       </div>
 
       {/* Step Header */}
-      <div className="bg-[#161b22] border border-[#30363d] p-3 rounded-xl flex items-center justify-between text-xs">
+      <div className="bg-slate-900 border border-slate-800 p-3 rounded-xl flex items-center justify-between text-xs">
         <div className="flex items-center gap-2">
           <div className="p-1.5 rounded-lg bg-emerald-950/80 border border-emerald-600/40 text-emerald-400">
             <Zap className="w-4 h-4" />
           </div>
           <div>
             <h3 className="font-bold text-white text-sm">
-              Step 4: ⚡ Inter-Departmental Requisition &amp; DM Sanction
+              Step 4: Inter-Departmental Requisition &amp; DM Sanction
             </h3>
-            <p className="text-[11px] text-[#8b949e]">
+            <p className="text-[11px] text-slate-400">
               Human-in-the-loop workflow: Pre-authorize SDRF budget, split into 3 department tickets, and execute District Magistrate sign-off.
             </p>
           </div>
@@ -412,17 +412,17 @@ export const Step4AutoOptimizer: React.FC<Step4AutoOptimizerProps> = ({
       </div>
 
       {/* System Calculated Requirements Banner */}
-      <div className="bg-gradient-to-r from-blue-950/80 via-[#161b22] to-emerald-950/80 border border-emerald-500/50 p-3 rounded-xl text-xs space-y-1.5 shadow-md">
+      <div className="bg-gradient-to-r from-blue-950/80 via-slate-900 to-emerald-950/80 border border-emerald-500/50 p-3 rounded-xl text-xs space-y-1.5 shadow-md">
         <div className="flex items-center justify-between">
-          <span className="font-bold text-white flex items-center gap-1.5">
+          <span className="font-bold text-white flex items-center gap-1.5 font-mono">
             <Sparkles className="w-4 h-4 text-amber-300" />
-            💡 System Calculated Requirement (100% Defense Coverage)
+            System Calculated Requirement (100% Defense Coverage)
           </span>
           <span className="text-[10px] font-mono text-emerald-300 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-700/60 font-bold">
             Est. ₹{estimatedRequirementCostCr} Cr
           </span>
         </div>
-        <p className="text-[11px] text-neutral-300">
+        <p className="text-[11px] text-slate-300">
           Optimal resource package for {currentTheater.name.split(',')[0]}:{' '}
           <strong className="text-white">
             {neededBridges} Modular Bridges, {neededBoats} Rescue Boats, {neededDrones} Med-Drones, and {neededBooths} Health Booths
@@ -431,16 +431,17 @@ export const Step4AutoOptimizer: React.FC<Step4AutoOptimizerProps> = ({
       </div>
 
       {/* Resource Allocation Sliders */}
-      <div className="bg-[#161b22] border border-[#30363d] p-4 rounded-xl space-y-4 shadow-sm">
-        <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider block">
+      <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-4 shadow-sm">
+        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block font-mono">
           Tactical Equipment Configuration:
         </span>
 
         {/* Slider 1: Modular Bailey Bridges */}
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 font-mono">
           <div className="flex justify-between text-xs">
             <span className="text-white font-medium flex items-center gap-1.5">
-              <span>🛠️</span> Modular Bailey Bridges (₹72L ea, 48h)
+              <Construction className="w-3.5 h-3.5 text-emerald-400" />
+              Modular Bailey Bridges (₹72L ea, 48h)
             </span>
             <span className="font-mono text-emerald-400 font-bold">
               {baileySpansCount} Spans (₹{baileySpansCount * 72}L)
@@ -465,10 +466,11 @@ export const Step4AutoOptimizer: React.FC<Step4AutoOptimizerProps> = ({
         </div>
 
         {/* Slider 2: Motorized Rescue Boats */}
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 font-mono">
           <div className="flex justify-between text-xs">
             <span className="text-white font-medium flex items-center gap-1.5">
-              <span>🚤</span> Motorized Rescue Boats (₹3.5L ea, 3h)
+              <Anchor className="w-3.5 h-3.5 text-cyan-400" />
+              Motorized Rescue Boats (₹3.5L ea, 3h)
             </span>
             <span className="font-mono text-cyan-400 font-bold">
               {rescueBoatsCount} Boats (₹{rescueBoatsCount * 3.5}L)
@@ -493,10 +495,11 @@ export const Step4AutoOptimizer: React.FC<Step4AutoOptimizerProps> = ({
         </div>
 
         {/* Slider 3: Medical Delivery Drones */}
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 font-mono">
           <div className="flex justify-between text-xs">
             <span className="text-white font-medium flex items-center gap-1.5">
-              <span>🚁</span> Medical Delivery Drones (₹8L ea, 45m)
+              <Radio className="w-3.5 h-3.5 text-purple-400" />
+              Medical Delivery Drones (₹8L ea, 45m)
             </span>
             <span className="font-mono text-purple-400 font-bold">
               {medDronesCount} Drones (₹{medDronesCount * 8}L)
@@ -521,10 +524,11 @@ export const Step4AutoOptimizer: React.FC<Step4AutoOptimizerProps> = ({
         </div>
 
         {/* Slider 4: Mobile Health Booths */}
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 font-mono">
           <div className="flex justify-between text-xs">
             <span className="text-white font-medium flex items-center gap-1.5">
-              <span>⛺</span> Mobile Health Booths / MMUs (₹15L ea, 6h)
+              <Activity className="w-3.5 h-3.5 text-emerald-400" />
+              Mobile Health Booths / MMUs (₹15L ea, 6h)
             </span>
             <span className="font-mono text-emerald-400 font-bold">
               {healthBoothsCount} Booths (₹{healthBoothsCount * 15}L)
@@ -553,17 +557,17 @@ export const Step4AutoOptimizer: React.FC<Step4AutoOptimizerProps> = ({
           <button
             type="button"
             onClick={handleRaiseRequisition}
-            className="w-full py-3 px-4 rounded-xl font-bold text-xs text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full py-3 px-4 rounded-xl font-bold text-xs text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer font-mono"
           >
             <FileText className="w-4 h-4 text-amber-300" />
-            <span>📝 Raise Early Requisition Ticket (Pre-Authorize SDRF Budget: {totalCostDisplay})</span>
+            <span>Raise Early Requisition Ticket (Pre-Authorize SDRF Budget: {totalCostDisplay})</span>
           </button>
         )}
       </div>
 
       {/* 2. REQUISITION TICKET & 3 DEPARTMENTAL WORK ORDERS (Requirement 2: Stage A & Stage B) */}
       {requisitionStage !== 'draft' && (
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden shadow-xl space-y-3">
+        <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden shadow-xl space-y-3 font-mono">
           {/* Ticket Header & Status Badge */}
           <div className="p-4 bg-[#0d1117] border-b border-[#30363d] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
@@ -573,7 +577,7 @@ export const Step4AutoOptimizer: React.FC<Step4AutoOptimizerProps> = ({
                 </span>
                 <span className="text-neutral-400 text-xs">• Inter-Departmental Requisition Ticket</span>
               </div>
-              <p className="text-[11px] text-neutral-400 mt-0.5">
+              <p className="text-[11px] text-neutral-400 mt-0.5 font-sans">
                 Competent Authority: <strong className="text-white">{authorityName}</strong> • Fund: State Disaster Response Fund (SDRF)
               </p>
             </div>
@@ -582,12 +586,12 @@ export const Step4AutoOptimizer: React.FC<Step4AutoOptimizerProps> = ({
             {requisitionStage === 'awaiting_approval' ? (
               <span className="px-3 py-1.5 rounded-lg bg-amber-950/80 border border-amber-600/70 text-amber-300 text-xs font-bold font-mono flex items-center gap-1.5 shadow-md shadow-amber-950/50">
                 <Clock className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: '4s' }} />
-                <span>🟡 AWAITING DISTRICT MAGISTRATE / INCIDENT COMMANDER SIGN-OFF</span>
+                <span>AWAITING DISTRICT MAGISTRATE / INCIDENT COMMANDER SIGN-OFF</span>
               </span>
             ) : (
               <span className="px-3 py-1.5 rounded-lg bg-emerald-950/80 border border-emerald-500/80 text-emerald-300 text-xs font-bold font-mono flex items-center gap-1.5 shadow-md shadow-emerald-950/50">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                <span>🟢 SANCTIONED &amp; DISPATCHED (Order Signed)</span>
+                <span>SANCTIONED &amp; DISPATCHED (Order Signed)</span>
               </span>
             )}
           </div>
@@ -647,7 +651,7 @@ export const Step4AutoOptimizer: React.FC<Step4AutoOptimizerProps> = ({
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-neutral-300">
                 <div>
-                  <span className="text-neutral-500 block">⛺ Health Booth Roadhead GPS:</span>
+                  <span className="text-neutral-500 block">Health Booth Roadhead GPS:</span>
                   <span className="font-mono text-emerald-300 font-bold">
                     {(primaryChoke.lat - 0.003).toFixed(5)}°N, {(primaryChoke.lon - 0.003).toFixed(5)}°E
                   </span>
@@ -656,9 +660,9 @@ export const Step4AutoOptimizer: React.FC<Step4AutoOptimizerProps> = ({
                   </span>
                 </div>
                 <div>
-                  <span className="text-neutral-500 block">🚁 Med-Drone Flight Corridor:</span>
+                  <span className="text-neutral-500 block">Med-Drone Flight Corridor:</span>
                   <span className="font-mono text-purple-300 font-bold">
-                    {primaryHospital.name} ➔ Breached Enclave
+                    {primaryHospital.name} &rarr; Breached Enclave
                   </span>
                   <span className="text-purple-400 block text-[10px]">45m rapid blood &amp; insulin drop</span>
                 </div>
@@ -708,10 +712,10 @@ export const Step4AutoOptimizer: React.FC<Step4AutoOptimizerProps> = ({
                 <button
                   type="button"
                   onClick={handleApproveSanctionOrder}
-                  className="w-full py-3.5 px-4 rounded-xl font-extrabold text-xs text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 shadow-xl shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full py-3.5 px-4 rounded-xl font-extrabold text-xs text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 shadow-xl shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer font-mono"
                 >
                   <FileCheck className="w-4 h-4 text-white" />
-                  <span>✍️ Approve &amp; Issue Official Sanction Order (DM Sign-Off &amp; Plot on Map)</span>
+                  <span>Approve &amp; Issue Official Sanction Order (DM Sign-Off &amp; Plot on Map)</span>
                 </button>
                 <p className="text-[10px] text-center text-neutral-500 mt-1 font-mono">
                   Clicking executes official administrative sanction, commits SDRF budget, and plots all 4 assets on the Master Map.
@@ -734,25 +738,25 @@ export const Step4AutoOptimizer: React.FC<Step4AutoOptimizerProps> = ({
                   <button
                     type="button"
                     onClick={handlePrintPdf}
-                    className="flex-1 py-2 px-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-blue-900/40"
+                    className="flex-1 py-2 px-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-blue-900/40 font-mono"
                   >
                     <Printer className="w-3.5 h-3.5" />
-                    <span>📄 Download Official Sanction Order (Printable/PDF)</span>
+                    <span>Download Official Sanction Order (Printable/PDF)</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={handleExportJson}
-                    className="flex-1 py-2 px-3 rounded-lg bg-[#21262d] hover:bg-[#30363d] text-cyan-300 border border-[#30363d] font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="flex-1 py-2 px-3 rounded-lg bg-[#21262d] hover:bg-[#30363d] text-cyan-300 border border-[#30363d] font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer font-mono"
                   >
                     <Download className="w-3.5 h-3.5" />
-                    <span>💾 Export Work Order (JSON)</span>
+                    <span>Export Work Order (JSON)</span>
                   </button>
                 </div>
 
                 {downloadSuccess && (
                   <p className="text-[11px] text-emerald-400 text-center font-mono">
-                    ✓ {downloadSuccess}
+                    {downloadSuccess}
                   </p>
                 )}
               </div>

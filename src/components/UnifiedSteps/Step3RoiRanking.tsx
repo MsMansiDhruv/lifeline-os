@@ -80,7 +80,7 @@ export const Step3RoiRanking: React.FC<Step3RoiRankingProps> = ({
           </div>
           <div>
             <h3 className="font-bold text-white text-sm">
-              Step 3: 📈 Multi-Tool Value &amp; ROI Ranking (All 4 Tools)
+              Step 3: Multi-Tool Value &amp; ROI Ranking (All 4 Tools)
             </h3>
             <p className="text-[11px] text-[#8b949e]">
               Ranks Health Booths, Drones, Boats, and Bridges using true Cost-Time-Efficiency in Indian Rupees (₹ Lakhs).
@@ -181,7 +181,7 @@ export const Step3RoiRanking: React.FC<Step3RoiRankingProps> = ({
                           : 'bg-blue-600 hover:bg-blue-500 text-white'
                       }`}
                     >
-                      {isDeployed ? '✓ Deployed on Map' : 'Deploy on Map ➔'}
+                      {isDeployed ? 'Deployed on Map' : 'Deploy on Map \u2192'}
                     </button>
                   </div>
                 </div>
@@ -211,7 +211,7 @@ export const Step3RoiRanking: React.FC<Step3RoiRankingProps> = ({
           className="w-full py-3 px-4 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 shadow-lg shadow-blue-900/40 transition-all flex items-center justify-center gap-2 cursor-pointer"
         >
           <FileText className="w-4 h-4 text-amber-300" />
-          <span>Advance to Step 4: Raise Official SDRF Requisition Ticket &amp; DM Approval ➔</span>
+          <span>Advance to Step 4: Raise Official SDRF Requisition Ticket &amp; DM Approval \u2192</span>
         </button>
       )}
     </div>

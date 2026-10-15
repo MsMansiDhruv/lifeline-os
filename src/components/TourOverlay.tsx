@@ -23,7 +23,7 @@ export interface TourStepInfo {
 export const TOUR_STEPS: TourStepInfo[] = [
   {
     step: 1,
-    title: '🌍 Multi-Region & Zero-Download Search',
+    title: 'Multi-Region & Zero-Download Search',
     badge: 'Step 1 of 5 • Global Ingest',
     description:
       'Welcome to Lifeline OS. Unlike single-city studies, you can switch between our verified Silchar (Assam) benchmark, the Oct 2026 Nepal Flash Floods, or type ANY city on Earth to fetch live OpenStreetMap bridges & hospitals on the fly.',
@@ -32,16 +32,16 @@ export const TOUR_STEPS: TourStepInfo[] = [
   },
   {
     step: 2,
-    title: '🔴 Pinpointing Single-Point Road Bottlenecks',
+    title: 'Pinpointing Single-Point Road Bottlenecks',
     badge: 'Step 2 of 5 • Graph Percolation',
     description:
-      'Standard maps just show blue floodwater. Our Tarjan O(V+E) cut-edge engine discovers "Articulation Bridges"—single road spans where a washout leaves 0 backup routes, trapping 27 villages (orange pins) at once.',
+      'Standard maps just show blue floodwater. Our Tarjan O(V+E) cut-edge engine discovers "Articulation Bridges"—single road spans where a washout leaves 0 backup routes, trapping 27 villages at once.',
     actionNote: 'Next will open the 4-Tool Sandbox and simulate instant multi-modal fixes.',
     targetId: 'tour-step-2-chokepoint-card',
   },
   {
     step: 3,
-    title: '🎛️ Simulate Multi-Modal Interventions',
+    title: 'Simulate Multi-Modal Interventions',
     badge: 'Step 3 of 5 • 4-Tool Sandbox',
     description:
       'Test fixes before spending budget! Pick a Modular Bailey Bridge (₹72L, 48h) to reopen 16T truck routes, a Med-Drone (₹8L, 45m) to air-drop blood over water, a Rescue Boat (₹3.5L, 3h) for water transit, or a Mobile Health Booth (₹15L, 6h) to treat casualties on-site.',
@@ -50,7 +50,7 @@ export const TOUR_STEPS: TourStepInfo[] = [
   },
   {
     step: 4,
-    title: '🏥 The Hospital Domino Effect (Cross-Module Relief)',
+    title: 'The Hospital Domino Effect (Cross-Module Relief)',
     badge: 'Step 4 of 5 • Healthcare Cascade',
     description:
       'Roads and hospitals are intimately linked. Deploying a Health Booth or Bridge in Step 1 drops primary ICU patient surge from +191% down to +114% (-77% relief) and reconnected starved hospital clinics!',
@@ -59,7 +59,7 @@ export const TOUR_STEPS: TourStepInfo[] = [
   },
   {
     step: 5,
-    title: '⚡ SDRF Requisition & District Magistrate Sanction',
+    title: 'SDRF Requisition & District Magistrate Sanction',
     badge: 'Step 5 of 5 • DM Sanction Order',
     description:
       'Unifies 4 government silos: ISRO NDEM satellite polygons, PWD road graphs, NHM triage, and NIDM IDRN inventory. Generates official SDRF Requisition Tickets (#REQ-SDRF-2026) split into 3 departmental work orders, sanctioned with District Magistrate sign-off and 1-click export.',
@@ -142,16 +142,16 @@ export const TourOverlay: React.FC<TourOverlayProps> = ({
         </p>
 
         {/* Next Action Indicator */}
-        <div className="p-2.5 rounded-xl bg-[#0d1117] border border-[#30363d] flex items-center gap-2 text-[11px] text-cyan-300 font-medium">
-          <span className="text-amber-400 font-bold">👉 Action:</span>
-          <span>{currentStepInfo.actionNote}</span>
+        <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center gap-2 text-[11px] text-cyan-300 font-medium font-mono">
+          <span className="text-amber-400 font-bold uppercase tracking-wider text-[10px]">Action:</span>
+          <span className="font-sans">{currentStepInfo.actionNote}</span>
         </div>
 
         {/* Footer Navigation Buttons */}
         <div className="flex items-center justify-between gap-3 pt-1">
           <button
             onClick={onSkipTour}
-            className="text-xs text-neutral-400 hover:text-white font-medium cursor-pointer"
+            className="text-xs text-slate-400 hover:text-white font-medium cursor-pointer font-mono"
           >
             Skip Tour
           </button>
@@ -160,7 +160,7 @@ export const TourOverlay: React.FC<TourOverlayProps> = ({
             {tourStep > 1 && (
               <button
                 onClick={onPrevStep}
-                className="px-3 py-1.5 rounded-xl bg-[#21262d] hover:bg-[#30363d] text-neutral-300 font-semibold text-xs transition-all cursor-pointer flex items-center gap-1 border border-[#30363d]"
+                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-all cursor-pointer flex items-center gap-1 border border-slate-700 font-mono"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>Prev</span>
@@ -169,9 +169,9 @@ export const TourOverlay: React.FC<TourOverlayProps> = ({
 
             <button
               onClick={onNextStep}
-              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all cursor-pointer flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all cursor-pointer flex items-center gap-1.5 font-mono"
             >
-              <span>{tourStep === 5 ? '🎉 Finish Tour & Explore Freely' : 'Next: Run Action'}</span>
+              <span>{tourStep === 5 ? 'Complete Tour & Enter Command Mode' : 'Next Step'}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>

@@ -32,61 +32,76 @@ export const Step2HospitalSurge: React.FC<Step2HospitalSurgeProps> = ({
 
   // Active interventions impact calculation
   const topChoke = currentTheater.chokePoints[0];
-  const secChoke = currentTheater.chokePoints[1];
-
   const topChokeTool = topChoke ? interventions[topChoke.id] || 'none' : 'none';
-  const secChokeTool = secChoke ? interventions[secChoke.id] || 'none' : 'none';
+  const jtTool = interventions['jt_road'] || 'none';
+  const hariTool = interventions['harinagar'] || 'none';
+  const korTool = interventions['korkoli_causeway'] || 'none';
+  const borTool = interventions['borkhola_link'] || 'none';
 
   // Compute live hospital capacity and status for each clinic
-  const computedHospitals = hospitals.map((hosp, idx) => {
+  const computedHospitals = hospitals.map((hosp) => {
     let surge = hosp.baseline_surge;
     let status = hosp.type;
     let reliefBadge = '';
-    let dailyIntake = Math.round(hosp.beds * 0.45);
+    const dailyIntake = Math.round(hosp.beds * 0.45);
 
-    // If top choke has an intervention:
-    if (topChoke && hosp.id === topChoke.nearest_hospital_id || idx === 0) {
-      if (topChokeTool === 'booth') {
-        // Health Booth intercepts 75% on-site -> drops Valley Hospital from 191% down to 114% (Stable Green)
-        surge = 114;
-        reliefBadge = `✅ -77% Surge Relieved by ${topChoke.road_name.split(' ')[0]} Health Booth`;
-      } else if (topChokeTool === 'bridge') {
-        // Bailey Bridge restores direct arterial flow -> drops surge down to 118%
-        surge = 118;
-        reliefBadge = `✅ -73% Surge Relieved by ${topChoke.road_name.split(' ')[0]} Bailey Bridge`;
-      } else if (topChokeTool === 'drone') {
-        surge = Math.round(hosp.baseline_surge * (1 - 0.45));
-        reliefBadge = `✅ -45% Surge Relieved by Med-Drone Air Corridor`;
-      } else if (topChokeTool === 'boat') {
-        surge = Math.round(hosp.baseline_surge * (1 - 0.35));
-        reliefBadge = `✅ -35% Surge Relieved by Rescue Boat Ferry`;
+    // 1. Valley Hospital (Linked to JT Road and Harinagar)
+    if (hosp.id === 'valley' || hosp.name.toLowerCase().includes('valley')) {
+      if (jtTool !== 'none' && hariTool !== 'none') {
+        surge = 100; // Both fixed: 100% fully stable
+        status = 'referral';
+        reliefBadge = 'Fully Relieved: Both JT Road & Harinagar Corridors Secured';
+      } else if (jtTool !== 'none') {
+        surge = 135; // JT Road cuts detour influx by half to 135% Amber
+        status = 'overloaded';
+        reliefBadge = '56% Surge Relieved by JT Road Counterfactual (Detour Diverted)';
+      } else if (hariTool !== 'none') {
+        surge = 145; // Harinagar relieves direct detour
+        status = 'overloaded';
+        reliefBadge = '46% Surge Relieved by Harinagar Counterfactual';
       }
     }
 
-    // Nightingale/Starved hospital recovering when Bailey Bridge or Boat is deployed
-    if (hosp.type === 'starved' || hosp.name.toLowerCase().includes('nightingale') || idx === 1) {
-      if (topChokeTool === 'bridge') {
+    // 2. Nightingale Hospital (Starved / Cut-Off by JT Road)
+    if (hosp.id === 'nightingale' || hosp.name.toLowerCase().includes('nightingale')) {
+      if (jtTool === 'bridge') {
         surge = 100;
         status = 'referral';
-        reliefBadge = `✅ Arterial Reopened: Clinic Recovered from 15% Blocked to 100% Operational`;
-      } else if (topChokeTool === 'boat') {
-        surge = 60;
-        reliefBadge = `✅ Water Pier Reconnected: Partial Ambulatory Intake Restored`;
+        reliefBadge = 'Arterial Reopened: Full 16T Access & Ambulance Intake Restored';
+      } else if (jtTool === 'boat') {
+        surge = 65;
+        status = 'referral';
+        reliefBadge = 'Water Pier Reconnected: Critical Casualty Water Transfer';
+      } else if (jtTool === 'drone') {
+        surge = 40;
+        reliefBadge = 'Airbridge Active: Emergency Pharmacy & Blood Supply Restored';
+      } else if (jtTool === 'booth') {
+        surge = 50;
+        reliefBadge = 'Local Booth Active: Forward Triage Operating';
       }
     }
 
-    // Secondary hospital relief from second choke point
-    if (secChoke && hosp.id === secChoke.nearest_hospital_id || idx === 2) {
-      if (secChokeTool !== 'none') {
-        const relief = INTERVENTION_TOOLS[secChokeTool].hospitalSurgeReliefPct;
-        surge = Math.round(hosp.baseline_surge * (1 - relief / 100));
-        reliefBadge = `✅ -${relief}% Relieved via ${INTERVENTION_TOOLS[secChokeTool].name}`;
+    // 3. South City Hospital (Linked to Korkoli River Causeway)
+    if (hosp.id === 'south_city' || hosp.name.toLowerCase().includes('south city')) {
+      if (korTool !== 'none') {
+        surge = 100;
+        status = 'referral';
+        reliefBadge = `100% Stable: Relieved by Korkoli Causeway ${INTERVENTION_TOOLS[korTool]?.name || 'Intervention'}`;
       }
     }
 
-    const isOverloaded = surge > 150;
+    // 4. Silchar Medical College (SMCH - Linked to Borkhola Feeder Cut-Off)
+    if (hosp.id === 'smch' || hosp.name.toLowerCase().includes('medical college')) {
+      if (borTool !== 'none') {
+        surge = 100;
+        status = 'referral';
+        reliefBadge = `100% Stable: Relieved by Borkhola Feeder ${INTERVENTION_TOOLS[borTool]?.name || 'Intervention'}`;
+      }
+    }
+
+    const isOverloaded = surge > 120;
     const isStable = surge <= 120 && surge > 0;
-    const isCutOff = hosp.type === 'starved' && topChokeTool !== 'bridge';
+    const isCutOff = hosp.type === 'starved' && jtTool === 'none';
 
     return {
       ...hosp,
@@ -132,7 +147,7 @@ export const Step2HospitalSurge: React.FC<Step2HospitalSurgeProps> = ({
           </div>
           <div>
             <h3 className="font-bold text-white text-sm">
-              Step 2: 🏥 Hospital Surge &amp; Triage Cascade (Linked to Step 1)
+              Step 2: Hospital Surge &amp; Triage Cascade (Linked to Step 1)
             </h3>
             <p className="text-[11px] text-[#8b949e]">
               Road cut-offs forcibly divert casualties into un-flooded hospitals. Deploying Booths or Bridges in Step 1 immediately stabilizes them!
@@ -157,14 +172,16 @@ export const Step2HospitalSurge: React.FC<Step2HospitalSurgeProps> = ({
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
             <span>
-              <strong>Cross-Module Relief Operational:</strong> {INTERVENTION_TOOLS[topChokeTool].name} on {topChoke.road_name} is actively intercepting and rerouting patients!
+              <strong>Cross-Module Relief Operational:</strong>{' '}
+              {(INTERVENTION_TOOLS as any)[topChokeTool]?.name || 'Counterfactual'} on{' '}
+              {topChoke?.road_name || 'Corridor'} is actively intercepting and rerouting patients!
             </span>
           </div>
           <button
             onClick={onGoToStep1}
             className="text-[10px] font-mono text-cyan-300 underline shrink-0 hover:text-white cursor-pointer"
           >
-            Adjust Step 1 Fix ➔
+            Adjust Step 1 Fix &rarr;
           </button>
         </div>
       ) : (
@@ -179,7 +196,7 @@ export const Step2HospitalSurge: React.FC<Step2HospitalSurgeProps> = ({
             onClick={onGoToStep1}
             className="px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg font-bold text-[11px] shrink-0 cursor-pointer shadow-md"
           >
-            Go to Step 1 ➔
+            Go to Step 1 &rarr;
           </button>
         </div>
       )}
@@ -216,7 +233,7 @@ export const Step2HospitalSurge: React.FC<Step2HospitalSurgeProps> = ({
                         : 'bg-rose-950 text-rose-300 border border-rose-600 animate-pulse'
                     }`}
                   >
-                    🏥
+                    <HeartPulse className="w-4 h-4" />
                   </div>
                   <div>
                     <h4 className="font-bold text-white text-xs flex items-center gap-2">

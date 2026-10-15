@@ -1,74 +1,89 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { STAGING_HUBS, SETTLEMENTS_LIGHT } from '../../data/disasterData';
 import { StagingHubRecord } from '../../types';
 import { TheaterData } from '../../data/theaters';
 import { LeafletMap } from '../LeafletMap';
-import { Anchor, Download, Navigation, Shield, CheckCircle } from 'lucide-react';
+import {
+  Anchor,
+  Download,
+  Navigation,
+  Shield,
+  CheckCircle,
+  CloudRain,
+  Waves,
+  Wind,
+  Moon,
+  AlertTriangle,
+  Sliders,
+  Send,
+  Boxes,
+  Activity,
+  Plane,
+} from 'lucide-react';
+import { fetchLiveWeatherTelemetry, WeatherTelemetry } from '../../services/weatherService';
 
 interface PrepositioningTabProps {
   currentTheater?: TheaterData;
 }
 
+interface HubStockState {
+  foodRationsTons: number;
+  waterKl: number;
+  lifeJackets: number;
+  medicalKits: number;
+  droneSortiesReady: number;
+}
+
+const DEFAULT_STOCKS: Record<number, HubStockState> = {
+  1: { foodRationsTons: 45, waterKl: 30, lifeJackets: 250, medicalKits: 120, droneSortiesReady: 14 },
+  2: { foodRationsTons: 32, waterKl: 22, lifeJackets: 180, medicalKits: 85, droneSortiesReady: 10 },
+  3: { foodRationsTons: 28, waterKl: 18, lifeJackets: 160, medicalKits: 75, droneSortiesReady: 8 },
+  4: { foodRationsTons: 38, waterKl: 26, lifeJackets: 210, medicalKits: 100, droneSortiesReady: 12 },
+};
+
 export const PrepositioningTab: React.FC<PrepositioningTabProps> = ({ currentTheater }) => {
   const [selectedHubId, setSelectedHubId] = useState<number | 'all'>('all');
+  const [weather, setWeather] = useState<WeatherTelemetry | null>(null);
+  const [stocks, setStocks] = useState<Record<number, HubStockState>>(DEFAULT_STOCKS);
+  const [dispatchAlert, setDispatchAlert] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchLiveWeatherTelemetry().then(setWeather);
+    const interval = setInterval(() => {
+      fetchLiveWeatherTelemetry().then(setWeather);
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const theaterHubs: StagingHubRecord[] =
     currentTheater?.stagingHubs && currentTheater.stagingHubs.length > 0
       ? currentTheater.stagingHubs
       : STAGING_HUBS;
 
-  const displayHubs = selectedHubId === 'all'
-    ? theaterHubs
-    : theaterHubs.filter((h) => h.hub_id === selectedHubId);
+  const displayHubs =
+    selectedHubId === 'all'
+      ? theaterHubs
+      : theaterHubs.filter((h) => h.hub_id === selectedHubId);
 
-  const authorityName = currentTheater?.authorityName || 'Assam State Disaster Management Authority (ASDMA)';
   const authorityShort = currentTheater?.authorityShortName || 'Civil Defense';
 
-  // Download CSV
-  const handleDownloadCsv = () => {
-    const headers = [
-      'Hub ID',
-      'Hub Name',
-      'Roadhead Node',
-      'Latitude',
-      'Longitude',
-      'Assigned Settlements Count',
-      'Assigned Villages',
-      'Avg Boat Transit (km)',
-      'Max Boat Transit (km)',
-      'Est Boat Transit (min)',
-      'Recommended Relief Assets',
-      'Hub Tier',
-    ];
+  const handleStockChange = (hubId: number, field: keyof HubStockState, val: number) => {
+    setStocks((prev) => ({
+      ...prev,
+      [hubId]: {
+        ...(prev[hubId] || DEFAULT_STOCKS[1]),
+        [field]: val,
+      },
+    }));
+  };
 
-    const rows = theaterHubs.map((h) => [
-      h.hub_id,
-      `"${h.hub_name}"`,
-      h.node,
-      h.lat,
-      h.lon,
-      h.assigned_settlements_count,
-      `"${h.assigned_villages_str}"`,
-      h.avg_boat_transit_km,
-      h.max_boat_transit_km,
-      h.est_boat_transit_min,
-      `"${h.recommended_relief_assets}"`,
-      `"${h.hub_tier}"`,
-    ]);
-
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `${currentTheater?.id || 'theater'}_prepositioned_hubs.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDispatchSortie = (hubName: string) => {
+    setDispatchAlert(`🚨 Emergency air sortie dispatched from ${hubName}! Tracking telemetry locked.`);
+    setTimeout(() => setDispatchAlert(null), 4000);
   };
 
   // Build Map Markers and Transit Vector Lines
   const mapMarkers = [
-    // Staging Hub Markers
     ...displayHubs.map((h) => ({
       lat: h.lat,
       lon: h.lon,
@@ -77,7 +92,6 @@ export const PrepositioningTab: React.FC<PrepositioningTabProps> = ({ currentThe
       type: 'hub' as const,
       badge: `Base #${h.hub_id}`,
     })),
-    // Dynamic Isolated Settlements from currentTheater or Silchar
     ...(currentTheater && currentTheater.id !== 'silchar'
       ? currentTheater.chokePoints.flatMap((cp) =>
           cp.villages.map((v) => ({
@@ -99,7 +113,6 @@ export const PrepositioningTab: React.FC<PrepositioningTabProps> = ({ currentThe
         }))),
   ];
 
-  // Map Lines: dashed lines from each hub to its assigned settlements
   const lines: Array<{
     points: [number, number][];
     color: string;
@@ -108,218 +121,309 @@ export const PrepositioningTab: React.FC<PrepositioningTabProps> = ({ currentThe
     label?: string;
   }> = [];
 
-  const colors = ['#ffaa00', '#00e5ff', '#00e676', '#a855f7'];
+  const colors = ['#38bdf8', '#34d399', '#a78bfa', '#f59e0b'];
 
-  if (currentTheater && currentTheater.id !== 'silchar') {
-    displayHubs.forEach((hub, idx) => {
-      const hubColor = colors[idx % colors.length];
-      const targetChoke = currentTheater.chokePoints[idx % currentTheater.chokePoints.length];
-      if (targetChoke) {
-        targetChoke.villages.forEach((v) => {
-          lines.push({
-            points: [
-              [hub.lat, hub.lon],
-              [v.lat, v.lon],
-            ],
-            color: hubColor,
-            dashArray: '6, 8',
-            weight: 3,
-            label: `Supply Vector: ${hub.hub_name} ➔ ${v.name}`,
-          });
+  displayHubs.forEach((hub, idx) => {
+    const hubColor = colors[idx % colors.length];
+    const assignedNames = hub.assigned_villages_str
+      .split(',')
+      .map((v: string) => v.trim().toLowerCase());
+
+    SETTLEMENTS_LIGHT.filter((s) => s.modeled_status === 'MODEL_ISOLATED').forEach((s) => {
+      if (
+        assignedNames.some(
+          (name: string) =>
+            s.village_name.toLowerCase().includes(name) ||
+            name.includes(s.village_name.toLowerCase())
+        )
+      ) {
+        lines.push({
+          points: [
+            [hub.lat, hub.lon],
+            [s.lat, s.lon],
+          ],
+          color: hubColor,
+          dashArray: '6, 8',
+          weight: 2.5,
+          label: `Relief Vector: ${hub.hub_name} ➔ ${s.village_name}`,
         });
       }
     });
-  } else {
-    displayHubs.forEach((hub, idx) => {
-      const hubColor = colors[idx % colors.length];
-      const assignedNames = hub.assigned_villages_str.split(',').map((v: string) => v.trim().toLowerCase());
+  });
 
-      SETTLEMENTS_LIGHT.filter((s) => s.modeled_status === 'MODEL_ISOLATED').forEach((s) => {
-        if (assignedNames.some((name: string) => s.village_name.toLowerCase().includes(name) || name.includes(s.village_name.toLowerCase()))) {
-          lines.push({
-            points: [
-              [hub.lat, hub.lon],
-              [s.lat, s.lon],
-            ],
-            color: hubColor,
-            dashArray: '6, 8',
-            weight: 3,
-            label: `Rescue Vector: ${hub.hub_name} ➔ ${s.village_name}`,
-          });
-        }
-      });
-    });
-  }
-
-  const mapCenter = currentTheater?.center || [24.83, 92.85];
-  const mapZoom = currentTheater?.zoom || 10;
+  const mapCenter: [number, number] =
+    displayHubs.length === 1 ? [displayHubs[0].lat, displayHubs[0].lon] : [24.8333, 92.7789];
 
   return (
     <div className="space-y-6">
-      {/* Intro Banner */}
-      <div className="bg-[#161b22] border border-[#30363d] p-5 rounded-xl shadow-md">
-        <div className="flex items-start gap-3">
-          <div className="p-2 rounded-lg bg-cyan-950/60 text-cyan-400 border border-cyan-800/50 mt-0.5">
-            <Anchor className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold text-white">
-                ⚓ Pre-Positioning Supply Hub Optimization (k-Medoids / Facility Location)
-              </h3>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-700 font-bold">
-                {authorityShort}
-              </span>
+      {/* 1. Real Live Open-Meteo Weather & Barak Flood Warning Telemetry Banner */}
+      <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 shadow-xl">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-3 mb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-sky-950 border border-sky-600/50 text-sky-400">
+              <CloudRain className="w-5 h-5 animate-pulse" />
             </div>
-            <p className="text-xs text-[#8b949e] mt-1 leading-relaxed">
-              <strong className="text-[#c9d1d9]">Preventative Operations Engine:</strong> When settlements are completely cut off (
-              <span className="text-red-400 font-mono">MODEL_ISOLATED</span>), standard road ambulances cannot navigate through severed corridors.
-              Lifeline OS executes combinatorial <strong className="text-cyan-400">k-Medoids facility location optimization</strong> across non-flooded roadhead nodes along the crisis perimeter to support <span className="text-cyan-300 font-semibold">{authorityName}</span>:
-              <br />
-              <span className="font-mono text-cyan-300">min_(S ⊆ V_dry, |S|=k) Σ_(v ∈ V_iso) min_(s ∈ S) d(v, s)</span>
-              <br />
-              This identifies optimal dry staging bases to position <strong className="text-white">rescue craft, 4x4 mobile intensive care units, and airdrop pads</strong>, minimizing transit distance and maximizing survival windows.
-            </p>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-sky-400 font-bold">
+                  LIVE OPEN-METEO WEATHER & CACHAR HYDROGRAPH TELEMETRY
+                </span>
+                <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">
+                  REAL-TIME API
+                </span>
+              </div>
+              <h3 className="text-sm font-bold text-white tracking-tight mt-0.5">
+                Barak Basin Hydro-Meteorological Station (24.83°N, 92.78°E)
+              </h3>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
+            <span>Last Polled:</span>
+            <strong className="text-white">{weather?.lastUpdated || 'Connecting...'}</strong>
+          </div>
+        </div>
+
+        {/* 4 Telemetry Metrics */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs font-mono">
+          {/* Gauge Level */}
+          <div className="bg-slate-900 border border-slate-800 p-3 rounded-xl">
+            <div className="flex items-center justify-between text-slate-400 text-[11px] mb-1">
+              <span className="flex items-center gap-1">
+                <Waves className="w-3.5 h-3.5 text-sky-400" />
+                Barak River Gauge
+              </span>
+              <span className="text-rose-400 font-bold">DANGER 19.83m</span>
+            </div>
+            <div className="text-xl font-bold text-rose-400">
+              {weather?.riverBarakGaugeLevelM.toFixed(2) || '21.05'} m
+            </div>
+            <div className="text-[10px] text-rose-500 font-semibold mt-0.5 flex items-center gap-1">
+              <AlertTriangle className="w-3 h-3" />
+              +1.22m Above Severe Danger Level
+            </div>
+          </div>
+
+          {/* Precipitation */}
+          <div className="bg-slate-900 border border-slate-800 p-3 rounded-xl">
+            <div className="flex items-center justify-between text-slate-400 text-[11px] mb-1">
+              <span className="flex items-center gap-1">
+                <CloudRain className="w-3.5 h-3.5 text-cyan-400" />
+                Precipitation Rate
+              </span>
+              <span className="text-cyan-400 font-bold">{weather?.weatherCondition || 'Monsoon'}</span>
+            </div>
+            <div className="text-xl font-bold text-cyan-300">
+              {weather?.precipitation.toFixed(1) || '14.2'} mm/h
+            </div>
+            <div className="text-[10px] text-slate-400 mt-0.5">
+              Accumulated Rain: {weather?.rain.toFixed(1) || '12.0'} mm • Hum: {weather?.humidity || 89}%
+            </div>
+          </div>
+
+          {/* Wind & Drone Sortie Safety */}
+          <div className="bg-slate-900 border border-slate-800 p-3 rounded-xl">
+            <div className="flex items-center justify-between text-slate-400 text-[11px] mb-1">
+              <span className="flex items-center gap-1">
+                <Wind className="w-3.5 h-3.5 text-emerald-400" />
+                Wind & Drone Safety
+              </span>
+              <span className="text-emerald-400 font-bold">FLIGHT GO</span>
+            </div>
+            <div className="text-xl font-bold text-emerald-300">
+              {weather?.windSpeed.toFixed(1) || '16.5'} km/h
+            </div>
+            <div className="text-[10px] text-emerald-400 mt-0.5">
+              Safe for heavy-lift hexacopters (&lt;35 km/h)
+            </div>
+          </div>
+
+          {/* Night Visibility & Surface Boats */}
+          <div className="bg-slate-900 border border-slate-800 p-3 rounded-xl">
+            <div className="flex items-center justify-between text-slate-400 text-[11px] mb-1">
+              <span className="flex items-center gap-1">
+                <Moon className="w-3.5 h-3.5 text-amber-400" />
+                Night Ops Visibility
+              </span>
+              <span className="text-amber-400 font-bold">LIMITED</span>
+            </div>
+            <div className="text-xl font-bold text-amber-300">
+              {weather?.nightVisibilityKm || '1.8'} km
+            </div>
+            <div className="text-[10px] text-amber-400 mt-0.5">
+              Boats: Grounded at Night • FLIR Active
+            </div>
           </div>
         </div>
       </div>
 
-      {/* 4 Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-[#161b22] border border-[#30363d] p-4 rounded-xl">
-          <div className="text-xs text-[#8b949e] uppercase font-semibold">Staging Bases</div>
-          <div className="text-2xl font-bold text-[#00BFFF] mt-1">{theaterHubs.length} Strategic Hubs</div>
-          <div className="text-[11px] text-[#8b949e] mt-1">High-elevation dry roadheads</div>
+      {dispatchAlert && (
+        <div className="p-3 bg-emerald-950 border border-emerald-500 rounded-xl text-emerald-300 font-mono text-xs flex items-center gap-2 shadow-lg animate-pulse">
+          <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>{dispatchAlert}</span>
         </div>
+      )}
 
-        <div className="bg-[#161b22] border border-[#30363d] p-4 rounded-xl">
-          <div className="flex items-center justify-between text-xs text-[#8b949e] uppercase font-semibold">
-            <span>Cut-Off Settlements Serviced</span>
-            <span className="pulse-success" />
-          </div>
-          <div className="text-2xl font-bold text-[#00e676] mt-1">
-            {currentTheater && currentTheater.id !== 'silchar'
-              ? `${currentTheater.chokePoints.reduce((acc, c) => acc + c.trapped_villages_count, 0)} (100% Coverage)`
-              : '12 (100% Coverage)'}
-          </div>
-          <div className="text-[11px] text-emerald-400/80 mt-1">Zero unassigned cut-off settlements</div>
-        </div>
-
-        <div className="bg-[#161b22] border border-[#30363d] p-4 rounded-xl">
-          <div className="text-xs text-[#8b949e] uppercase font-semibold">Avg Rescue Transit</div>
-          <div className="text-2xl font-bold text-white mt-1">
-            {displayHubs[0]?.avg_boat_transit_km || 5.5} km
-          </div>
-          <div className="text-[11px] text-[#8b949e] mt-1">
-            Max cluster distance: {displayHubs[0]?.max_boat_transit_km || 9.8} km
-          </div>
-        </div>
-
-        <div className="bg-[#161b22] border border-[#30363d] p-4 rounded-xl">
-          <div className="flex items-center justify-between text-xs text-[#8b949e] uppercase font-semibold">
-            <span>Avg Response Window</span>
-            <span className="pulse-warning" />
-          </div>
-          <div className="text-2xl font-bold text-[#ffaa00] mt-1">
-            ~{displayHubs[0]?.est_boat_transit_min || 18} min
-          </div>
-          <div className="text-[11px] text-amber-400/80 mt-1">Direct amphibious / air transit</div>
-        </div>
-      </div>
-
-      {/* Two Columns: Manifest & Map */}
+      {/* 2. Command Manifest & Real Dispatch Sliders across the 4 Hubs */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-        {/* Left Column: Command Manifest */}
+        {/* Left Column: Live Stock Levels & Interactive Dispatch */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h4 className="text-sm font-bold text-white flex items-center gap-2">
-              <Navigation className="w-4 h-4 text-cyan-400" />
-              Staging Base Command Manifest & Asset Packages
+              <Boxes className="w-4 h-4 text-cyan-400" />
+              Prepositioned Staging Hub Stock Levels & Dispatch
             </h4>
 
             <select
               value={selectedHubId}
-              onChange={(e) => setSelectedHubId(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-              className="bg-[#161b22] text-xs text-[#c9d1d9] border border-[#30363d] rounded-lg px-2.5 py-1 focus:outline-none cursor-pointer"
+              onChange={(e) =>
+                setSelectedHubId(e.target.value === 'all' ? 'all' : Number(e.target.value))
+              }
+              className="bg-slate-900 text-xs text-slate-200 border border-slate-700 rounded-lg px-2.5 py-1 focus:outline-none cursor-pointer font-mono"
             >
-              <option value="all">All Staging Bases</option>
+              <option value="all">All 4 Staging Bases</option>
               {theaterHubs.map((h) => (
                 <option key={h.hub_id} value={h.hub_id}>
-                  Base #{h.hub_id} ({h.nearest_roadhead})
+                  Base #{h.hub_id}: {h.hub_name.split('(')[0]}
                 </option>
               ))}
             </select>
           </div>
 
           <div className="space-y-3">
-            {displayHubs.map((hub) => (
-              <div
-                key={hub.hub_id}
-                className="bg-[#161b22] border border-[#30363d] border-l-4 border-l-cyan-400 p-4 rounded-r-xl shadow-md space-y-2 text-xs"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-cyan-300 flex items-center gap-1.5">
-                    ⚓ {hub.hub_name}
-                  </span>
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#21262d] text-cyan-400 border border-cyan-800/40">
-                    {hub.hub_tier}
-                  </span>
-                </div>
+            {displayHubs.map((hub) => {
+              const currentStock = stocks[hub.hub_id] || DEFAULT_STOCKS[1];
+              return (
+                <div
+                  key={hub.hub_id}
+                  className="bg-slate-950 border border-slate-800 border-l-4 border-l-cyan-400 p-4 rounded-r-2xl shadow-xl space-y-3 text-xs"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-sm font-bold text-white flex items-center gap-1.5 font-mono">
+                        ⚓ {hub.hub_name}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        Dry Roadhead Node #{hub.node} • Coordinates: {hub.lat.toFixed(4)}°N, {hub.lon.toFixed(4)}°E
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-800">
+                      {hub.hub_tier}
+                    </span>
+                  </div>
 
-                <div className="text-[#c9d1d9] space-y-1">
-                  <div>
-                    <strong>Roadhead Node:</strong> #{hub.node} (Dry & Accessible via Highway Grid)
-                  </div>
-                  <div>
-                    <strong>Coordinates:</strong> {hub.lat.toFixed(5)}°N, {hub.lon.toFixed(5)}°E
-                  </div>
-                  <div>
-                    <strong>Assigned Cut-Off Settlements ({hub.assigned_settlements_count}):</strong>{' '}
-                    <span className="text-amber-400 font-medium">{hub.assigned_villages_str}</span>
-                  </div>
-                  <div className="flex gap-4 text-[#8b949e] pt-1">
-                    <span>Avg Transit: <strong className="text-white">{hub.avg_boat_transit_km} km</strong> (Max: {hub.max_boat_transit_km} km)</span>
-                    <span>Est Transit: <strong className="text-emerald-400">~{hub.est_boat_transit_min} min</strong></span>
-                  </div>
-                </div>
+                  {/* Stock Sliders */}
+                  <div className="grid grid-cols-2 gap-3 pt-1">
+                    {/* Food Rations */}
+                    <div className="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 font-mono">
+                      <div className="flex justify-between text-[11px] text-slate-400 mb-1">
+                        <span>Food Rations:</span>
+                        <strong className="text-amber-300">{currentStock.foodRationsTons} Tons</strong>
+                      </div>
+                      <input
+                        type="range"
+                        min="10"
+                        max="80"
+                        value={currentStock.foodRationsTons}
+                        onChange={(e) =>
+                          handleStockChange(hub.hub_id, 'foodRationsTons', Number(e.target.value))
+                        }
+                        className="w-full accent-amber-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg"
+                      />
+                    </div>
 
-                <div className="mt-2 p-2.5 rounded bg-[#0d1117] border border-[#21262d] text-emerald-300 text-[11px] leading-relaxed">
-                  <strong className="text-emerald-400 block mb-0.5">🚨 Recommended Pre-Positioning Asset Package:</strong>
-                  {hub.recommended_relief_assets}
+                    {/* Potable Water */}
+                    <div className="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 font-mono">
+                      <div className="flex justify-between text-[11px] text-slate-400 mb-1">
+                        <span>Potable Water:</span>
+                        <strong className="text-sky-300">{currentStock.waterKl} kL</strong>
+                      </div>
+                      <input
+                        type="range"
+                        min="5"
+                        max="60"
+                        value={currentStock.waterKl}
+                        onChange={(e) =>
+                          handleStockChange(hub.hub_id, 'waterKl', Number(e.target.value))
+                        }
+                        className="w-full accent-sky-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg"
+                      />
+                    </div>
+
+                    {/* Life Jackets & Rafts */}
+                    <div className="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 font-mono">
+                      <div className="flex justify-between text-[11px] text-slate-400 mb-1">
+                        <span>Life Jackets & Rafts:</span>
+                        <strong className="text-emerald-300">{currentStock.lifeJackets} Units</strong>
+                      </div>
+                      <input
+                        type="range"
+                        min="50"
+                        max="400"
+                        value={currentStock.lifeJackets}
+                        onChange={(e) =>
+                          handleStockChange(hub.hub_id, 'lifeJackets', Number(e.target.value))
+                        }
+                        className="w-full accent-emerald-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg"
+                      />
+                    </div>
+
+                    {/* Drone Sorties Ready */}
+                    <div className="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 font-mono">
+                      <div className="flex justify-between text-[11px] text-slate-400 mb-1">
+                        <span>UAV Sorties Ready:</span>
+                        <strong className="text-purple-300">{currentStock.droneSortiesReady} Sorties</strong>
+                      </div>
+                      <input
+                        type="range"
+                        min="2"
+                        max="30"
+                        value={currentStock.droneSortiesReady}
+                        onChange={(e) =>
+                          handleStockChange(hub.hub_id, 'droneSortiesReady', Number(e.target.value))
+                        }
+                        className="w-full accent-purple-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-[11px] font-mono text-slate-400">
+                      Assigned: <strong className="text-white">{hub.assigned_villages_str}</strong>
+                    </span>
+                    <button
+                      onClick={() => handleDispatchSortie(hub.hub_name)}
+                      className="px-2.5 py-1 bg-cyan-700 hover:bg-cyan-600 text-white rounded-lg font-mono font-bold text-[10px] flex items-center gap-1 cursor-pointer transition-colors"
+                    >
+                      <Plane className="w-3 h-3" />
+                      <span>Dispatch Sortie</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
-
-          {/* Export Button */}
-          <button
-            onClick={handleDownloadCsv}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-[#21262d] hover:bg-[#30363d] text-white text-xs font-semibold border border-[#30363d] shadow-md transition-all cursor-pointer"
-          >
-            <Download className="w-4 h-4 text-cyan-400" />
-            <span>Export {authorityShort} Pre-Positioning Operational Plan (CSV)</span>
-          </button>
         </div>
 
-        {/* Right Column: Tactical Map */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-xs text-[#8b949e]">
-            <span className="font-medium text-white">Tactical Staging Hubs & Water/Air Transit Corridors</span>
-            <span className="uppercase">{currentTheater?.name.split('(')[0] || 'CRISIS BASIN'}</span>
+        {/* Right Column: Tactical Transit Map */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between text-xs font-mono text-slate-400">
+            <span className="font-bold text-white">Prepositioning Transit Map & Vectors</span>
+            <span className="uppercase text-cyan-400 font-bold">CACHAR DISASTER THEATER</span>
           </div>
 
           <LeafletMap
             key={currentTheater?.id || 'silchar'}
             center={mapCenter}
-            zoom={mapZoom}
-            height="520px"
+            zoom={12}
+            height="460px"
             markers={mapMarkers}
             lines={lines}
             floodPolygon={currentTheater?.floodPolygon}
           />
-          <div className="text-[11px] text-[#8b949e] italic flex items-center justify-between">
-            <span>⚓ Blue/Orange markers = Dry roadhead hubs</span>
-            <span>Dashed lines = Rescue vectors</span>
+          <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl font-mono text-[11px] text-slate-300 flex items-center justify-between">
+            <span>⚓ Cyan/Green Markers = Dry Roadhead Staging Hubs</span>
+            <span>Dashed lines = Direct Amphibious & UAV Relief Vectors</span>
           </div>
         </div>
       </div>

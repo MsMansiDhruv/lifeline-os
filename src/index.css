@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Tactical Dark OpenStreetMap Tiles (100% Free, Keyless, with Crisp Place/Road Labels) */
+.tactical-dark-osm-tiles {
+  filter: brightness(90%) contrast(125%) hue-rotate(180deg) invert(100%) !important;
+}
+
 @keyframes pulse-red {
   0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.8); }
   70% { transform: scale(1.15); box-shadow: 0 0 0 8px rgba(255, 77, 77, 0); }

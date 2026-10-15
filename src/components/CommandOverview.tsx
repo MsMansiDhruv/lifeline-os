@@ -58,13 +58,13 @@ export const CommandOverview: React.FC<CommandOverviewProps> = ({
   return (
     <div className="space-y-3.5">
       {/* 1-Line Interactive Walkthrough Guide Bar (No "Jury" word) */}
-      <div className="bg-[#161b22] border border-blue-900/40 px-3.5 py-2 rounded-xl flex items-center justify-between text-xs text-neutral-300">
+      <div className="bg-slate-900 border border-blue-900/40 px-3.5 py-2 rounded-xl flex items-center justify-between text-xs text-slate-300">
         <div className="flex items-center gap-2 truncate">
-          <span className="text-amber-400 font-bold shrink-0">💡 How it works:</span>
-          <span className="truncate text-neutral-300">
-            <strong>(1)</strong> Select a washed-out bridge on the left to see trapped villages ➔{' '}
-            <strong>(2)</strong> Click any of the 4 Sandbox tools (Bridge / Boat / Drone / Health Booth) ➔{' '}
-            <strong>(3)</strong> Watch the map fly and hospital surge relieve in real time!
+          <span className="text-amber-400 font-bold shrink-0">Workflow:</span>
+          <span className="truncate text-slate-300">
+            <strong>(1)</strong> Select a washed-out bridge on the left to inspect isolated villages &bull;{' '}
+            <strong>(2)</strong> Deploy counterfactual tools (Bridge / Boat / Drone / Clinic) &bull;{' '}
+            <strong>(3)</strong> Watch network connectivity and clinic surge rebalance in real time.
           </span>
         </div>
         <span className="hidden sm:inline-block text-[11px] font-mono text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800/50 shrink-0 ml-2">
@@ -82,7 +82,7 @@ export const CommandOverview: React.FC<CommandOverviewProps> = ({
             </span>
           </div>
           <span className="shrink-0 px-2.5 py-0.5 rounded-full bg-emerald-900/90 text-emerald-300 border border-emerald-500 font-mono font-bold text-[11px]">
-            MAX BOTTLENECK: {rawWorstCut} ➔ {dynamicWorstCut} VILLAGES CUT
+            MAX BOTTLENECK: {rawWorstCut} &rarr; {dynamicWorstCut} VILLAGES CUT
           </span>
         </div>
       )}
@@ -103,12 +103,12 @@ export const CommandOverview: React.FC<CommandOverviewProps> = ({
       {/* 4 Plain-Language High-Contrast KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
         {/* KPI 1: Single-Point Road Bottlenecks */}
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-4 shadow-sm hover:border-neutral-500 transition-all flex flex-col justify-between">
-          <div className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">
-            Single-Point Road Bottlenecks
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-sm hover:border-slate-700 transition-all flex flex-col justify-between">
+          <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider font-mono">
+            Road Bottlenecks
           </div>
           <div className="flex items-baseline justify-between mt-2">
-            <span className="text-3xl font-extrabold text-white tracking-tight">
+            <span className="text-3xl font-extrabold text-white tracking-tight font-mono">
               {displayedRoadsCount}
             </span>
             {isHeavy ? (
@@ -125,17 +125,17 @@ export const CommandOverview: React.FC<CommandOverviewProps> = ({
 
         {/* KPI 2: Worst Single Failure */}
         <div
-          className={`bg-[#161b22] border rounded-xl p-4 shadow-sm transition-all flex flex-col justify-between ${
+          className={`bg-slate-900 border rounded-xl p-4 shadow-sm transition-all flex flex-col justify-between ${
             worstTool && worstTool !== 'none'
               ? 'border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
-              : 'border-[#30363d] hover:border-red-500/40'
+              : 'border-slate-800 hover:border-rose-500/40'
           }`}
         >
-          <div className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider truncate">
+          <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider truncate font-mono">
             Worst Failure ({worstChoke.road_name.split(' ')[0]})
           </div>
           <div className="flex items-baseline justify-between mt-2">
-            <div className="flex items-baseline gap-1.5">
+            <div className="flex items-baseline gap-1.5 font-mono">
               <span
                 className={`text-3xl font-extrabold tracking-tight ${
                   worstTool && worstTool !== 'none' ? 'text-emerald-400' : 'text-rose-500'
@@ -148,11 +148,11 @@ export const CommandOverview: React.FC<CommandOverviewProps> = ({
               )}
             </div>
             {worstTool && worstTool !== 'none' ? (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-950 text-emerald-400 border border-emerald-700/80">
+              <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-md bg-emerald-950 text-emerald-400 border border-emerald-700/80">
                 -{rawWorstCut - dynamicWorstCut} Reconnected
               </span>
             ) : (
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+              <span className={`text-[10px] font-bold font-mono px-2 py-0.5 rounded-md border ${
                 isHeavy ? 'bg-amber-950/90 text-amber-300 border-amber-600' : 'bg-rose-950/70 text-rose-400 border-rose-800/60'
               }`}>
                 {rawWorstCut} Villages Trapped
@@ -163,18 +163,18 @@ export const CommandOverview: React.FC<CommandOverviewProps> = ({
 
         {/* KPI 3: Hospitals in Critical Overload */}
         <div
-          className={`bg-[#161b22] border rounded-xl p-4 shadow-sm transition-all flex flex-col justify-between ${
+          className={`bg-slate-900 border rounded-xl p-4 shadow-sm transition-all flex flex-col justify-between ${
             dynamicOverloadedCount < baseOverloadedCount
               ? 'border-emerald-500/60'
-              : 'border-[#30363d] hover:border-amber-500/40'
+              : 'border-slate-800 hover:border-amber-500/40'
           }`}
         >
-          <div className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">
+          <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider font-mono">
             Clinics in Critical Overload
           </div>
           <div className="flex items-baseline justify-between mt-2">
             <span
-              className={`text-3xl font-extrabold tracking-tight ${
+              className={`text-3xl font-extrabold tracking-tight font-mono ${
                 dynamicOverloadedCount === 0
                   ? 'text-emerald-400'
                   : dynamicOverloadedCount < baseOverloadedCount
@@ -184,45 +184,45 @@ export const CommandOverview: React.FC<CommandOverviewProps> = ({
             >
               {dynamicOverloadedCount}
             </span>
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+            <span className={`text-[10px] font-bold font-mono px-2 py-0.5 rounded-md border ${
               dynamicOverloadedCount < baseOverloadedCount
-                ? 'bg-emerald-950 text-emerald-400 border-emerald-700/80'
-                : 'bg-amber-950/70 text-amber-400 border-amber-800/60'
+                ? 'bg-emerald-950 text-emerald-400 border border-emerald-700/80'
+                : 'bg-amber-950/70 text-amber-400 border border-amber-800/60'
             }`}>
               {dynamicOverloadedCount < baseOverloadedCount
-                ? `-${baseOverloadedCount - dynamicOverloadedCount} Relieved`
+                ? `${baseOverloadedCount - dynamicOverloadedCount} Clinics Relieved`
                 : '>150% Influx'}
             </span>
           </div>
         </div>
 
-        {/* KPI 4: Vehicle Physics Mode (Direct Interactive Toggle inside the Card) */}
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-3.5 shadow-sm flex flex-col justify-between">
-          <div className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">
+        {/* KPI 4: Vehicle Physics Mode */}
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-3.5 shadow-sm flex flex-col justify-between">
+          <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider font-mono">
             Vehicle Physics Mode
           </div>
-          <div className="grid grid-cols-2 gap-1.5 mt-2">
+          <div className="grid grid-cols-2 gap-1.5 mt-2 font-mono">
             <button
               onClick={() => onFleetChange && onFleetChange('Light Emergency (Ambulance/4x4)')}
               className={`px-2 py-1.5 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer ${
                 !isHeavy
                   ? 'bg-blue-600 text-white shadow-sm'
-                  : 'bg-[#0d1117] text-neutral-400 hover:text-white border border-[#21262d]'
+                  : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
               }`}
             >
               <Shield className="w-3 h-3" />
-              <span>🚑 4x4</span>
+              <span>4x4</span>
             </button>
             <button
               onClick={() => onFleetChange && onFleetChange('Heavy Supply (Truck/Bus)')}
               className={`px-2 py-1.5 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer ${
                 isHeavy
                   ? 'bg-amber-600 text-white shadow-sm'
-                  : 'bg-[#0d1117] text-neutral-400 hover:text-white border border-[#21262d]'
+                  : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
               }`}
             >
               <Truck className="w-3 h-3" />
-              <span>🚛 16T Truck</span>
+              <span>16T Truck</span>
             </button>
           </div>
         </div>

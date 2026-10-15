@@ -24,6 +24,7 @@ export interface TheaterChokePoint {
   priority_tier: 'P1 - Immediate' | 'P2 - Secondary' | 'P3 - Tactical';
   villages: TheaterVillage[];
   nearest_hospital_id: string;
+  failure_type?: string;
 }
 
 export interface TheaterHospital {
@@ -58,9 +59,10 @@ export interface TheaterData {
 export const INTERVENTION_TOOLS = {
   bridge: {
     type: 'bridge',
-    name: 'Modular Bailey Bridge',
-    label: '🛠️ Modular Bailey Bridge',
+    name: 'Bailey Bridge',
+    label: 'Bailey Bridge',
     costStr: '₹72 Lakhs',
+    setupCost: '₹72L • 48h Setup',
     timeStr: '48h',
     badge: '₹72L | 48h',
     costInLakhs: 72,
@@ -72,52 +74,18 @@ export const INTERVENTION_TOOLS = {
     truckAccessible: true,
     pinColor: '#10b981', // emerald
     lineColor: '#00e676',
-    statusBadge: 'SECURED (BRIDGE ACTIVE)',
+    statusBadge: 'SECURED (BAILEY BRIDGE)',
+    plainExplanation:
+      'Spans the washed-out river gap with a steel truss bridge. Reopens the main green highway for both 4x4 Ambulances and 16-Ton Food Trucks, reconnecting 100% of trapped villages.',
+    mapActionLabel: 'BAILEY BRIDGE ACTIVE: Full Highway & 16T Truck Access Restored',
     desc: 'Modular Class-40 Bailey span. Reconnects 100% of trapped villages, reopens arterial access for 16T heavy supply trucks, and relieves -73% Hospital Surge.',
-  },
-  boat: {
-    type: 'boat',
-    name: 'Motorized Rescue Boat',
-    label: '🚤 Rescue Boat',
-    costStr: '₹3.5 Lakhs',
-    timeStr: '3h',
-    badge: '₹3.5L | 3h',
-    costInLakhs: 3.5,
-    cost: 350000,
-    timeHours: 3,
-    timeMinutes: 180,
-    villagesRelievedPct: 65,
-    hospitalSurgeReliefPct: 35,
-    truckAccessible: false,
-    pinColor: '#06b6d4', // cyan
-    lineColor: '#00e5ff',
-    statusBadge: 'EVACUATING (WATER FERRY)',
-    desc: 'Motorized inflatable Zodiac boat. Establishes water ferry crossing within 3 hours. Evacuates stranded civilians and ambulatory casualties.',
-  },
-  drone: {
-    type: 'drone',
-    name: 'Medical Delivery Drone',
-    label: '🚁 Med-Drone',
-    costStr: '₹8 Lakhs',
-    timeStr: '45m',
-    badge: '₹8L | 45m',
-    costInLakhs: 8,
-    cost: 800000,
-    timeHours: 0.75,
-    timeMinutes: 45,
-    villagesRelievedPct: 80,
-    hospitalSurgeReliefPct: 45,
-    truckAccessible: false,
-    pinColor: '#a855f7', // purple
-    lineColor: '#c084fc',
-    statusBadge: 'AIR-SUPPLIED (MED-DRONE)',
-    desc: 'Rapid medical cargo drone. Air-drops blood, antivenom, and insulin in 45 minutes directly over flood barriers. Relieves -45% critical clinical surge.',
   },
   booth: {
     type: 'booth',
-    name: 'Mobile Health Booth / MMU',
-    label: '⛺ Health Booth',
+    name: 'Field Clinic Booth',
+    label: 'Field Clinic Booth',
     costStr: '₹15 Lakhs',
+    setupCost: '₹15L • 6h Setup',
     timeStr: '6h',
     badge: '₹15L | 6h',
     costInLakhs: 15,
@@ -129,15 +97,64 @@ export const INTERVENTION_TOOLS = {
     truckAccessible: false,
     pinColor: '#059669', // field green
     lineColor: '#34d399',
-    statusBadge: 'ON-SITE TRIAGE (HEALTH BOOTH)',
+    statusBadge: 'TRIAGE (FIELD CLINIC)',
+    plainExplanation:
+      'Deploys a temporary trauma & triage tent on the dry roadhead right before the broken bridge. Treats 75% of displaced villagers locally so they do not have to detour into city hospitals (drops city ICU overload by 80%).',
+    mapActionLabel: 'MOBILE FIELD CLINIC: Intercepting Local Patients (-80% City ER Surge)',
     desc: 'Mobile Medical Booth / MMU placed at roadhead. Intercepts 75% of displaced patients on-site, relieving -80% ER hospital surge in 6 hours.',
+  },
+  drone: {
+    type: 'drone',
+    name: 'Medical UAV Drone',
+    label: 'Medical UAV Drone',
+    costStr: '₹8 Lakhs',
+    setupCost: '₹8L • 45m Setup',
+    timeStr: '45m',
+    badge: '₹8L | 45m',
+    costInLakhs: 8,
+    cost: 800000,
+    timeHours: 0.75,
+    timeMinutes: 45,
+    villagesRelievedPct: 80,
+    hospitalSurgeReliefPct: 45,
+    truckAccessible: false,
+    pinColor: '#a855f7', // purple
+    lineColor: '#c084fc',
+    statusBadge: 'SUPPLIED (UAV AIRBRIDGE)',
+    plainExplanation:
+      'Bypasses flooded roads completely by flying emergency blood, snake antivenom, and insulin straight from the nearest hospital over the water to trapped villages in 12 minutes.',
+    mapActionLabel: 'UAV AIRBRIDGE: 12-Min Emergency Medical Supply Line',
+    desc: 'Rapid medical cargo drone. Air-drops blood, antivenom, and insulin in 45 minutes directly over flood barriers. Relieves -45% critical clinical surge.',
+  },
+  boat: {
+    type: 'boat',
+    name: 'Zodiac Boat Ferry',
+    label: 'Zodiac Boat Ferry',
+    costStr: '₹3.5 Lakhs',
+    setupCost: '₹3.5L • 3h Setup',
+    timeStr: '3h',
+    badge: '₹3.5L | 3h',
+    costInLakhs: 3.5,
+    cost: 350000,
+    timeHours: 3,
+    timeMinutes: 180,
+    villagesRelievedPct: 65,
+    hospitalSurgeReliefPct: 35,
+    truckAccessible: false,
+    pinColor: '#06b6d4', // cyan
+    lineColor: '#00e5ff',
+    statusBadge: 'EVACUATING (BOAT FERRY)',
+    plainExplanation:
+      'Launches motorized inflatable rescue boats across the flooded road gap. Evacuates critical patients across the water in 3 hours, though 16-Ton food trucks remain blocked.',
+    mapActionLabel: 'MARINE FERRY SHUTTLE: Critical Patient Water Transfer Active',
+    desc: 'Motorized inflatable Zodiac boat. Establishes water ferry crossing within 3 hours. Evacuates stranded civilians and ambulatory casualties.',
   },
 } as const;
 
 export const THEATERS: Record<string, TheaterData> = {
   silchar: {
     id: 'silchar',
-    name: '🌊 Silchar, Assam (Monsoon Riverine Flood)',
+    name: 'Silchar, Assam (Monsoon Riverine Flood)',
     subtitle: 'Barak Valley Basin • 31,214 Topological Nodes',
     authorityName: 'Assam Disaster Management Authority',
     authorityShortName: 'Assam DMA',
@@ -162,27 +179,28 @@ export const THEATERS: Record<string, TheaterData> = {
     chokePoints: [
       {
         id: 'jt_road',
-        road_name: 'JT Road Corridor',
+        road_name: 'JT Road (Binnākāndi Cut)',
         rank: 1,
         lat: 24.872,
         lon: 92.845,
         trapped_villages_count: 27,
-        exposed_meters: 420,
+        exposed_meters: 48,
         spans_count: 3,
         baseline_km: 7.76,
         detour_km: 19.44,
         priority_tier: 'P1 - Immediate',
+        failure_type: 'Bridge Abutment Washout (48m Span Gap)',
         villages: [
           { id: 'v_bin', name: 'Binnākāndi', lat: 24.885, lon: 92.855, population: 4200 },
           { id: 'v_tol', name: 'Tolengram', lat: 24.892, lon: 92.861, population: 3100 },
           { id: 'v_kan', name: 'Kanakpur', lat: 24.879, lon: 92.870, population: 5300 },
           { id: 'v_son', name: 'Sonāimukh', lat: 24.865, lon: 92.862, population: 2800 },
         ],
-        nearest_hospital_id: 'smch',
+        nearest_hospital_id: 'valley',
       },
       {
         id: 'harinagar',
-        road_name: 'Harinagar Inbound Corridor',
+        road_name: 'Sonai Road Corridor',
         rank: 2,
         lat: 24.895,
         lon: 92.868,
@@ -192,6 +210,7 @@ export const THEATERS: Record<string, TheaterData> = {
         baseline_km: 8.2,
         detour_km: 21.3,
         priority_tier: 'P1 - Immediate',
+        failure_type: 'Submerged Highway Causeway (1.4m Overtopping Water)',
         villages: [
           { id: 'v_har_baz', name: 'Harinagar Bazar', lat: 24.905, lon: 92.875, population: 3800 },
           { id: 'v_dalu', name: 'Dalu Gaon', lat: 24.912, lon: 92.880, population: 2900 },
@@ -201,16 +220,17 @@ export const THEATERS: Record<string, TheaterData> = {
       },
       {
         id: 'korkoli_causeway',
-        road_name: 'Korkoli River Causeway',
+        road_name: 'Badarpur Ghat Link',
         rank: 3,
         lat: 24.845,
         lon: 92.812,
         trapped_villages_count: 14,
-        exposed_meters: 180,
+        exposed_meters: 32,
         spans_count: 2,
         baseline_km: 4.5,
         detour_km: 16.8,
         priority_tier: 'P2 - Secondary',
+        failure_type: 'Culvert Scour & Embankment Breach (32m Gap)',
         villages: [
           { id: 'v_kor_1', name: 'Korkoli East', lat: 24.851, lon: 92.818, population: 2200 },
           { id: 'v_kor_2', name: 'Korkoli Tea Garden', lat: 24.858, lon: 92.825, population: 1750 },
@@ -219,16 +239,17 @@ export const THEATERS: Record<string, TheaterData> = {
       },
       {
         id: 'borkhola_link',
-        road_name: 'Borkhola Feeder Cut-Off',
+        road_name: 'Udharbond Link',
         rank: 4,
         lat: 24.920,
         lon: 92.795,
         trapped_villages_count: 11,
-        exposed_meters: 150,
+        exposed_meters: 60,
         spans_count: 1,
         baseline_km: 5.1,
         detour_km: 18.2,
         priority_tier: 'P2 - Secondary',
+        failure_type: 'Flash Mudflow & Road Slip (60m Blockage)',
         villages: [
           { id: 'v_bor_1', name: 'Borkhola Bazar', lat: 24.931, lon: 92.805, population: 3100 },
           { id: 'v_bor_2', name: 'Rani Colony', lat: 24.939, lon: 92.812, population: 1400 },
@@ -409,7 +430,7 @@ export const THEATERS: Record<string, TheaterData> = {
   },
   nepal: {
     id: 'nepal',
-    name: '🏔️ Gorkha & Budhi Gandaki, Nepal (Oct 2026 Flash Floods)',
+    name: 'Gorkha & Budhi Gandaki, Nepal (Oct 2026 Flash Floods)',
     subtitle: 'Budhi Gandaki Gorge • Trishuli River Basin • 18,450 Nodes',
     authorityName: 'Koshi/Bagmati Provincial Disaster Management Authority (Nepal)',
     authorityShortName: 'PDMA Nepal',
@@ -671,7 +692,7 @@ export const THEATERS: Record<string, TheaterData> = {
   },
   wayanad: {
     id: 'wayanad',
-    name: '⛰️ Wayanad, Kerala (Mountain Landslide Viaduct Severance)',
+    name: 'Wayanad, Kerala (Mountain Landslide Viaduct Severance)',
     subtitle: 'Meppadi & Chooralmala Corridor • Western Ghats • 14,820 Nodes',
     authorityName: 'Kerala State Disaster Management Authority (KSDMA)',
     authorityShortName: 'KSDMA',
@@ -1257,7 +1278,7 @@ export function createCustomTheater(
 
   return {
     id: 'custom',
-    name: `🌐 ${cityName} (Live Disaster Theater)`,
+    name: `${cityName} (Live Disaster Theater)`,
     subtitle: `Sentinel-1 SAR + OpenStreetMap Ingest • ${authority} • Coords [${lat.toFixed(4)}, ${lon.toFixed(4)}]`,
     authorityName: authority,
     authorityShortName: authorityShort,
