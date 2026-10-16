@@ -62,7 +62,7 @@ export const TOUR_STEPS: TourStepInfo[] = [
     title: 'SDRF Requisition & District Magistrate Sanction',
     badge: 'Step 5 of 5 • DM Sanction Order',
     description:
-      'Unifies 4 government silos: ISRO NDEM satellite polygons, PWD road graphs, NHM triage, and NIDM IDRN inventory. Generates official SDRF Requisition Tickets (#REQ-SDRF-2026) split into 3 departmental work orders, sanctioned with District Magistrate sign-off and 1-click export.',
+      'Synthesizes multi-agency field layers: SAR satellite radar extents, PWD road graphs, NHM triage intake, and IDRN inventory. Generates official SDRF Requisition Tickets (#REQ-SDRF-2026) split into departmental work orders, sanctioned with District Magistrate sign-off.',
     actionNote: 'You are ready to command Lifeline OS freely!',
     targetId: 'tour-step-5-copilot-dispatch',
   },

@@ -18,6 +18,7 @@ import { fetchLiveWeatherTelemetry, WeatherTelemetry } from '../../services/weat
 interface Step4RoiGroundTruthProps {
   currentTheater: TheaterData;
   onAdvanceToStep5?: () => void;
+  panelWidth?: number;
 }
 
 export const Step4RoiGroundTruth: React.FC<Step4RoiGroundTruthProps> = ({

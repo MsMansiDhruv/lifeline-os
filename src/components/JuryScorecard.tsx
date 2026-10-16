@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sliders, CheckCircle2, Clock, Activity, Coins, ShieldCheck, Radio } from 'lucide-react';
+import { Sliders, CheckCircle2, Clock, Activity, Coins, Radio } from 'lucide-react';
 import { INTERVENTION_TOOLS, InterventionType, TheaterChokePoint } from '../data/theaters';
 
 interface JuryScorecardProps {
@@ -46,6 +46,9 @@ export const JuryScorecard: React.FC<JuryScorecardProps> = ({
   const avgSurgeRelief =
     activeDeploymentsCount > 0 ? Math.round(totalSurgeReliefSum / activeDeploymentsCount) : 0;
 
+  // Baseline 191% down to 108%
+  const currentIcuLoad = Math.max(104, 191 - avgSurgeRelief);
+
   const budgetDisplay =
     totalBudgetLakhs >= 100
       ? `₹${(totalBudgetLakhs / 100).toFixed(2)} Cr`
@@ -54,109 +57,108 @@ export const JuryScorecard: React.FC<JuryScorecardProps> = ({
   const isWide = panelWidth >= 440;
 
   return (
-    <div className="bg-slate-950/90 border border-slate-800 rounded-xl p-3 shadow-lg select-none">
+    <div className="bg-slate-950/90 border border-slate-800 rounded-xl p-3.5 shadow-lg select-none text-slate-200">
       {/* Header bar */}
-      <div className="flex items-center justify-between border-b border-slate-800/80 pb-2 mb-3">
+      <div className="flex items-center justify-between border-b border-slate-800/80 pb-2.5 mb-3">
         <div className="flex items-center gap-2">
-          <span className="p-1 rounded bg-slate-900 text-slate-300 border border-slate-700/60">
-            <Sliders className="w-3.5 h-3.5" />
+          <span className="p-1.5 rounded-lg bg-slate-900 text-slate-200 border border-slate-700">
+            <Sliders className="w-4 h-4 text-cyan-400" />
           </span>
-          <span className="text-xs font-mono font-bold text-slate-200 uppercase tracking-wider">
-            Live Simulation Scorecard
-          </span>
-          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-900 text-slate-400 border border-slate-800">
-            Counterfactual
+          <span className="text-sm font-bold text-white tracking-wide">
+            Live SEOC Simulation Scorecard
           </span>
         </div>
 
         {activeDeploymentsCount > 0 ? (
-          <span className="flex items-center gap-1.5 text-[11px] font-mono font-semibold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/50">
+          <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400 bg-emerald-950/80 px-2.5 py-1 rounded-lg border border-emerald-800">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            {activeDeploymentsCount} Active
+            {activeDeploymentsCount} of {chokePoints.length} Corridors Active
           </span>
         ) : (
-          <span className="text-[10px] font-mono text-slate-500">
-            Select a counterfactual tool
+          <span className="text-xs text-slate-400">
+            Assign tools to preview impact
           </span>
         )}
       </div>
 
-      {/* Auto-Adjusting Grid based on Panel Width: 2 cols when < 440px, 4 cols when >= 440px */}
+      {/* Grid of Metrics */}
       <div className={`grid gap-2.5 ${isWide ? 'grid-cols-4' : 'grid-cols-2'}`}>
         {/* Cell 1: Active Deployments */}
-        <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-800/80 flex flex-col justify-between">
-          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-            <Radio className="w-3.5 h-3.5 text-blue-400" />
+        <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800 flex flex-col justify-between">
+          <span className="text-xs uppercase tracking-wider text-slate-400 font-semibold flex items-center gap-1.5">
+            <Radio className="w-4 h-4 text-blue-400" />
             Deployments
           </span>
-          <div className="mt-1.5 flex items-baseline gap-1">
-            <span className="font-mono font-semibold text-[20px] text-white tabular-nums leading-none">
+          <div className="mt-2 flex items-baseline gap-1">
+            <span className="text-2xl font-bold text-white tracking-tight leading-none">
               {activeDeploymentsCount}
             </span>
-            <span className="font-mono text-xs text-slate-500">/ {chokePoints.length}</span>
+            <span className="text-xs text-slate-400">/ {chokePoints.length}</span>
           </div>
         </div>
 
         {/* Cell 2: Villages Reconnected */}
-        <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-800/80 flex flex-col justify-between">
-          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+        <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800 flex flex-col justify-between">
+          <span className="text-xs uppercase tracking-wider text-slate-400 font-semibold flex items-center gap-1.5">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             Reconnected
           </span>
-          <div className="mt-1.5 flex items-baseline gap-1">
+          <div className="mt-2 flex items-baseline gap-1">
             <span
-              className={`font-mono font-semibold text-[20px] tabular-nums leading-none ${
+              className={`text-2xl font-bold tracking-tight leading-none ${
                 totalVillagesReached > 0 ? 'text-emerald-400' : 'text-slate-400'
               }`}
             >
               {totalVillagesReached}
             </span>
-            <span className="font-mono text-xs text-slate-500">/ {totalTrappedVillages}</span>
+            <span className="text-xs text-slate-400">/ {totalTrappedVillages}</span>
           </div>
         </div>
 
-        {/* Cell 3: Clinical Surge Relief */}
-        <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-800/80 flex flex-col justify-between">
-          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-            <Activity className="w-3.5 h-3.5 text-cyan-400" />
-            ER Relief
+        {/* Cell 3: ICU Load Stabilized (Never negative!) */}
+        <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800 flex flex-col justify-between">
+          <span className="text-xs uppercase tracking-wider text-slate-400 font-semibold flex items-center gap-1.5">
+            <Activity className="w-4 h-4 text-cyan-400" />
+            ICU Status
           </span>
-          <div className="mt-1.5 flex items-baseline gap-1">
+          <div className="mt-2 flex items-baseline gap-1">
             <span
-              className={`font-mono font-semibold text-[20px] tabular-nums leading-none ${
-                avgSurgeRelief > 0 ? 'text-cyan-400' : 'text-slate-400'
+              className={`text-2xl font-bold tracking-tight leading-none ${
+                currentIcuLoad <= 110 ? 'text-emerald-400' : 'text-amber-400'
               }`}
             >
-              {avgSurgeRelief > 0 ? `-${avgSurgeRelief}%` : '0%'}
+              {activeDeploymentsCount > 0 ? `${currentIcuLoad}%` : '191%'}
             </span>
-            <span className="font-mono text-[10px] text-slate-500">Peak ICU</span>
+            <span className="text-xs text-slate-400">
+              {currentIcuLoad <= 110 ? 'Safe' : 'Critical'}
+            </span>
           </div>
         </div>
 
         {/* Cell 4: Sanctioned Budget */}
-        <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-800/80 flex flex-col justify-between">
-          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-            <Coins className="w-3.5 h-3.5 text-amber-400" />
-            Sanction
+        <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800 flex flex-col justify-between">
+          <span className="text-xs uppercase tracking-wider text-slate-400 font-semibold flex items-center gap-1.5">
+            <Coins className="w-4 h-4 text-amber-400" />
+            SDRF Sanction
           </span>
-          <div className="mt-1.5 flex items-baseline gap-1">
+          <div className="mt-2 flex items-baseline gap-1">
             <span
-              className={`font-mono font-semibold text-[20px] tabular-nums leading-none ${
+              className={`text-2xl font-bold tracking-tight leading-none ${
                 totalBudgetLakhs > 0 ? 'text-amber-400' : 'text-slate-400'
               }`}
             >
               {totalBudgetLakhs > 0 ? budgetDisplay : '₹0.0 L'}
             </span>
-            <span className="font-mono text-[10px] text-slate-500">Capex</span>
+            <span className="text-xs text-slate-400">Capex</span>
           </div>
         </div>
       </div>
 
       {/* Subtle Bottom Status Strip: Fastest Response Time */}
-      <div className="mt-2.5 pt-2 border-t border-slate-800/60 flex items-center justify-between text-[11px] font-mono text-slate-400">
+      <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-300">
         <span className="flex items-center gap-1.5">
-          <Clock className="w-3 h-3 text-purple-400" />
-          <span>Fastest Vector:</span>
+          <Clock className="w-3.5 h-3.5 text-purple-400" />
+          <span className="text-slate-400">Fastest Vector:</span>
         </span>
         <span className={fastestMinutes !== null ? 'text-purple-300 font-semibold' : 'text-slate-500'}>
           {fastestLabel}

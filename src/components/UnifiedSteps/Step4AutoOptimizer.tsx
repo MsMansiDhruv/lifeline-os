@@ -361,39 +361,6 @@ export const Step4AutoOptimizer: React.FC<Step4AutoOptimizerProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* 1. UNIFIED BRIDGE ACROSS 4 GOVERNMENT SILOS CONNECTOR PILLS (Requirement 1) */}
-      <div className="bg-[#0d1117] border border-cyan-500/40 rounded-xl p-3 shadow-lg space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold text-white flex items-center gap-1.5 uppercase tracking-wider font-mono">
-            <Layers className="w-3.5 h-3.5 text-cyan-400" />
-            Unified Government Silo Data Bridge:
-          </span>
-          <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800 font-bold flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Live Synced
-          </span>
-        </div>
-
-        {/* 1 Clean Single-Line Status Bar (Requirement 5) */}
-        <div className="p-2.5 rounded-lg bg-slate-900/90 border border-slate-800 text-[11px] font-mono flex items-center justify-between text-slate-200 overflow-x-auto scrollbar-none whitespace-nowrap">
-          <span className="flex items-center gap-1 text-sky-400 font-semibold">
-            <span>🛰️</span> ISRO SAR
-          </span>
-          <span className="text-slate-600 font-bold px-1">➔</span>
-          <span className="flex items-center gap-1 text-cyan-400 font-semibold">
-            <span>🛣️</span> PWD Roads
-          </span>
-          <span className="text-slate-600 font-bold px-1">➔</span>
-          <span className="flex items-center gap-1 text-purple-400 font-semibold">
-            <span>🏥</span> NHM Triage
-          </span>
-          <span className="text-slate-600 font-bold px-1">➔</span>
-          <span className="flex items-center gap-1 text-amber-400 font-semibold">
-            <span>📦</span> IDRN Stock
-          </span>
-        </div>
-      </div>
-
       {/* Step Header */}
       <div className="bg-slate-900 border border-slate-800 p-3 rounded-xl flex items-center justify-between text-xs">
         <div className="flex items-center gap-2">

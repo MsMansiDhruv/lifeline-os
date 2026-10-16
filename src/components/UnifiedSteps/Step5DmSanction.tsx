@@ -22,6 +22,7 @@ interface Step5DmSanctionProps {
   currentTheater: TheaterData;
   activeInterventions: Record<string, InterventionType>;
   fleetMode?: string;
+  panelWidth?: number;
 }
 
 export const Step5DmSanction: React.FC<Step5DmSanctionProps> = ({

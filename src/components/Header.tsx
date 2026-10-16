@@ -35,6 +35,7 @@ interface HeaderProps {
   onSelectTheater: (theaterId: string) => void;
   customTheater: TheaterData | null;
   onLoadCustomTheater: (theater: TheaterData) => void;
+  onSearchFocus?: (coords: [number, number]) => void;
   tourStep?: number;
   onStartTour?: () => void;
   onStartInteractiveTour?: () => void;
@@ -44,6 +45,7 @@ interface HeaderProps {
   interactiveTourTask?: number;
   opsMode?: 'day' | 'night';
   onToggleOpsMode?: () => void;
+  onPreemptiveAlertClick?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -59,6 +61,7 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectTheater,
   customTheater,
   onLoadCustomTheater,
+  onSearchFocus,
   tourStep = 0,
   onStartTour,
   onStartInteractiveTour,
@@ -68,6 +71,7 @@ export const Header: React.FC<HeaderProps> = ({
   interactiveTourTask = 0,
   opsMode = 'day',
   onToggleOpsMode,
+  onPreemptiveAlertClick,
 }) => {
   const [cityQuery, setCityQuery] = useState<string>('');
   const [isSearching, setIsSearching] = useState<boolean>(false);
@@ -245,6 +249,7 @@ export const Header: React.FC<HeaderProps> = ({
 
     onLoadCustomTheater(newTheater);
     onSelectTheater('custom');
+    onSearchFocus?.([lat, lon]);
     setStatusMessage(null);
     setIsSearching(false);
   };
@@ -392,37 +397,54 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Center Zone: Compact Unified Telemetry Strip (hidden xl:flex items-center gap-1.5) */}
       <div className="hidden xl:flex items-center gap-1.5 shrink-0">
+        {/* Live Preemptive Alert Pill */}
+        <button
+          type="button"
+          onClick={onPreemptiveAlertClick}
+          className="text-xs px-2.5 py-1.5 rounded-lg bg-amber-950/80 hover:bg-amber-900 border border-amber-600/80 hover:border-cyan-400 whitespace-nowrap font-medium flex items-center gap-2 text-amber-200 cursor-pointer transition-all shadow-sm group"
+          title="⚠️ PREEMPTIVE TRIGGER: JT Road Deck (18.0m ASL) will submerge in 6h at current +0.4m/hr rise — Click to Auto-Focus & Pre-Stage"
+        >
+          <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0" />
+          <span className="font-bold text-xs text-amber-300">🚨 PREEMPTIVE ALERT:</span>
+          <span className="text-slate-200 truncate max-w-[200px] text-xs group-hover:text-cyan-300">
+            JT Road Deck -0.8m Submerging
+          </span>
+          <span className="text-xs text-cyan-400 font-bold bg-slate-950 px-1.5 py-0.5 rounded border border-cyan-800 hidden 2xl:inline">
+            FOCUS
+          </span>
+        </button>
+
         {/* 1. Chokes */}
-        <div className="text-[11px] px-2 py-1 rounded bg-slate-900 border border-slate-800 whitespace-nowrap font-mono flex items-center gap-1 text-slate-300">
+        <div className="text-xs px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 whitespace-nowrap flex items-center gap-1.5 text-slate-300">
           <span>🌉</span>
           <span className="text-slate-400">Chokes:</span>
-          <strong className={dynamicBottlenecksCritical > 0 ? 'text-rose-400 font-bold' : 'text-emerald-400 font-bold'}>
+          <strong className={dynamicBottlenecksCritical > 0 ? 'text-rose-400 font-bold text-sm' : 'text-emerald-400 font-bold text-sm'}>
             {dynamicBottlenecksCritical}
           </strong>
         </div>
 
         {/* 2. Trapped & Reconnected */}
-        <div className="text-[11px] px-2 py-1 rounded bg-slate-900 border border-slate-800 whitespace-nowrap font-mono flex items-center gap-1 text-slate-300">
+        <div className="text-xs px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 whitespace-nowrap flex items-center gap-1.5 text-slate-300">
           <span>🏘️</span>
           <span className="text-slate-400">Trapped:</span>
-          <strong className={dynamicTrappedLeft === 0 ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
+          <strong className={dynamicTrappedLeft === 0 ? 'text-emerald-400 font-bold text-sm' : 'text-amber-400 font-bold text-sm'}>
             {dynamicTrappedLeft}
           </strong>
-          <span className="text-emerald-400 font-semibold text-[10px]">
+          <span className="text-emerald-400 font-semibold text-xs">
             (✅ {totalSavedVillages})
           </span>
         </div>
 
         {/* 3. ER Surge & Golden Hour */}
-        <div className="text-[11px] px-2 py-1 rounded bg-slate-900 border border-slate-800 whitespace-nowrap font-mono flex items-center gap-1 text-slate-300">
+        <div className="text-xs px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 whitespace-nowrap flex items-center gap-1.5 text-slate-300">
           <span>🏥</span>
           <span className="text-slate-400">ER Surge:</span>
-          <strong className={overloadedHospitalsCount > 0 ? 'text-rose-400 font-bold' : 'text-emerald-400 font-bold'}>
+          <strong className={overloadedHospitalsCount > 0 ? 'text-rose-400 font-bold text-sm' : 'text-emerald-400 font-bold text-sm'}>
             {overloadedHospitalsCount} Critical
           </strong>
           <span className="text-slate-600">|</span>
           <span>⏱️</span>
-          <span className={dynamicTrappedLeft > 0 ? 'text-rose-400 font-bold' : 'text-emerald-400 font-bold'}>
+          <span className={dynamicTrappedLeft > 0 ? 'text-rose-400 font-bold text-sm' : 'text-emerald-400 font-bold text-sm'}>
             {dynamicTrappedLeft > 0 ? (isHeavy ? '95m' : '65m') : (isHeavy ? '35m' : '22m')}
           </span>
         </div>
@@ -430,23 +452,41 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Right Zone (shrink-0 flex items-center gap-1.5 — NEVER HIDDEN OR PUSHED OFF-SCREEN!) */}
       <div className="shrink-0 flex items-center gap-1.5">
-        {/* 1. Vehicle Toggle: [ 🚑 4x4 | 🚛 16T ] */}
+        {/* 1. Vehicle Toggle: [ 4x4 Light Response | 16T Heavy Supply ] */}
         <div className="flex items-center bg-slate-900 p-0.5 rounded-lg border border-slate-800 text-xs font-mono shrink-0">
           <button
             onClick={() => onFleetChange('Light Emergency (Ambulance/4x4)')}
-            className={`px-2 py-1 rounded font-semibold text-[11px] transition-all cursor-pointer flex items-center gap-1 ${
+            className={`px-2 py-1 rounded font-bold text-[11px] transition-all cursor-pointer flex items-center gap-1.5 ${
               !isHeavy
-                ? 'bg-blue-600 text-white shadow-sm'
+                ? 'bg-cyan-700 text-white shadow-sm'
                 : 'text-slate-400 hover:text-white'
             }`}
-            title="4x4 Ambulance Mode (183 Roads, 4 Critical)"
+            title="4x4 Light Response Mode (Ambulances / 4x4 SUVs — 183 Roads, 4 Critical)"
           >
-            <span>🚑 4x4</span>
+            {/* 4x4 Light Response SVG */}
+            <svg
+              className={`w-3.5 h-3.5 shrink-0 ${!isHeavy ? 'text-white' : 'text-cyan-400'}`}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-1.1 0-2 .9-2 2v7c0 .6.4 1 1 1h2" />
+              <circle cx="7" cy="17" r="2" />
+              <path d="M9 17h6" />
+              <circle cx="17" cy="17" r="2" />
+              <path d="M7 11h4" />
+              <path d="M9 9v4" />
+            </svg>
+            <span>4x4</span>
+            <span className="text-[9px] text-cyan-200 hidden 2xl:inline font-normal">(3.2T)</span>
           </button>
           <div className="relative">
             <button
               onClick={() => onFleetChange('Heavy Supply (Truck/Bus)')}
-              className={`px-2 py-1 rounded font-semibold text-[11px] transition-all cursor-pointer flex items-center gap-1 ${
+              className={`px-2 py-1 rounded font-bold text-[11px] transition-all cursor-pointer flex items-center gap-1.5 ${
                 isHeavy
                   ? 'bg-amber-600 text-white shadow-sm'
                   : 'text-slate-400 hover:text-white'
@@ -455,9 +495,27 @@ export const Header: React.FC<HeaderProps> = ({
                   ? 'ring-2 ring-emerald-400 shadow-[0_0_15px_#10b981] animate-pulse bg-emerald-950 text-emerald-300'
                   : ''
               }`}
-              title="16T Heavy Truck Mode (IRC:6 Weight Limit — 246 Roads, 6 Critical)"
+              title="16T Heavy Supply Mode (6-Wheel Articulated Freight Truck — IRC:6 Axle Limit: 246 Roads, 6 Critical)"
             >
-              <span>🚛 16T</span>
+              {/* 16T Heavy Freight Truck SVG */}
+              <svg
+                className={`w-3.5 h-3.5 shrink-0 ${isHeavy ? 'text-white' : 'text-amber-400'}`}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2" />
+                <path d="M15 18H9" />
+                <path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62L19.4 9.6a1 1 0 0 0-.78-.4H14v8.8" />
+                <circle cx="7" cy="18" r="2" />
+                <circle cx="17" cy="18" r="2" />
+                <circle cx="12" cy="18" r="1.5" />
+              </svg>
+              <span>16T</span>
+              <span className="text-[9px] text-amber-200 hidden 2xl:inline font-normal">(IRC:6)</span>
             </button>
             {interactiveTourTask === 2 && (
               <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 z-50 bg-emerald-400 text-slate-950 font-mono font-bold text-[9px] px-2 py-0.5 rounded-full shadow-[0_0_12px_#10b981] whitespace-nowrap animate-bounce flex items-center gap-1">
@@ -471,10 +529,10 @@ export const Header: React.FC<HeaderProps> = ({
         {(onStartInteractiveTour || onStartTour) && (
           <button
             onClick={onStartInteractiveTour || onStartTour}
-            className={`bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-3 py-1.5 rounded-lg text-xs shadow-lg shrink-0 flex items-center gap-1.5 cursor-pointer transition-all ${
+            className={`bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-2.5 py-1.5 rounded-lg text-xs shadow-lg shrink-0 flex items-center gap-1.5 cursor-pointer transition-all ${
               isInteractiveTourActive ? 'ring-2 ring-white shadow-[0_0_15px_#10b981]' : ''
             }`}
-            title="Hands-on interactive guided tour walking through all 5 steps"
+            title="Hands-on interactive guided tour walking through all command phases"
           >
             <Target className="w-3.5 h-3.5" />
             <span className="hidden sm:inline font-mono">Guided Tour</span>
@@ -486,10 +544,10 @@ export const Header: React.FC<HeaderProps> = ({
         {onStartAutoDemo && (
           <button
             onClick={onStartAutoDemo}
-            className={`bg-cyan-600 hover:bg-cyan-500 text-white font-semibold px-3 py-1.5 rounded-lg text-xs shadow-lg shrink-0 flex items-center gap-1.5 cursor-pointer transition-all ${
+            className={`bg-cyan-600 hover:bg-cyan-500 text-white font-semibold px-2.5 py-1.5 rounded-lg text-xs shadow-lg shrink-0 flex items-center gap-1.5 cursor-pointer transition-all ${
               isAutoDemoActive ? 'ring-2 ring-white shadow-[0_0_15px_#06b6d4]' : ''
             }`}
-            title="100% hands-free autonomous presentation with speech narration"
+            title="Hands-free autonomous command presentation with voice briefing"
           >
             <Play className="w-3.5 h-3.5 fill-current" />
             <span className="hidden sm:inline font-mono">Auto-Demo</span>
@@ -497,34 +555,44 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         )}
 
-        {/* 4. Cloud Stack Icon Button: [ ☁️ Stack ] */}
+        {/* 4. Day / Night Ops Mode Toggle */}
+        {onToggleOpsMode && (
+          <button
+            onClick={onToggleOpsMode}
+            className={`px-2 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer border shrink-0 flex items-center gap-1.5 ${
+              opsMode === 'night'
+                ? 'bg-indigo-950 text-indigo-300 border-indigo-500 shadow-[0_0_12px_rgba(99,102,241,0.4)]'
+                : 'bg-amber-950/70 hover:bg-amber-900 text-amber-300 border-amber-600/70'
+            }`}
+            title={
+              opsMode === 'night'
+                ? 'Night Operations Active: Marine Boats GROUNDED due to night current hazards'
+                : 'Day Operations Active: Daylight visibility for all air, marine, and ground units'
+            }
+          >
+            {opsMode === 'night' ? (
+              <>
+                <Moon className="w-3.5 h-3.5 text-indigo-400" />
+                <span className="hidden md:inline text-[10px]">Night Ops</span>
+              </>
+            ) : (
+              <>
+                <Sun className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden md:inline text-[10px]">Day Ops</span>
+              </>
+            )}
+          </button>
+        )}
+
+        {/* 5. Cloud Stack Icon Button */}
         {onOpenCloudArchitecture && (
           <button
             onClick={onOpenCloudArchitecture}
-            className="bg-blue-950/80 hover:bg-blue-900 text-cyan-300 border border-cyan-500/60 px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer shrink-0 transition-all shadow-sm"
+            className="bg-blue-950/80 hover:bg-blue-900 text-cyan-300 border border-cyan-500/60 px-2 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1 cursor-pointer shrink-0 transition-all shadow-sm"
             title="Inspect 4-Tier Cloud Run, Firestore, and Gemini MCP Architecture"
           >
             <Cloud className="w-3.5 h-3.5 text-cyan-400" />
             <span className="hidden md:inline">Stack</span>
-          </button>
-        )}
-
-        {/* Day / Night Ops Mode Toggle */}
-        {onToggleOpsMode && (
-          <button
-            onClick={onToggleOpsMode}
-            className={`p-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer border shrink-0 ${
-              opsMode === 'night'
-                ? 'bg-indigo-950 text-indigo-300 border-indigo-500'
-                : 'bg-amber-950/60 hover:bg-amber-900 text-amber-300 border-amber-600/70'
-            }`}
-            title={opsMode === 'night' ? 'Night Operations Active' : 'Day Operations Active'}
-          >
-            {opsMode === 'night' ? (
-              <Moon className="w-3.5 h-3.5 text-indigo-400" />
-            ) : (
-              <Sun className="w-3.5 h-3.5 text-amber-400" />
-            )}
           </button>
         )}
 

@@ -90,6 +90,8 @@ interface VillageCohort {
   infantsUnder5: number;
   dailyRationTons: number;
   primaryAssignedCamp: string;
+  lat: number;
+  lon: number;
 }
 
 const VILLAGE_COHORTS: VillageCohort[] = [
@@ -104,6 +106,8 @@ const VILLAGE_COHORTS: VillageCohort[] = [
     infantsUnder5: 42,
     dailyRationTons: 2.88,
     primaryAssignedCamp: 'Silchar Govt Boys HS Relief Camp',
+    lat: 24.847,
+    lon: 92.791,
   },
   {
     id: 'vc_tol',
@@ -116,6 +120,8 @@ const VILLAGE_COHORTS: VillageCohort[] = [
     infantsUnder5: 31,
     dailyRationTons: 2.12,
     primaryAssignedCamp: 'Silchar Govt Boys HS Relief Camp',
+    lat: 24.842,
+    lon: 92.796,
   },
   {
     id: 'vc_har',
@@ -128,6 +134,8 @@ const VILLAGE_COHORTS: VillageCohort[] = [
     infantsUnder5: 35,
     dailyRationTons: 2.60,
     primaryAssignedCamp: 'Udharbond Community Shelter',
+    lat: 24.865,
+    lon: 92.831,
   },
   {
     id: 'vc_kor',
@@ -140,6 +148,8 @@ const VILLAGE_COHORTS: VillageCohort[] = [
     infantsUnder5: 34,
     dailyRationTons: 2.71,
     primaryAssignedCamp: 'Sonai Model HS Ground Camp',
+    lat: 24.815,
+    lon: 92.748,
   },
 ];
 

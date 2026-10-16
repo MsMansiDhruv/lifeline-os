@@ -102,7 +102,7 @@ export const TelemetryDrawer: React.FC<TelemetryDrawerProps> = ({ isOpen, onClos
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 text-[11px] font-mono">
               <div className="p-2.5 rounded-lg bg-[#161b22] border border-[#30363d] space-y-1">
-                <div className="text-cyan-400 font-bold">🛰️ ISRO NDEM</div>
+                <div className="text-cyan-400 font-bold">🛰️ SAR Satellite Radar</div>
                 <div className="text-[10px] text-neutral-400">Flood Hub Satellite Polygons</div>
               </div>
               <div className="p-2.5 rounded-lg bg-[#161b22] border border-[#30363d] space-y-1">

@@ -4,11 +4,12 @@ import {
   Pause,
   SkipBack,
   SkipForward,
-  Volume2,
-  VolumeX,
   X,
+  Eye,
   Radio,
+  Sparkles,
 } from 'lucide-react';
+import { playClickSound, playRadarPing } from '../services/audioService';
 
 export interface DemoScene {
   id: number;
@@ -16,89 +17,66 @@ export interface DemoScene {
   durationSeconds: number;
   title: string;
   script: string;
+  judgeFocus: string;
 }
 
 export const AUTO_DEMO_SCENES: DemoScene[] = [
   {
     id: 1,
-    timeRange: 'Scene 1 • 0:00 - 0:14',
-    durationSeconds: 14,
-    title: 'Step 1: Diagnose Breaches & Tarjan Cut-Edges',
+    timeRange: 'Scene 1 of 4 • Step 1',
+    durationSeconds: 11,
+    title: '1. Road Cut-Offs & Flood Swell',
     script:
-      'Standard flood maps only show static blue water. Lifeline OS isolates single-point-of-failure bridges using Tarjan cut-edge graph math. At JT Road here, a 38-meter breach leaves 27 villages trapped with a critical 65-minute trauma delay.',
+      'Watch the river flood swell along the natural river meanders. Switching from 4x4 Ambulance to 16-Ton Supply Truck exposes narrow rural bridge weight limits, blocking 27 villages.',
+    judgeFocus: '👁️ JUDGE FOCUS: Notice how 16T mode restricts bypass roads in amber and marks JT Road breach on map',
   },
   {
     id: 2,
-    timeRange: 'Scene 2 • 0:14 - 0:28',
-    durationSeconds: 14,
-    title: 'Step 2: Hospital ICU Surge & Vulnerable Cohorts',
+    timeRange: 'Scene 2 of 4 • Step 2',
+    durationSeconds: 11,
+    title: '2. Hospital Surge Balancing',
     script:
-      'Road cuts forcibly divert casualties into un-flooded facilities. Valley Hospital suffers 191% critical ICU overload. 14 renal dialysis patients and 38 high-risk maternal cases are stranded, while PHC cold-chain batteries have only 3.5 hours remaining.',
+      'Because primary roads are cut, detour ambulances surge into Valley Hospital at 191% ICU overload. We activate ambulance rerouting to SMCH Regional, dropping the surge to 145%.',
+    judgeFocus: '👁️ JUDGE FOCUS: Observe the blue ambulance-diversion line to SMCH Regional and Valley Hospital load drop',
   },
   {
     id: 3,
-    timeRange: 'Scene 3 • 0:28 - 0:44',
-    durationSeconds: 16,
-    title: 'Step 3: Physical Counterfactuals & 60m Rule',
+    timeRange: 'Scene 3 of 4 • Step 3',
+    durationSeconds: 12,
+    title: '3. Constrained Warehouse Stock Allocation',
     script:
-      'Civil engineering physics are enforced: a 310m causeway cannot build a Bailey bridge! But at JT Road, deploying a ₹72 Lakh Class-40 Bailey bridge across the 38-meter gap anchors between dry abutments, restoring Golden Hour to 22 minutes and dropping hospital overload to safe green.',
+      'District warehouse inventory has hard caps: only 1 Bailey Bridge and ₹130L budget. Auto-recommend assigns the bridge to JT Road and field clinics at causeways for maximum life-safety ROI.',
+    judgeFocus: '👁️ JUDGE FOCUS: Bailey bridge button locks across other corridors because stock is 0/1; budget stays under ₹130L',
   },
   {
     id: 4,
-    timeRange: 'Scene 4 • 0:44 - 1:00',
-    durationSeconds: 16,
-    title: 'Step 4: Gemini 2.5 Flash MCP Work-Orders & DM Sanction',
+    timeRange: 'Scene 4 of 4 • Step 4',
+    durationSeconds: 12,
+    title: '4. SDRF Form-3B Sign-Off & Live Road Dispatch',
     script:
-      'Finally, Gemini 2.5 Flash executes deterministic Model Context Protocol tool calls with zero coordinate hallucination. The District Magistrate digitally signs SDRF Form-3B, locking engineering, marine, and drone assets directly into motion.',
+      'The District Magistrate digitally signs the statutory SDRF Form-3B order. Real-time GPS fleet markers move smoothly along the street coordinates on the map with zero popups.',
+    judgeFocus: '👁️ JUDGE FOCUS: Watch live Uber-style fleet convoys moving along winding streets with bottom status bar',
   },
 ];
 
 interface AutoDemoPlayerProps {
-  currentSceneIdx: number; // 0..5
+  currentSceneIdx: number; // 0..3
   onSceneChange: (sceneIdx: number) => void;
   onClose: () => void;
+  onDispatchFleet?: () => void;
 }
 
 export const AutoDemoPlayer: React.FC<AutoDemoPlayerProps> = ({
   currentSceneIdx,
   onSceneChange,
   onClose,
+  onDispatchFleet,
 }) => {
   const [isPaused, setIsPaused] = useState<boolean>(false);
-  const [voiceEnabled, setVoiceEnabled] = useState<boolean>(true);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
 
   const scene = AUTO_DEMO_SCENES[currentSceneIdx] || AUTO_DEMO_SCENES[0];
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Speech Synthesis
-  useEffect(() => {
-    if (!('speechSynthesis' in window)) return;
-
-    window.speechSynthesis.cancel();
-
-    if (voiceEnabled && !isPaused && scene) {
-      const utterance = new SpeechSynthesisUtterance(scene.script);
-      utterance.rate = 1.05;
-      utterance.pitch = 1.0;
-      utterance.lang = 'en-US';
-
-      // Pick high quality voice if available
-      const voices = window.speechSynthesis.getVoices();
-      const engVoice = voices.find(
-        (v) => v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Samantha'))
-      );
-      if (engVoice) utterance.voice = engVoice;
-
-      window.speechSynthesis.speak(utterance);
-    }
-
-    return () => {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
-    };
-  }, [currentSceneIdx, voiceEnabled, isPaused]);
 
   // Scene Timer Loop
   useEffect(() => {
@@ -114,13 +92,13 @@ export const AutoDemoPlayer: React.FC<AutoDemoPlayerProps> = ({
     timerRef.current = setInterval(() => {
       setElapsedSeconds((prev) => {
         if (prev + 0.1 >= scene.durationSeconds) {
-          // Advance to next scene
           if (currentSceneIdx < AUTO_DEMO_SCENES.length - 1) {
+            playRadarPing(1100 + currentSceneIdx * 100);
             onSceneChange(currentSceneIdx + 1);
             return 0;
           } else {
-            // Reached end of presentation
             setIsPaused(true);
+            onDispatchFleet?.();
             return scene.durationSeconds;
           }
         }
@@ -131,143 +109,125 @@ export const AutoDemoPlayer: React.FC<AutoDemoPlayerProps> = ({
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [currentSceneIdx, isPaused, scene.durationSeconds, onSceneChange]);
+  }, [currentSceneIdx, isPaused, scene.durationSeconds, onSceneChange, onDispatchFleet]);
 
   const progressPct = Math.min(100, (elapsedSeconds / scene.durationSeconds) * 100);
 
   const handlePrev = () => {
+    playClickSound();
     if (currentSceneIdx > 0) {
       onSceneChange(currentSceneIdx - 1);
     }
   };
 
   const handleNext = () => {
+    playClickSound();
     if (currentSceneIdx < AUTO_DEMO_SCENES.length - 1) {
       onSceneChange(currentSceneIdx + 1);
     } else {
-      onClose();
+      onDispatchFleet?.();
     }
   };
 
   return (
-    <div className="fixed top-16 right-4 z-40 w-[420px] max-w-[calc(100vw-32px)] bg-slate-950/95 border-2 border-cyan-400 rounded-2xl p-4 shadow-[0_0_50px_rgba(34,211,238,0.35)] backdrop-blur-md text-white select-none pointer-events-auto animate-in fade-in slide-in-from-top-3">
+    <div className="fixed top-20 right-4 z-40 w-[460px] max-w-[calc(100vw-32px)] bg-slate-900/95 border-2 border-cyan-400 rounded-2xl p-4 shadow-[0_0_50px_rgba(34,211,238,0.35)] backdrop-blur-md text-white select-none pointer-events-auto">
       {/* Header Bar */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2.5">
+      <div className="flex items-center justify-between border-b border-slate-800 pb-2.5 mb-2.5">
         <div className="flex items-center gap-2">
-          <span className="p-1 rounded-md bg-cyan-950 text-cyan-400 border border-cyan-700/60 flex items-center gap-1 font-mono text-[10px] font-bold">
-            <Radio className="w-3.5 h-3.5 animate-pulse text-cyan-400" />
-            AUTONOMOUS PRESENTATION DOCK
+          <span className="p-1 rounded-md bg-cyan-950 text-cyan-400 border border-cyan-700/60 flex items-center gap-1 text-xs font-bold font-mono">
+            <Radio className="w-4 h-4 animate-pulse text-cyan-400" />
+            JUDGE AUTO-DEMO
           </span>
-          <span className="text-[11px] font-mono font-bold text-white uppercase tracking-tight">
-            Scene {scene.id} of 6: {scene.title}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 text-cyan-300 border border-cyan-900 font-bold">
+          <span className="text-sm font-bold text-white uppercase tracking-tight">
             {scene.timeRange}
           </span>
-          <button
-            onClick={() => {
-              if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-              onClose();
-            }}
-            className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
-            title="Exit Presentation"
-          >
-            <X className="w-4 h-4" />
-          </button>
         </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            playClickSound();
+            onClose();
+          }}
+          className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+          title="Exit Auto-Demo"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
 
-      {/* Visual Scene Progress Bar */}
-      <div className="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden mb-3 border border-slate-800">
+      {/* Progress Bar */}
+      <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden mb-3 border border-slate-800">
         <div
           className="bg-gradient-to-r from-cyan-500 to-emerald-400 h-full transition-all duration-100 ease-linear shadow-[0_0_10px_rgba(34,211,238,0.8)]"
           style={{ width: `${progressPct}%` }}
         />
       </div>
 
-      {/* Large Presenter Teleprompter Text (Readable directly to judges!) */}
-      <div className="min-h-[64px] flex items-center px-1 mb-3">
-        <p className="text-sm md:text-base font-medium text-white leading-relaxed font-sans">
-          "{scene.script}"
+      {/* Scene Title & Narration */}
+      <div className="space-y-2 mb-3">
+        <h4 className="text-base font-bold text-white">
+          {scene.title}
+        </h4>
+        <p className="text-sm text-slate-200 leading-relaxed font-normal">
+          {scene.script}
         </p>
+
+        {/* BRIGHT ANIMATED JUDGE FOCUS CALLOUT */}
+        <div className="p-3 rounded-xl bg-cyan-950/80 border-2 border-cyan-400 flex items-start gap-2.5 text-sm text-cyan-200 font-medium shadow-[0_0_20px_rgba(6,182,212,0.25)]">
+          <Eye className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5 animate-pulse" />
+          <span className="leading-relaxed">{scene.judgeFocus}</span>
+        </div>
       </div>
 
-      {/* Footer Controls */}
-      <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
-        {/* Navigation buttons */}
-        <div className="flex items-center gap-2">
+      {/* Controls */}
+      <div className="flex items-center justify-between pt-2 border-t border-slate-800">
+        <div className="flex items-center gap-1.5">
           <button
-            onClick={handlePrev}
+            type="button"
             disabled={currentSceneIdx === 0}
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1 border transition-all cursor-pointer ${
+            onClick={handlePrev}
+            className={`p-2 rounded-lg border text-sm transition-colors cursor-pointer ${
               currentSceneIdx === 0
-                ? 'opacity-40 cursor-not-allowed bg-slate-900 text-slate-500 border-slate-800'
-                : 'bg-slate-900 hover:bg-slate-800 text-slate-200 border-slate-700'
+                ? 'border-slate-800 text-slate-600 cursor-not-allowed'
+                : 'border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800'
             }`}
+            title="Previous Scene"
           >
-            <SkipBack className="w-3.5 h-3.5" />
-            <span>Prev</span>
+            <SkipBack className="w-4 h-4" />
           </button>
 
           <button
+            type="button"
             onClick={() => setIsPaused(!isPaused)}
-            className="px-3.5 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-mono font-bold text-xs flex items-center gap-1.5 shadow-[0_0_15px_rgba(34,211,238,0.4)] transition-all cursor-pointer"
+            className="p-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold transition-all shadow-md cursor-pointer"
+            title={isPaused ? 'Resume Auto-Play' : 'Pause'}
           >
-            {isPaused ? <Play className="w-3.5 h-3.5 fill-current" /> : <Pause className="w-3.5 h-3.5 fill-current" />}
-            <span>{isPaused ? 'Resume' : 'Pause'}</span>
+            {isPaused ? <Play className="w-4 h-4 fill-current" /> : <Pause className="w-4 h-4 fill-current" />}
           </button>
 
           <button
+            type="button"
+            disabled={currentSceneIdx === AUTO_DEMO_SCENES.length - 1}
             onClick={handleNext}
-            className="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 text-xs font-mono font-bold flex items-center gap-1 transition-all cursor-pointer"
-          >
-            <span>{currentSceneIdx === AUTO_DEMO_SCENES.length - 1 ? 'Finish' : 'Next'}</span>
-            <SkipForward className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {/* Voice Narration & Exit */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => {
-              if (voiceEnabled && 'speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-              }
-              setVoiceEnabled(!voiceEnabled);
-            }}
-            className={`px-2.5 py-1 rounded-lg text-xs font-mono font-semibold flex items-center gap-1.5 border transition-all cursor-pointer ${
-              voiceEnabled
-                ? 'bg-emerald-950/80 text-emerald-300 border-emerald-700 shadow-sm'
-                : 'bg-slate-900 text-slate-400 border-slate-800'
+            className={`p-2 rounded-lg border text-sm transition-colors cursor-pointer ${
+              currentSceneIdx === AUTO_DEMO_SCENES.length - 1
+                ? 'border-slate-800 text-slate-600 cursor-not-allowed'
+                : 'border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800'
             }`}
-            title="Toggle Voice Over Synthesis"
+            title="Next Scene"
           >
-            {voiceEnabled ? (
-              <>
-                <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
-                <span>AI Voice: ON</span>
-              </>
-            ) : (
-              <>
-                <VolumeX className="w-3.5 h-3.5 text-slate-500" />
-                <span>AI Voice: OFF</span>
-              </>
-            )}
-          </button>
-
-          <button
-            onClick={() => {
-              if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-              onClose();
-            }}
-            className="text-xs font-mono text-slate-400 hover:text-white transition-colors cursor-pointer"
-          >
-            Exit Demo
+            <SkipForward className="w-4 h-4" />
           </button>
         </div>
+
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-xs text-slate-400 hover:text-white cursor-pointer px-2 py-1"
+        >
+          Exit Demo
+        </button>
       </div>
     </div>
   );
