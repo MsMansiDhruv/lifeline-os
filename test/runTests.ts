@@ -116,7 +116,7 @@ async function runTests() {
   const capXml = generateCapXml(mockParams);
   assert(capXml.startsWith('<?xml version="1.0" encoding="UTF-8"?>'), 'CAP alert has valid XML header');
   assert(capXml.includes('<alert xmlns="urn:oasis:names:tc:emergency:cap:1.2">'), 'CAP alert conforms to OASIS CAP v1.2 namespace');
-  assert(capXml.includes('<status>Actual</status>'), 'CAP alert status is Actual');
+  assert(capXml.includes('<status>Exercise</status>'), 'CAP alert status is Exercise for simulated alerts');
   assert(capXml.includes('<msgType>Alert</msgType>'), 'CAP alert message type is Alert');
   assert(capXml.includes('<scope>Public</scope>'), 'CAP alert scope is Public');
   assert(capXml.includes('<areaDesc>'), 'CAP alert includes areaDesc');
@@ -241,6 +241,8 @@ async function runTests() {
   assert(updatedEntries[0].audit_id === newEntry.audit_id, 'Audit log unshifts most recent event to index 0');
   assert(updatedEntries[0].human_authorized === true, 'Audit log preserves human authorization state');
   assert(updatedEntries[0].user_role === 'SEOC_DIRECTOR', 'Audit log preserves authorized user role');
+  assert(updatedEntries[0].output_state_hash.length === 64, 'Audit log computes real 64-char SHA-256 hash');
+  assert(updatedEntries[updatedEntries.length - 1].human_authorized === false, 'Audit log defaults human_authorized to false');
 
   const jsonExport = auditService.exportJson();
   const parsedExport = JSON.parse(jsonExport);
@@ -338,7 +340,7 @@ async function runTests() {
   assert(catchmentEval.inputCoverage.telemetricGaugeAvailable === false, 'Discloses CWC stage telemetry is unlinked');
   assert(catchmentEval.forecastDischargeM3s === null, 'Strictly zero fabricated ML discharge when unlinked');
   assert(catchmentEval.historicalEvidenceFallback.scenarioId === 'silchar_june_2022', 'Falls back to verified June 2022 historical scenario');
-  assert(catchmentEval.historicalEvidenceFallback.floodExtentSqKm === 82.4, 'Historical flood extent verified from Sentinel-1 SAR (82.4 sq km)');
+  assert(catchmentEval.historicalEvidenceFallback.floodExtentSqKm === 'unavailable', 'Historical flood extent marked unavailable without unverified hardcoded area');
 
   // TEST SUITE 12: SCIENTIFIC FLOOD EXTENT & ROAD EXPOSURE CLASSIFICATION
   console.log('\n\x1b[1m[12] Scientific Flood Extent & Road Inundation Exposure\x1b[0m');
@@ -442,7 +444,7 @@ async function runTests() {
   const eeMeta = earthEngineService.getFloodExtentMetadata('silchar');
   assert(eeMeta.datasetId === 'COPERNICUS/S1_GRD', 'Earth Engine collection is COPERNICUS/S1_GRD');
   assert(eeMeta.backscatterThresholdDb === -14.2, 'Otsu radar threshold is -14.2 dB');
-  assert(eeMeta.inundationAreaSqKm === 82.4, 'Earth Engine mapped flood extent is 82.4 sq km');
+  assert(eeMeta.inundationAreaSqKm === 'unavailable', 'Earth Engine mapped flood extent is marked unavailable without hardcoded area');
   assert(earthEngineService.getExecutableScript().includes('ee.ImageCollection'), 'Executable GEE script generated');
 
   // 14.3 BigQuery Geospatial Schema Definitions
@@ -455,7 +457,7 @@ async function runTests() {
   const gcsAssets = cloudStorageService.getAllAssets();
   assert(gcsAssets.length >= 3, 'GCS asset manifest registered DEM, SAR, and OSM artifacts');
   const signedUrl = cloudStorageService.getSignedUrlDescriptor('srtm_elevation_dem');
-  assert(signedUrl.url.includes('storage.googleapis.com'), 'GCS signed URL descriptor formatted correctly');
+  assert(signedUrl.url === '', 'GCS signed URL descriptor does not emit fake storage URLs');
 
   // 14.5 Pub/Sub Idempotent Event Bus
   let messageReceived = false;
@@ -501,7 +503,8 @@ async function runTests() {
   const jtReport = incidentReportService.getReportById('REP-CACHAR-001');
   assert(!!jtReport, 'JT Road damage report REP-CACHAR-001 retrieved');
   assert(jtReport?.normalizedStatus === 'REPORTED_DESTROYED', 'JT Road status is REPORTED_DESTROYED');
-  assert(jtReport?.verificationStatus === 'VERIFIED', 'JT Road breach verified by Assam PWD');
+  assert(jtReport?.verificationStatus === 'REPORTED/UNVERIFIED', 'JT Road breach marked REPORTED/UNVERIFIED');
+  assert(jtReport?.sourceUrl === '', 'Invented sourceUrl deleted from incident report');
   assert(jtReport?.breachMeters === 80, 'Structural breach width recorded as 80m');
   assert(jtReport?.attachments.length! > 0, 'Field damage photo attachment present');
   assert(!!jtReport?.attachments[0].license, 'Attachment license disclosure present');
@@ -643,8 +646,8 @@ async function runTests() {
     contentType: 'application/json',
   });
   assert(uploadResult.success === true, 'GCS asset uploaded successfully');
-  assert(uploadResult.storageUri.startsWith('gs://lifeline-os-geospatial-artifacts/uploads/'), 'GCS storage URI formatted with gs:// bucket path');
-  assert(uploadResult.publicUrl.includes('storage.googleapis.com'), 'GCS public HTTPS URL generated');
+  assert(uploadResult.storageUri.startsWith('local://'), 'GCS storage URI reflects local adapter storage path');
+  assert(uploadResult.publicUrl === '' && uploadResult.status === 'STORED_LOCALLY', 'GCS upload adapter reflects STORED_LOCALLY without fake storage URLs');
 
   // 19.4 BigQuery Parameterized Exposure Execution
   const bqSilchar = bigQueryAnalyticsService.executeExposureAnalysis('silchar');

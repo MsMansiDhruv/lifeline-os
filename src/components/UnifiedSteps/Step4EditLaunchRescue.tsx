@@ -62,9 +62,9 @@ export const Step4EditLaunchRescue: React.FC<Step4EditLaunchRescueProps> = ({
 }) => {
   const [phoneNumber, setPhoneNumber] = useState<string>(() => {
     try {
-      return localStorage.getItem('lifeline_phone_number') || '+91 98765 43210';
+      return localStorage.getItem('lifeline_phone_number') || '';
     } catch {
-      return '+91 98765 43210';
+      return '';
     }
   });
 
@@ -180,6 +180,8 @@ export const Step4EditLaunchRescue: React.FC<Step4EditLaunchRescueProps> = ({
       nearestHospital: nearestHosp?.name || 'Valley Hospital',
       detourMins: 65,
       dryRoadheadName: `${primaryChoke?.road_name.split('(')[0].trim() || 'JT'} North Roadhead`,
+      humanApproved: true,
+      idempotencyKey: `test_alert_${pushTopic}_${selectedLang}_${Date.now()}`,
     });
     setIsBroadcasting(false);
     if (result.success) {
@@ -199,7 +201,7 @@ export const Step4EditLaunchRescue: React.FC<Step4EditLaunchRescueProps> = ({
 
   const handleDispatch = () => {
     playLaunchChime();
-    // Fire real over-the-air phone alert immediately upon signing sanction
+    // Fire real over-the-air phone alert upon explicit human approval
     dispatchLivePhoneAlert({
       phone: phoneNumber,
       topic: pushTopic,
@@ -211,6 +213,8 @@ export const Step4EditLaunchRescue: React.FC<Step4EditLaunchRescueProps> = ({
       nearestHospital: nearestHosp?.name || 'Valley Hospital',
       detourMins: 65,
       dryRoadheadName: `${primaryChoke?.road_name.split('(')[0].trim() || 'JT'} North Roadhead`,
+      humanApproved: true,
+      idempotencyKey: `sanction_dispatch_${currentTheater.id}_${primaryChoke?.id || 'primary'}_${primaryTool}`,
     }).then((res) => {
       setLastBroadcast({
         success: res.success,

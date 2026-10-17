@@ -144,7 +144,7 @@ export const LiveMissionLaunchOverlay: React.FC<LiveMissionLaunchOverlayProps> =
               timeStr: 'T+04h 10m',
               phase: 3,
               type: 'clinic',
-              text: 'VALLEY HOSPITAL STABILIZED: 184 triage casualties filtered on dry ground! ICU load dropped from 191% Red to 108% Green.',
+              text: 'VALLEY HOSPITAL STABILIZED: Triage casualties filtered on dry ground! Facility capacity safely balanced (assumed demo values; SIMULATED CLOSURE on OSM graph).',
             },
           ]);
         }

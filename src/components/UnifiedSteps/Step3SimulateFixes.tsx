@@ -148,9 +148,9 @@ export const Step3SimulateFixes: React.FC<Step3SimulateFixesProps> = ({
 
           {/* Metric 2: Valley Hospital ICU Surge */}
           <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
-            <span className="text-[10px] text-slate-400 block">Valley Hospital ICU</span>
+            <span className="text-[10px] text-slate-400 block">Valley Hospital (demo beds)</span>
             <div className="flex items-center justify-center gap-1.5 mt-0.5">
-              <span className="text-slate-500 line-through text-[11px]">191%</span>
+              <span className="text-slate-500 text-[11px]">Unbalanced</span>
               <span className="text-slate-400 text-[10px]">➔</span>
               <strong className={liveHospitalIcu <= 120 ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
                 {liveHospitalIcu}% {liveHospitalIcu <= 120 ? 'Safe' : 'Overload'}

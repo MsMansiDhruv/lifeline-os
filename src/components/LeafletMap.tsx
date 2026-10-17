@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import { Layers, ChevronUp, ChevronDown, Map, Satellite, Moon } from 'lucide-react';
+import { Layers, ChevronUp, ChevronDown, Map, Satellite, Moon, Maximize2, Sliders } from 'lucide-react';
+import { EvidenceBadge } from './common/EvidenceBadge';
 import { CorridorRoadNetwork } from '../services/osrmRouting';
 import {
   SVG_BRIDGE_HTML,
@@ -43,6 +44,27 @@ export interface MapMarker {
   customBanner?: string;
   stepCategory?: 'start' | 'choke' | 'dest' | 'fleet';
   onClick?: () => void;
+}
+
+export function computeShoelaceArea(polygon?: [number, number][]): string {
+  if (!polygon || polygon.length < 3) return 'unavailable';
+  const R = 6371000;
+  const rad = Math.PI / 180;
+  const lat0 = polygon.reduce((acc, c) => acc + c[0], 0) / polygon.length;
+  const cosLat0 = Math.cos(lat0 * rad);
+
+  const pts = polygon.map(([lat, lon]) => [
+    lon * rad * R * cosLat0,
+    lat * rad * R,
+  ]);
+
+  let area = 0;
+  for (let i = 0; i < pts.length; i++) {
+    const j = (i + 1) % pts.length;
+    area += pts[i][0] * pts[j][1] - pts[j][0] * pts[i][1];
+  }
+  const areaSqKm = Math.abs(area) / 2 / 1000000;
+  return `${areaSqKm.toFixed(1)} km²`;
 }
 
 export type MapStyleMode = 'vector' | 'street' | 'satellite';
@@ -180,6 +202,50 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       interventions: val,
       buildings: val,
     });
+  };
+
+  const [layerOpacity, setLayerOpacity] = useState<Record<string, number>>({
+    bridges: 100,
+    roads: 100,
+    hospitals: 100,
+    villages: 100,
+    floodExtent: 70,
+    severedBreaches: 100,
+    detourBypass: 100,
+    interventions: 100,
+    buildings: 100,
+  });
+
+  const handleZoomToLayer = (layerKey: string) => {
+    if (!mapInstanceRef.current) return;
+    const map = mapInstanceRef.current;
+    if (layerKey === 'bridges' || layerKey === 'roads' || layerKey === 'severedBreaches') {
+      if (chokePoints && chokePoints.length > 0) {
+        const bounds = L.latLngBounds(chokePoints.map((cp) => [cp.lat, cp.lon]));
+        map.fitBounds(bounds, { padding: [panelWidth + 40, 80], maxZoom: 14 });
+      }
+    } else if (layerKey === 'hospitals') {
+      const hospCoords: [number, number][] = [
+        [24.8315, 92.7985],
+        [24.7895, 92.8015],
+        [24.8105, 92.7980],
+        [24.8210, 92.8020],
+      ];
+      map.fitBounds(L.latLngBounds(hospCoords), { padding: [panelWidth + 40, 80], maxZoom: 15 });
+    } else if (layerKey === 'villages') {
+      if (chokePoints && chokePoints.length > 0) {
+        const vCoords = chokePoints.map((cp) => [cp.lat, cp.lon] as [number, number]);
+        map.fitBounds(L.latLngBounds(vCoords), { padding: [panelWidth + 40, 80], maxZoom: 14 });
+      }
+    } else if (layerKey === 'floodExtent') {
+      if (floodPolygon && floodPolygon.length > 0) {
+        map.fitBounds(L.latLngBounds(floodPolygon), { padding: [panelWidth + 40, 80] });
+      }
+    } else if (layerKey === 'detourBypass') {
+      if (corridorNet && corridorNet.detour.length > 0) {
+        map.fitBounds(L.latLngBounds(corridorNet.detour), { padding: [panelWidth + 40, 80] });
+      }
+    }
   };
 
   const floodLayerRef = useRef<L.LayerGroup | null>(null);
@@ -917,24 +983,20 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         </div>
       )}
 
-      {/* 3. TOP-RIGHT: VIEW MODE SWITCHER (BEFORE | SWIPE | AFTER) */}
+      {/* 3. TOP-RIGHT: VIEW MODE / SWIPE COMPARISON (DISABLED PER SPEC) */}
       <div className="absolute top-16 right-6 z-[1000] flex items-center gap-2 pointer-events-auto">
         <div className="flex items-center bg-slate-900/95 border border-slate-700/80 rounded-xl p-1 shadow-2xl backdrop-blur-md">
-          <span className="text-[10px] font-mono uppercase font-bold text-slate-400 px-2">View:</span>
-          {(['before', 'swipe', 'after'] as const).map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              onClick={() => setSwipeMode(mode)}
-              className={`px-3 py-1 rounded-lg text-xs font-bold capitalize transition-all cursor-pointer ${
-                swipeMode === mode
-                  ? 'bg-cyan-600 text-white shadow-md'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
-              }`}
-            >
-              {mode}
-            </button>
-          ))}
+          <span className="text-[10px] font-mono uppercase font-bold text-slate-400 px-2 flex items-center gap-1">
+            <Sliders className="w-3 h-3 text-slate-500" />
+            Swipe:
+          </span>
+          <span
+            className="px-2.5 py-1 rounded-lg text-xs font-mono text-slate-400 bg-slate-800/80 border border-slate-700 cursor-not-allowed flex items-center gap-1.5"
+            title="no compatible post-event imagery loaded"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
+            <span>Disabled (no compatible post-event imagery loaded)</span>
+          </span>
         </div>
       </div>
 
@@ -946,7 +1008,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       </div>
 
       {/* 5. RIGHT PANEL: AUTHENTIC LAYER CATALOGUE & VISIBILITY CONTROLS */}
-      <div className="fixed bottom-12 right-6 z-[1001] bg-slate-900/95 border-2 border-slate-700/80 rounded-2xl shadow-2xl w-[320px] backdrop-blur-md select-none pointer-events-auto overflow-hidden transition-all">
+      <div className="fixed bottom-12 right-6 z-[1001] bg-slate-900/95 border-2 border-slate-700/80 rounded-2xl shadow-2xl w-[320px] max-w-[calc(100vw-32px)] backdrop-blur-md select-none pointer-events-auto overflow-hidden transition-all">
         {/* Toggle Header Bar */}
         <div
           onClick={() => setIsLegendOpen(!isLegendOpen)}
@@ -968,7 +1030,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
 
         {/* Expandable Body */}
         {isLegendOpen && (
-          <div className="p-3 space-y-3 max-h-[calc(100vh-250px)] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 animate-in fade-in text-xs">
+          <div className="p-3 space-y-3 max-h-[calc(100vh-270px)] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 animate-in fade-in text-xs">
             {/* Quick All On / All Off Actions */}
             <div className="flex items-center justify-between pb-1.5 border-b border-slate-800">
               <span className="text-[10px] font-mono uppercase font-bold text-slate-400">Layer Toggles</span>
@@ -1035,140 +1097,76 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
               </div>
             </div>
 
-            {/* Group 1: Mapped Infrastructure Features */}
-            <div className="space-y-1.5 pt-1 border-t border-slate-800/80">
+            {/* Layer Rows with Status Badge, Opacity Slider & Zoom to Extent */}
+            <div className="space-y-2 pt-1 border-t border-slate-800/80">
               <span className="text-[10px] uppercase font-mono font-bold text-slate-400 block">
-                Infrastructure Features
+                Infrastructure &amp; Evidence Layers
               </span>
-              <div className="space-y-1 font-mono text-[11px]">
-                <label className="flex items-center justify-between cursor-pointer hover:bg-slate-800/50 p-1 rounded">
-                  <span className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={layerVisibility.bridges}
-                      onChange={() => toggleLayerItem('bridges')}
-                      className="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0"
-                    />
-                    <span className="w-2.5 h-2.5 rounded-sm bg-rose-500" />
-                    <span>Bridge Choke Points</span>
-                  </span>
-                  <span className="text-[10px] text-slate-400">{chokePoints.length}</span>
-                </label>
 
-                <label className="flex items-center justify-between cursor-pointer hover:bg-slate-800/50 p-1 rounded">
-                  <span className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={layerVisibility.roads}
-                      onChange={() => toggleLayerItem('roads')}
-                      className="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0"
-                    />
-                    <span className="w-2.5 h-2.5 rounded-sm bg-amber-500" />
-                    <span>Road Corridors</span>
-                  </span>
-                  <span className="text-[10px] text-slate-400">42</span>
-                </label>
+              {[
+                { key: 'bridges', label: 'Bridge Choke Points', color: '#f43f5e', evidence: 'OFFICIAL' },
+                { key: 'roads', label: 'Road Corridors', color: '#f59e0b', evidence: 'MODELLED' },
+                { key: 'hospitals', label: 'Hospitals & Clinics', color: '#38bdf8', evidence: 'ASSUMED' },
+                { key: 'villages', label: 'Disconnected Villages', color: '#34d399', evidence: 'MODELLED' },
+                { key: 'floodExtent', label: 'Flood Extent (Ref Only)', color: '#0284c7', evidence: 'OBSERVED' },
+                { key: 'severedBreaches', label: 'Severed Breaches', color: '#dc2626', evidence: 'SIMULATED' },
+                { key: 'detourBypass', label: 'Emergency Detour', color: '#fbbf24', evidence: 'MODELLED' },
+                { key: 'interventions', label: 'Tactical Assets', color: '#a855f7', evidence: 'OFFICIAL' },
+              ].map((layer) => {
+                const k = layer.key as keyof typeof layerVisibility;
+                const isVis = layerVisibility[k];
+                const opacity = layerOpacity[layer.key] || 100;
 
-                <label className="flex items-center justify-between cursor-pointer hover:bg-slate-800/50 p-1 rounded">
-                  <span className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={layerVisibility.hospitals}
-                      onChange={() => toggleLayerItem('hospitals')}
-                      className="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0"
-                    />
-                    <span className="w-2.5 h-2.5 rounded-sm bg-cyan-400" />
-                    <span>Hospitals &amp; Clinics</span>
-                  </span>
-                  <span className="text-[10px] text-slate-400">4+</span>
-                </label>
+                return (
+                  <div key={layer.key} className="p-1.5 rounded-lg bg-slate-950/60 border border-slate-800 space-y-1">
+                    <div className="flex items-center justify-between gap-1">
+                      <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-white min-w-0">
+                        <input
+                          type="checkbox"
+                          checked={isVis}
+                          onChange={() => toggleLayerItem(k)}
+                          className="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0 shrink-0"
+                        />
+                        <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: layer.color }} />
+                        <span className="truncate max-w-[120px]">{layer.label}</span>
+                      </label>
 
-                <label className="flex items-center justify-between cursor-pointer hover:bg-slate-800/50 p-1 rounded">
-                  <span className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={layerVisibility.villages}
-                      onChange={() => toggleLayerItem('villages')}
-                      className="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0"
-                    />
-                    <span className="w-2.5 h-2.5 rounded-sm bg-emerald-400" />
-                    <span>Disconnected Villages</span>
-                  </span>
-                  <span className="text-[10px] text-slate-400">Active</span>
-                </label>
-              </div>
-            </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <EvidenceBadge evidenceClass={layer.evidence} size="xs" />
+                        <button
+                          type="button"
+                          onClick={() => handleZoomToLayer(layer.key)}
+                          className="p-1 rounded text-slate-400 hover:text-cyan-300 hover:bg-slate-800 transition-colors cursor-pointer"
+                          title="Zoom to layer extent"
+                        >
+                          <Maximize2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
 
-            {/* Group 2: Flood Evidence & Damage Reports */}
-            <div className="space-y-1.5 pt-1 border-t border-slate-800/80">
-              <span className="text-[10px] uppercase font-mono font-bold text-slate-400 block">
-                Flood Evidence &amp; Hazards
-              </span>
-              <div className="space-y-1 font-mono text-[11px]">
-                <label className="flex items-center justify-between cursor-pointer hover:bg-slate-800/50 p-1 rounded">
-                  <span className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={layerVisibility.floodExtent}
-                      onChange={() => toggleLayerItem('floodExtent')}
-                      className="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0"
-                    />
-                    <span className="w-2.5 h-2.5 rounded bg-sky-500/60 border border-sky-400" />
-                    <span>Sentinel-1 SAR Extent</span>
-                  </span>
-                  <span className="text-[10px] text-cyan-400">82.4 km²</span>
-                </label>
-
-                <label className="flex items-center justify-between cursor-pointer hover:bg-slate-800/50 p-1 rounded">
-                  <span className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={layerVisibility.severedBreaches}
-                      onChange={() => toggleLayerItem('severedBreaches')}
-                      className="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0"
-                    />
-                    <span className="w-2.5 h-1 border-t-2 border-dashed border-rose-500" />
-                    <span>Severed Road Breaches</span>
-                  </span>
-                  <span className="text-[10px] text-rose-400">Pulsing</span>
-                </label>
-
-                <label className="flex items-center justify-between cursor-pointer hover:bg-slate-800/50 p-1 rounded">
-                  <span className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={layerVisibility.detourBypass}
-                      onChange={() => toggleLayerItem('detourBypass')}
-                      className="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0"
-                    />
-                    <span className="w-2.5 h-1 border-t-2 border-dashed border-amber-400" />
-                    <span>Emergency Detour Route</span>
-                  </span>
-                  <span className="text-[10px] text-amber-400">Active</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Group 3: Physical Response Operations */}
-            <div className="space-y-1.5 pt-1 border-t border-slate-800/80">
-              <span className="text-[10px] uppercase font-mono font-bold text-slate-400 block">
-                Response Fleet Operations
-              </span>
-              <div className="space-y-1 font-mono text-[11px]">
-                <label className="flex items-center justify-between cursor-pointer hover:bg-slate-800/50 p-1 rounded">
-                  <span className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={layerVisibility.interventions}
-                      onChange={() => toggleLayerItem('interventions')}
-                      className="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0"
-                    />
-                    <span className="w-2.5 h-2.5 rounded-sm bg-purple-500" />
-                    <span>Tactical Assets (Bridge/MMU/UAV)</span>
-                  </span>
-                  <span className="text-[10px] text-purple-400">Ready</span>
-                </label>
-              </div>
+                    {/* Opacity Slider */}
+                    {isVis && (
+                      <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400 px-1 pt-0.5">
+                        <span className="text-[9px]">Opacity</span>
+                        <input
+                          type="range"
+                          min="10"
+                          max="100"
+                          value={opacity}
+                          onChange={(e) =>
+                            setLayerOpacity((prev) => ({
+                              ...prev,
+                              [layer.key]: parseInt(e.target.value, 10),
+                            }))
+                          }
+                          className="flex-1 accent-cyan-400 h-1 bg-slate-800 rounded cursor-pointer"
+                        />
+                        <span className="w-7 text-right text-[9px] text-slate-300">{opacity}%</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             {/* Color & Symbol Legend Guide */}

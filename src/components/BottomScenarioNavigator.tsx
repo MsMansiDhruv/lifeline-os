@@ -122,22 +122,16 @@ export const BottomScenarioNavigator: React.FC<BottomScenarioNavigatorProps> = (
               </button>
             )}
 
-            {/* Before/After Swipe Toggle */}
-            {onToggleSwipeMode && (
-              <button
-                type="button"
-                onClick={onToggleSwipeMode}
-                className={`px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${
-                  swipeMode === 'swipe'
-                    ? 'bg-cyan-900/60 border-cyan-400 text-cyan-200'
-                    : 'bg-slate-900 border-slate-700/80 text-slate-300 hover:text-white'
-                }`}
-                title="Toggle Before/After satellite swipe comparison"
-              >
-                <Sliders className="w-3.5 h-3.5 text-cyan-400" />
-                <span className="hidden sm:inline">Swipe</span>
-              </button>
-            )}
+            {/* Before/After Swipe Toggle (Disabled per Spec: no compatible post-event imagery loaded) */}
+            <button
+              type="button"
+              disabled={true}
+              className="px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold border border-slate-800 bg-slate-900/60 text-slate-500 cursor-not-allowed flex items-center gap-1.5 opacity-60"
+              title="no compatible post-event imagery loaded"
+            >
+              <Sliders className="w-3.5 h-3.5 text-slate-500" />
+              <span className="hidden sm:inline">Swipe (Disabled)</span>
+            </button>
 
             {/* 3D Terrain Switcher */}
             <button

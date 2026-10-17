@@ -36,7 +36,7 @@ export const INTERACTIVE_TASKS: InteractiveTask[] = [
     title: 'Chapter 3 (Protect): Balance Hospital Surge & Review Detours',
     targetDescription: 'Detour Visualization & Deterministic Diversion',
     instruction:
-      'Washed-out roads create a +47 min delay. Click "Engage Surge Balancing" to divert 34 patients to SMCH and Civil Hospital, stabilizing Valley Hospital down to 74%.',
+      'Simulated road closures create severe detours (up to 11.68 km on OSM graph; 42 isolated settlements). Click "Engage Surge Balancing" to rebalance emergency patients across SMCH and Civil Hospital (assumed demo values).',
     actionPrompt: '👉 Click "Engage Surge Balancing" toggle button',
   },
   {

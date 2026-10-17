@@ -15,7 +15,11 @@ export interface BroadcastParams {
   nearestHospital?: string;
   detourMins?: number;
   dryRoadheadName?: string;
+  humanApproved?: boolean;
+  idempotencyKey?: string;
 }
+
+const sentIdempotencyKeys = new Set<string>();
 
 export interface BroadcastResult {
   success: boolean;
@@ -87,6 +91,33 @@ export async function dispatchLivePhoneAlert(params: BroadcastParams): Promise<B
   const corridor = params.corridorName || 'JT Road';
   const lang = params.language || 'en';
   const smsMessageText = constructEvacuationMessage(params);
+
+  // Any alert requires an explicit human approve click
+  if (params.humanApproved !== true) {
+    return {
+      success: false,
+      error: 'Alert blocked: explicit human approval click required',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      topic,
+      smsPayload: smsMessageText,
+      language: lang,
+    };
+  }
+
+  // Prevent duplicate send on replay via idempotency key
+  if (params.idempotencyKey) {
+    if (sentIdempotencyKeys.has(params.idempotencyKey)) {
+      return {
+        success: false,
+        error: 'Duplicate alert suppressed by idempotency key',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        topic,
+        smsPayload: smsMessageText,
+        language: lang,
+      };
+    }
+    sentIdempotencyKeys.add(params.idempotencyKey);
+  }
 
   // Trigger hardware vibration if supported on device (Haptic Feedback)
   if (typeof window !== 'undefined' && 'navigator' in window && 'vibrate' in navigator) {

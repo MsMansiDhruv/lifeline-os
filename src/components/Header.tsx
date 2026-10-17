@@ -18,6 +18,8 @@ import {
   Satellite,
   Mountain,
   Cloud,
+  HelpCircle,
+  Sliders,
 } from 'lucide-react';
 import { FleetMode } from '../types';
 import { THEATERS, TheaterData, createCustomTheater, InterventionType } from '../data/theaters';
@@ -54,6 +56,9 @@ interface HeaderProps {
   isSimulationRunning?: boolean;
   simulationProgress?: string;
   onOpenCloudArchitecture?: () => void;
+  onOpenWhatWeDontKnow?: () => void;
+  onToggleAccessView?: () => void;
+  isAccessViewOpen?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -84,6 +89,9 @@ export const Header: React.FC<HeaderProps> = ({
   isSimulationRunning = false,
   simulationProgress = '',
   onOpenCloudArchitecture,
+  onOpenWhatWeDontKnow,
+  onToggleAccessView,
+  isAccessViewOpen = false,
 }) => {
   const [cityQuery, setCityQuery] = useState<string>('');
   const [isSearching, setIsSearching] = useState<boolean>(false);
@@ -519,6 +527,36 @@ export const Header: React.FC<HeaderProps> = ({
             title="Inspect Google Cloud & Gemini MCP Architecture"
           >
             <Cloud className="w-3.5 h-3.5" />
+          </button>
+        )}
+
+        {/* Baseline vs Scenario Access Slider Toggle */}
+        {onToggleAccessView && (
+          <button
+            type="button"
+            onClick={onToggleAccessView}
+            className={`px-2 py-1 rounded-lg border text-xs font-mono font-bold cursor-pointer transition-colors flex items-center gap-1.5 ${
+              isAccessViewOpen
+                ? 'bg-rose-950/80 border-rose-500 text-rose-300 shadow-sm'
+                : 'bg-slate-900 hover:bg-slate-800 border-slate-700/80 text-slate-300'
+            }`}
+            title="Toggle Baseline vs Simulated Closure access view (319 settlements slider)"
+          >
+            <Sliders className="w-3.5 h-3.5 text-rose-400" />
+            <span className="hidden xl:inline">319 Access</span>
+          </button>
+        )}
+
+        {/* What We Don't Know (Epistemic Disclosures) */}
+        {onOpenWhatWeDontKnow && (
+          <button
+            type="button"
+            onClick={onOpenWhatWeDontKnow}
+            className="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-amber-600/60 text-amber-300 text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer transition-colors shadow-sm"
+            title="What We Don't Know • Honest identification of telemetry gaps and assumptions"
+          >
+            <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden lg:inline">Unknowns</span>
           </button>
         )}
 

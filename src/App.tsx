@@ -1334,31 +1334,6 @@ export function App() {
           onDispatchFleet={() => {
             setIsLiveDispatched(true);
             setActiveStep('step4_edit_launch');
-            const primaryChoke = currentTheater.chokePoints[0];
-            const primaryTool = (primaryChoke ? interventions[primaryChoke.id] : 'bridge') || 'bridge';
-            dispatchLivePhoneAlert({
-              topic: (() => {
-                try {
-                  return localStorage.getItem('lifeline_alert_topic') || 'lifeline-os-alert-2026';
-                } catch {
-                  return 'lifeline-os-alert-2026';
-                }
-              })(),
-              phone: (() => {
-                try {
-                  return localStorage.getItem('lifeline_phone_number') || '+91 98765 43210';
-                } catch {
-                  return '+91 98765 43210';
-                }
-              })(),
-              theaterName: currentTheater.name,
-              corridorName: primaryChoke?.road_name.split('(')[0].trim() || 'JT Road',
-              breachWidth: primaryChoke?.exposed_meters || 38,
-              allocationTool: primaryTool,
-              nearestHospital: currentTheater.hospitals[0]?.name || 'Valley Hospital',
-              detourMins: 65,
-              dryRoadheadName: `${primaryChoke?.road_name.split('(')[0].trim() || 'JT'} North Roadhead`,
-            });
           }}
         />
       )}

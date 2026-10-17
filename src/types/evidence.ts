@@ -41,8 +41,11 @@ export type RouteClassification =
 export type EvidenceClass =
   | 'OBSERVED'
   | 'OFFICIAL'
+  | 'REPORTED'
   | 'MODELLED'
-  | 'ASSUMED';
+  | 'ASSUMED'
+  | 'SIMULATED'
+  | 'UNKNOWN';
 
 // 5. Geographic Search & Selection Modes (Section 5.4)
 export type GeoSelectionMode =

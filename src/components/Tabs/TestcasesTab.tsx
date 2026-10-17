@@ -77,7 +77,7 @@ const DISASTER_SCENARIOS: ScenarioMeta[] = [
     summary:
       'Simultaneous hydraulic failure of JT Road, Harinagar culvert, Korkoli causeway, and Borkhola link bridge, completely severing all four major rural healthcare corridors.',
     naiveFailure:
-      'Hospitals in central Silchar suffer 191% ICU collapse due to uncontrolled patient surge, while rural patients die in transit along severed roads.',
+      'Hospitals in central Silchar suffer severe patient overload (SIMULATED CLOSURE on OSM graph; hospital beds are assumed demo values), while rural patients face critical transit delays along severed roads.',
     lifelineSolution:
       'Lifeline OS deploys a distributed multi-tool defense: ₹15L Mobile Health Booths at bridgeheads to treat 78% of acute diarrhea/fever on-site, plus emergency Bailey Bridges on highest-ROI links.',
     recommendedAction:

@@ -81,7 +81,7 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ settlements }) => {
             <span className="text-[10px] text-emerald-400 font-bold">FLATTENED</span>
           </div>
           <div className="text-2xl font-bold text-emerald-400">92% Bed Load</div>
-          <div className="text-[10px] text-slate-400 mt-1">Averted 191% collapse with field clinics</div>
+          <div className="text-[10px] text-slate-400 mt-1">Hospital beds are assumed demo values (SIMULATED CLOSURE on OSM graph)</div>
         </div>
 
         <div className="bg-slate-950 border border-slate-800 p-4 rounded-xl shadow-md">

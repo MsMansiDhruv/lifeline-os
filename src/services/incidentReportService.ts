@@ -19,7 +19,7 @@ export interface IncidentDamageReport {
   sourceUrl: string;
   observationTime: string; // ISO 8601
   retrievalTime: string;   // ISO 8601
-  verificationStatus: 'VERIFIED' | 'PROVISIONAL_UNVERIFIED' | 'CONFLICTING' | 'OFFICIAL_CONFIRMED';
+  verificationStatus: 'REPORTED/UNVERIFIED' | 'VERIFIED' | 'PROVISIONAL_UNVERIFIED' | 'CONFLICTING' | 'OFFICIAL_CONFIRMED';
   attachments: Array<{
     type: 'photo' | 'video' | 'document';
     title: string;
@@ -47,10 +47,10 @@ const INCIDENT_REPORTS: IncidentDamageReport[] = [
     reportedCondition: '80m bridge approach embankment washed away by turbulent Barak overflow; structural deck exposed',
     normalizedStatus: 'REPORTED_DESTROYED',
     source: 'Assam PWD (Roads) Field Assessment Unit',
-    sourceUrl: 'https://pwdroads.assam.gov.in/cachar/jt-road-2022',
+    sourceUrl: '',
     observationTime: '2022-06-20T16:45:00Z',
-    retrievalTime: '2026-10-17T09:15:00Z',
-    verificationStatus: 'VERIFIED',
+    retrievalTime: '',
+    verificationStatus: 'REPORTED/UNVERIFIED',
     attachments: [
       {
         type: 'photo',
@@ -83,10 +83,10 @@ const INCIDENT_REPORTS: IncidentDamageReport[] = [
     reportedCondition: 'Overtopped by 0.75m standing water; culvert barrel clogged with floating hyacinth debris',
     normalizedStatus: 'REPORTED_DAMAGED',
     source: 'Cachar DDMA Revenue Circle Officer',
-    sourceUrl: 'https://asdma.assam.gov.in/field/sonai-circle',
+    sourceUrl: '',
     observationTime: '2022-06-21T08:30:00Z',
-    retrievalTime: '2026-10-17T09:30:00Z',
-    verificationStatus: 'OFFICIAL_CONFIRMED',
+    retrievalTime: '',
+    verificationStatus: 'REPORTED/UNVERIFIED',
     attachments: [
       {
         type: 'photo',
@@ -112,10 +112,10 @@ const INCIDENT_REPORTS: IncidentDamageReport[] = [
     reportedCondition: '120m earthen dyke failure caused catastrophic backflow inundation of Korkoli agricultural bowl',
     normalizedStatus: 'REPORTED_DESTROYED',
     source: 'Water Resources Department (WRD) Assam',
-    sourceUrl: 'https://waterresources.assam.gov.in',
+    sourceUrl: '',
     observationTime: '2022-06-20T14:10:00Z',
-    retrievalTime: '2026-10-17T08:45:00Z',
-    verificationStatus: 'VERIFIED',
+    retrievalTime: '',
+    verificationStatus: 'REPORTED/UNVERIFIED',
     attachments: [
       {
         type: 'photo',
@@ -140,10 +140,10 @@ const INCIDENT_REPORTS: IncidentDamageReport[] = [
     reportedCondition: 'Approach road waterlogged by 0.4m; ground floor storm drains overwhelmed. Power operating on emergency diesel genset.',
     normalizedStatus: 'REPORTED_DAMAGED',
     source: 'Hospital Medical Superintendent Dispatch Log',
-    sourceUrl: 'https://nhm.assam.gov.in/facilities/nightingale',
+    sourceUrl: '',
     observationTime: '2022-06-21T11:00:00Z',
-    retrievalTime: '2026-10-17T10:00:00Z',
-    verificationStatus: 'VERIFIED',
+    retrievalTime: '',
+    verificationStatus: 'REPORTED/UNVERIFIED',
     attachments: [
       {
         type: 'photo',
@@ -167,10 +167,10 @@ const INCIDENT_REPORTS: IncidentDamageReport[] = [
     reportedCondition: 'Conflicting reports: Local gram panchayat reports structure washed away; SDRF patrol reports bridge intact with flooded approaches.',
     normalizedStatus: 'CONFLICTING_REPORTS',
     source: 'Citizen Ground SMS + SDRF Radio Relay',
-    sourceUrl: 'https://lifeline-os.org/audit/rep-cachar-005',
+    sourceUrl: '',
     observationTime: '2022-06-21T15:20:00Z',
-    retrievalTime: '2026-10-17T10:30:00Z',
-    verificationStatus: 'CONFLICTING',
+    retrievalTime: '',
+    verificationStatus: 'REPORTED/UNVERIFIED',
     attachments: [
       {
         type: 'document',
@@ -197,10 +197,10 @@ const INCIDENT_REPORTS: IncidentDamageReport[] = [
     reportedCondition: '120m section of highway approach slab and concrete abutment swept into swollen Roshi river gorge by boulder-laden debris torrent',
     normalizedStatus: 'REPORTED_DESTROYED',
     source: 'Department of Roads (DoR Nepal) & Nepal Police Roshi Outpost',
-    sourceUrl: 'https://dor.gov.np/kavre/roshi-breach',
+    sourceUrl: '',
     observationTime: '2024-09-28T22:15:00Z',
-    retrievalTime: '2026-10-17T09:00:00Z',
-    verificationStatus: 'VERIFIED',
+    retrievalTime: '',
+    verificationStatus: 'REPORTED/UNVERIFIED',
     attachments: [
       {
         type: 'photo',
@@ -226,10 +226,10 @@ const INCIDENT_REPORTS: IncidentDamageReport[] = [
     reportedCondition: '85m river embankment slumping into Roshi Khola channel; suspension bridge eastern anchor exposed to severe hydraulic scour',
     normalizedStatus: 'REPORTED_DAMAGED',
     source: 'Kavrepalanchok District Emergency Operations Center (DEOC) & Nepal Red Cross',
-    sourceUrl: 'https://bipadportal.gov.np/incident/mangaltar-002',
+    sourceUrl: '',
     observationTime: '2024-09-29T06:30:00Z',
-    retrievalTime: '2026-10-17T09:30:00Z',
-    verificationStatus: 'VERIFIED',
+    retrievalTime: '',
+    verificationStatus: 'REPORTED/UNVERIFIED',
     attachments: [
       {
         type: 'photo',
@@ -255,10 +255,10 @@ const INCIDENT_REPORTS: IncidentDamageReport[] = [
     reportedCondition: 'Gravel and mud inundation over bridgehead exceeding 1.4m depth from combined Roshi and Sunkoshi flash flood backflow',
     normalizedStatus: 'UNDER_REPAIR',
     source: 'Department of Roads Heavy Equipment Division & Sindhuli DAO',
-    sourceUrl: 'https://dor.gov.np/sindhuli/nepalthok',
+    sourceUrl: '',
     observationTime: '2024-09-29T10:00:00Z',
-    retrievalTime: '2026-10-17T10:00:00Z',
-    verificationStatus: 'OFFICIAL_CONFIRMED',
+    retrievalTime: '',
+    verificationStatus: 'REPORTED/UNVERIFIED',
     attachments: [
       {
         type: 'document',
@@ -286,10 +286,10 @@ const INCIDENT_REPORTS: IncidentDamageReport[] = [
     reportedCondition: 'Concrete bridge span totally obliterated by violent midnight debris flow carrying boulders and uprooted timber',
     normalizedStatus: 'REPORTED_DESTROYED',
     source: 'Kerala State Disaster Management Authority & Indian Army Madras Sappers',
-    sourceUrl: 'https://sdma.kerala.gov.in/wayanad-chooralmala',
+    sourceUrl: '',
     observationTime: '2024-07-30T04:30:00Z',
-    retrievalTime: '2026-10-17T09:00:00Z',
-    verificationStatus: 'VERIFIED',
+    retrievalTime: '',
+    verificationStatus: 'REPORTED/UNVERIFIED',
     attachments: [
       {
         type: 'photo',
@@ -315,10 +315,10 @@ const INCIDENT_REPORTS: IncidentDamageReport[] = [
     reportedCondition: '130m of roadway buried under 4 meters of viscous mud, boulders, and tree trunks; completely severed',
     normalizedStatus: 'REPORTED_DESTROYED',
     source: 'NDRF 4th Battalion Rescue Task Force',
-    sourceUrl: 'https://ndrf.gov.in',
+    sourceUrl: '',
     observationTime: '2024-07-30T06:00:00Z',
-    retrievalTime: '2026-10-17T09:30:00Z',
-    verificationStatus: 'OFFICIAL_CONFIRMED',
+    retrievalTime: '',
+    verificationStatus: 'REPORTED/UNVERIFIED',
     attachments: [
       {
         type: 'photo',

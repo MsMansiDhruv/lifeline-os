@@ -62,7 +62,7 @@ export interface HydrologyInferenceResult {
     scenarioId: string;
     observationDate: string;
     source: string;
-    floodExtentSqKm: number;
+    floodExtentSqKm: number | string;
     peakDischargeM3s: number;
     verifiedAbutmentWashout: string;
   };
@@ -126,7 +126,7 @@ class HydrologyModelService {
           scenarioId: 'silchar_june_2022',
           observationDate: '2022-06-20T04:30:00Z',
           source: 'Sentinel-1 SAR Ground Truth + ASDMA Field Inspection',
-          floodExtentSqKm: 82.4,
+          floodExtentSqKm: 'unavailable',
           peakDischargeM3s: 1420,
           verifiedAbutmentWashout: 'JT Road (Binnākāndi Cut) 80m alluvial abutment breach at Sonabarighat',
         },
