@@ -15,6 +15,7 @@ import {
   Calendar,
   AlertTriangle,
   Info,
+  Cloud,
 } from 'lucide-react';
 import { SCENARIO_MANIFESTS, ScenarioId, ScenarioManifest } from '../data/scenarios';
 import { evidenceCatalogueService } from '../services/evidenceCatalogueService';
@@ -28,6 +29,7 @@ interface BottomScenarioNavigatorProps {
   simulationProgress?: string;
   onOpenEvidenceCatalogue: () => void;
   onOpenFieldEditor: () => void;
+  onOpenCloudArchitecture?: () => void;
   viewMode: 'map' | 'satellite' | '3d';
   onSelectViewMode: (mode: 'map' | 'satellite' | '3d') => void;
   swipeMode?: 'off' | 'swipe' | 'before' | 'after';
@@ -42,6 +44,7 @@ export const BottomScenarioNavigator: React.FC<BottomScenarioNavigatorProps> = (
   simulationProgress = '',
   onOpenEvidenceCatalogue,
   onOpenFieldEditor,
+  onOpenCloudArchitecture,
   viewMode,
   onSelectViewMode,
   swipeMode = 'off',
@@ -172,6 +175,19 @@ export const BottomScenarioNavigator: React.FC<BottomScenarioNavigatorProps> = (
               <Edit3 className="w-3.5 h-3.5 text-emerald-400" />
               <span className="hidden md:inline">Field Edit</span>
             </button>
+
+            {/* Google Cloud Architecture Modal Button */}
+            {onOpenCloudArchitecture && (
+              <button
+                type="button"
+                onClick={onOpenCloudArchitecture}
+                className="px-2.5 py-1.5 rounded-xl text-xs font-mono font-medium bg-slate-900 border border-blue-500/50 text-blue-300 hover:text-white hover:bg-blue-950/60 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                title="Open 4-Tier Google Cloud Architecture & Gemini MCP Stack"
+              >
+                <Cloud className="w-3.5 h-3.5 text-blue-400" />
+                <span className="hidden md:inline">GCP Cloud</span>
+              </button>
+            )}
 
             {/* Collapse / Expand Toggle */}
             <button

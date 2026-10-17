@@ -45,6 +45,7 @@ import { Terrain3DViewer } from './components/Terrain3DViewer';
 import { BottomScenarioNavigator } from './components/BottomScenarioNavigator';
 import { EvidenceCatalogueModal } from './components/EvidenceCatalogueModal';
 import { FieldEvidenceEditorModal } from './components/FieldEvidenceEditorModal';
+import { CloudArchitectureModal } from './components/CloudArchitectureModal';
 import {
   ShieldAlert,
   Activity,
@@ -117,6 +118,7 @@ export function App() {
   const [isSanctionModalOpen, setIsSanctionModalOpen] = useState<boolean>(false);
   const [isEvidenceModalOpen, setIsEvidenceModalOpen] = useState<boolean>(false);
   const [isFieldEditorModalOpen, setIsFieldEditorModalOpen] = useState<boolean>(false);
+  const [isCloudModalOpen, setIsCloudModalOpen] = useState<boolean>(false);
   const [ecosystemState, setEcosystemState] = useState<EcosystemBusState>(ecosystemBus.getState());
   const [isSosDismissed, setIsSosDismissed] = useState<boolean>(false);
 
@@ -1245,6 +1247,7 @@ export function App() {
         onRunResponseSimulation={handleRunResponseSimulation}
         isSimulationRunning={isSimulationRunning}
         simulationProgress={simulationProgress}
+        onOpenCloudArchitecture={() => setIsCloudModalOpen(true)}
       />
 
       {/* 3. EDITORIAL 5-CHAPTER INCIDENT COMMAND PANEL DOCKED ON LEFT */}
@@ -1448,6 +1451,7 @@ export function App() {
         simulationProgress={simulationProgress}
         onOpenEvidenceCatalogue={() => setIsEvidenceModalOpen(true)}
         onOpenFieldEditor={() => setIsFieldEditorModalOpen(true)}
+        onOpenCloudArchitecture={() => setIsCloudModalOpen(true)}
         viewMode={viewMode}
         onSelectViewMode={(mode) => setViewMode(mode)}
       />
@@ -1466,6 +1470,13 @@ export function App() {
         onClose={() => setIsFieldEditorModalOpen(false)}
         theaterId={activeTheaterId}
         theaterName={currentTheater.name}
+      />
+
+      {/* Google Cloud Platform & Gemini MCP Architecture Modal */}
+      <CloudArchitectureModal
+        isOpen={isCloudModalOpen}
+        onClose={() => setIsCloudModalOpen(false)}
+        activeTheaterName={currentTheater.name}
       />
     </div>
   );

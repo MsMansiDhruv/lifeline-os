@@ -17,6 +17,7 @@ import {
   Map,
   Satellite,
   Mountain,
+  Cloud,
 } from 'lucide-react';
 import { FleetMode } from '../types';
 import { THEATERS, TheaterData, createCustomTheater, InterventionType } from '../data/theaters';
@@ -52,6 +53,7 @@ interface HeaderProps {
   onRunResponseSimulation?: () => void;
   isSimulationRunning?: boolean;
   simulationProgress?: string;
+  onOpenCloudArchitecture?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -81,6 +83,7 @@ export const Header: React.FC<HeaderProps> = ({
   onRunResponseSimulation,
   isSimulationRunning = false,
   simulationProgress = '',
+  onOpenCloudArchitecture,
 }) => {
   const [cityQuery, setCityQuery] = useState<string>('');
   const [isSearching, setIsSearching] = useState<boolean>(false);
@@ -504,6 +507,18 @@ export const Header: React.FC<HeaderProps> = ({
             title={opsMode === 'night' ? 'Night Ops (Marine boats restricted)' : 'Day Ops (Full visibility)'}
           >
             {opsMode === 'night' ? <Moon className="w-3.5 h-3.5 text-indigo-400" /> : <Sun className="w-3.5 h-3.5 text-amber-400" />}
+          </button>
+        )}
+
+        {/* GCP Cloud Architecture Inspector */}
+        {onOpenCloudArchitecture && (
+          <button
+            type="button"
+            onClick={onOpenCloudArchitecture}
+            className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-blue-500/50 text-blue-400 hover:text-white text-xs cursor-pointer transition-colors shadow-sm"
+            title="Inspect Google Cloud & Gemini MCP Architecture"
+          >
+            <Cloud className="w-3.5 h-3.5" />
           </button>
         )}
 
