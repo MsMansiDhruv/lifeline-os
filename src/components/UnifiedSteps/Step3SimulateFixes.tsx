@@ -23,6 +23,7 @@ import {
   Database,
   ShieldCheck,
 } from 'lucide-react';
+import { BridgeIcon, CampIcon, DroneIcon, BoatIcon } from '../common/TacticalIcons';
 
 interface Step3SimulateFixesProps {
   currentTheater: TheaterData;
@@ -265,19 +266,19 @@ export const Step3SimulateFixes: React.FC<Step3SimulateFixesProps> = ({
                         isBaileyOverSpan
                           ? 'opacity-40 cursor-not-allowed bg-slate-900 border-slate-800 text-rose-400'
                           : currentTool === 'bridge'
-                          ? 'bg-emerald-700 text-white border-emerald-400 shadow-md shadow-emerald-900/50 cursor-pointer'
+                          ? 'bg-amber-900 text-amber-100 border-amber-600 shadow-md shadow-amber-950/50 cursor-pointer'
                           : 'bg-slate-900 text-slate-300 hover:text-white border-slate-800 hover:border-slate-700 cursor-pointer'
-                      } ${isTourTarget && !isBaileyOverSpan ? 'ring-4 ring-emerald-400 animate-pulse' : ''}`}
+                      } ${isTourTarget && !isBaileyOverSpan ? 'ring-4 ring-amber-400 animate-pulse' : ''}`}
                       title={
                         isBaileyOverSpan
                           ? `🚫 UNBUILDABLE: ${coords.breachWidthMeters}m Floodplain exceeds 60m Max Bailey Span — Use Boat Ferry or Med-Drone!`
                           : 'Class-40 Modular Bailey Bridge: Anchors strictly between North & South Dry Abutments'
                       }
                     >
-                      <Construction className="w-3.5 h-3.5 mb-0.5 text-emerald-400" />
+                      <BridgeIcon size={16} className="mb-0.5 text-amber-200" />
                       <span className="truncate">{isBaileyOverSpan ? 'Locked (>60m)' : 'Bailey Bridge'}</span>
                       <span className="text-[9px] text-slate-400">
-                        {isBaileyOverSpan ? 'Exceeds Span' : '₹72L • 48h'}
+                        {isBaileyOverSpan ? 'Exceeds Span' : '₹1.8 Cr • 72h'}
                       </span>
                     </button>
                     {isBaileyOverSpan && (
@@ -287,7 +288,7 @@ export const Step3SimulateFixes: React.FC<Step3SimulateFixesProps> = ({
                     )}
                   </div>
 
-                  {/* Tool 2: Dry Roadhead Field Clinic (Snapped to dry ground) */}
+                  {/* Tool 2: Dry Roadhead Hospital Camp (YELLOW) */}
                   <div className="relative">
                     <button
                       type="button"
@@ -298,21 +299,21 @@ export const Step3SimulateFixes: React.FC<Step3SimulateFixesProps> = ({
                       }}
                       className={`w-full py-2 px-1 rounded-lg font-semibold flex flex-col items-center justify-center transition-all cursor-pointer border ${
                         currentTool === 'booth'
-                          ? 'bg-emerald-800 text-white border-emerald-400 shadow-md'
+                          ? 'bg-yellow-500 text-yellow-950 font-bold border-yellow-400 shadow-md shadow-yellow-900/50'
                           : 'bg-slate-900 text-slate-300 hover:text-white border-slate-800 hover:border-slate-700'
                       }`}
                       title="Dry Roadhead Clinic: Pitched at 29m ASL dry roadhead, 600m before water"
                     >
-                      <Activity className="w-3.5 h-3.5 mb-0.5 text-emerald-400" />
-                      <span className="truncate">Dry Clinic</span>
-                      <span className="text-[9px] text-slate-400">₹15L • 6h</span>
+                      <CampIcon size={16} className="mb-0.5 text-yellow-300" />
+                      <span className="truncate">Hospital Camp</span>
+                      <span className="text-[9px] text-slate-400">₹25L • 6h</span>
                     </button>
-                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 z-20 bg-blue-950 text-blue-300 border border-blue-800 font-mono text-[7px] px-1 py-0.2 rounded whitespace-nowrap">
+                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 z-20 bg-yellow-950 text-yellow-300 border border-yellow-800 font-mono text-[7px] px-1 py-0.2 rounded whitespace-nowrap">
                       29m ASL Dry
                     </div>
                   </div>
 
-                  {/* Tool 3: Drone Airbridge (Hospital to Village Drop-Zone) */}
+                  {/* Tool 3: Drone Airbridge (PURPLE) */}
                   <div className="relative">
                     <button
                       type="button"
@@ -328,16 +329,16 @@ export const Step3SimulateFixes: React.FC<Step3SimulateFixesProps> = ({
                       }`}
                       title="Medical UAV Drone: Flies directly from Hospital Helipad to Village School Drop-Zone"
                     >
-                      <Radio className="w-3.5 h-3.5 mb-0.5 text-purple-400" />
+                      <DroneIcon size={16} className="mb-0.5 text-purple-300" />
                       <span className="truncate">Med Drone</span>
-                      <span className="text-[9px] text-slate-400">₹8L • 45m</span>
+                      <span className="text-[9px] text-slate-400">₹12L • 45m</span>
                     </button>
                     <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 z-20 bg-purple-950 text-purple-300 border border-purple-800 font-mono text-[7px] px-1 py-0.2 rounded whitespace-nowrap">
                       Air Corridor
                     </div>
                   </div>
 
-                  {/* Tool 4: NDRF Boat Ferry (Shore-to-Shore Dry Ramps) */}
+                  {/* Tool 4: NDRF Boat Ferry (BLUE) */}
                   <div className="relative">
                     <button
                       type="button"
@@ -352,18 +353,18 @@ export const Step3SimulateFixes: React.FC<Step3SimulateFixesProps> = ({
                         opsMode === 'night'
                           ? 'opacity-40 cursor-not-allowed bg-slate-900 border-slate-800 text-slate-500'
                           : currentTool === 'boat'
-                          ? 'bg-cyan-700 text-white border-cyan-400 shadow-md shadow-cyan-900/50 cursor-pointer'
+                          ? 'bg-blue-600 text-white border-blue-400 shadow-md shadow-blue-900/50 cursor-pointer'
                           : 'bg-slate-900 text-slate-300 hover:text-white border-slate-800 hover:border-slate-700 cursor-pointer'
                       }`}
-                      title="NDRF Zodiac Ferry: Connects North Dry Launch Ramp to South Dry Landing Jetty"
+                      title="NDRF Rescue Boat: Connects North Dry Launch Ramp to South Dry Landing Jetty"
                     >
-                      <Anchor className="w-3.5 h-3.5 mb-0.5 text-cyan-400" />
-                      <span className="truncate">Zodiac Ferry</span>
+                      <BoatIcon size={16} className="mb-0.5 text-blue-300" />
+                      <span className="truncate">Rescue Boat</span>
                       <span className="text-[9px] text-slate-400">
-                        {opsMode === 'night' ? 'Grounded' : '₹3.5L • 3h'}
+                        {opsMode === 'night' ? 'Grounded' : '₹6.5L • 3h'}
                       </span>
                     </button>
-                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 z-20 bg-cyan-950 text-cyan-300 border border-cyan-800 font-mono text-[7px] px-1 py-0.2 rounded whitespace-nowrap">
+                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 z-20 bg-blue-950 text-blue-300 border border-blue-800 font-mono text-[7px] px-1 py-0.2 rounded whitespace-nowrap">
                       Dry Ramps
                     </div>
                   </div>

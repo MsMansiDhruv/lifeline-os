@@ -112,7 +112,7 @@ export const BASE_SURGE_HOSPITALS: SurgeHospital[] = [
     surge_percentage: 168,
     status: 'CRITICAL_SURGE',
     asdma_directive: 'Dispatch 10,000 ORS sachets, 80 vials lyophilized polyvalent anti-snake venom, and chlorine purification tablets.',
-    mmu_assets_dispatched: '1x Epidemic Surveillance Unit + Zodiac Inflatable Ambulance',
+    mmu_assets_dispatched: '1x Epidemic Surveillance Unit + Rescue Boat Ambulance',
     feeder_settlements: [
       { name: 'Chibitabichia', baseline_facility: 'Jiribam CHC (Severed Feeder)', add_km: 4.18, add_min: 17.1, population: 1850 },
       { name: 'Cossipore', baseline_facility: 'Jiribam CHC (Severed Feeder)', add_km: 5.77, add_min: 24.2, population: 2400 },

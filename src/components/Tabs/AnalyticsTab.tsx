@@ -1,6 +1,7 @@
 import React from 'react';
 import { SettlementRecord } from '../../types';
 import { BarChart3, PieChart, Activity, TrendingUp, ShieldCheck, Clock, Users, IndianRupee } from 'lucide-react';
+import { BridgeIcon, CampIcon, DroneIcon, BoatIcon } from '../common/TacticalIcons';
 
 interface AnalyticsTabProps {
   settlements: SettlementRecord[];
@@ -283,26 +284,38 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ settlements }) => {
           <div className="flex items-center justify-between">
             <h4 className="text-sm font-bold text-white flex items-center gap-2 font-mono">
               <IndianRupee className="w-4 h-4 text-purple-400" />
-              SDRF Budget Allocation Breakdown (₹1.46 Cr Total)
+              SDRF Budget Allocation Breakdown (₹2.24 Cr / ₹250L Cap)
             </h4>
           </div>
 
           <div className="space-y-2.5 text-xs font-mono">
             <div className="flex justify-between items-center p-2.5 rounded-xl bg-slate-900 border border-slate-800">
-              <span className="text-slate-300">🛠️ PWD Bailey Bridges (2x Quad Spans):</span>
-              <strong className="text-emerald-400">₹127.0 Lakhs (87.0%)</strong>
+              <span className="text-slate-300 flex items-center gap-1.5">
+                <BridgeIcon size={14} color="#f59e0b" />
+                <span>PWD Class-40 Bailey Bridge (1x Span):</span>
+              </span>
+              <strong className="text-emerald-400">₹180.0 Lakhs (80.5%)</strong>
             </div>
             <div className="flex justify-between items-center p-2.5 rounded-xl bg-slate-900 border border-slate-800">
-              <span className="text-slate-300">⛺ Mobile Health Clinic Booths (2x):</span>
-              <strong className="text-cyan-400">₹15.0 Lakhs (10.3%)</strong>
+              <span className="text-slate-300 flex items-center gap-1.5">
+                <CampIcon size={14} color="#facc15" />
+                <span>Mobile Medical Unit (MMU Clinic):</span>
+              </span>
+              <strong className="text-cyan-400">₹25.0 Lakhs (11.2%)</strong>
             </div>
             <div className="flex justify-between items-center p-2.5 rounded-xl bg-slate-900 border border-slate-800">
-              <span className="text-slate-300">🚁 Autonomous UAV Medical Shuttles:</span>
-              <strong className="text-purple-400">₹8.0 Lakhs (5.5%)</strong>
+              <span className="text-slate-300 flex items-center gap-1.5">
+                <DroneIcon size={14} color="#c084fc" />
+                <span>Heavy Med-Drone Airbridge:</span>
+              </span>
+              <strong className="text-purple-400">₹12.0 Lakhs (5.4%)</strong>
             </div>
             <div className="flex justify-between items-center p-2.5 rounded-xl bg-slate-900 border border-slate-800">
-              <span className="text-slate-300">🚤 NDRF Inflatable Zodiac Operations:</span>
-              <strong className="text-amber-400">₹3.5 Lakhs (2.4%)</strong>
+              <span className="text-slate-300 flex items-center gap-1.5">
+                <BoatIcon size={14} color="#38bdf8" />
+                <span>NDRF 40HP Rescue Boat Operations:</span>
+              </span>
+              <strong className="text-blue-400">₹6.5 Lakhs (2.9%)</strong>
             </div>
           </div>
         </div>

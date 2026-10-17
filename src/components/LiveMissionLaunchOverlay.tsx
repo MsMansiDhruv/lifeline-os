@@ -20,6 +20,7 @@ import {
   playVictoryChord,
   speakTacticalNarration,
 } from '../services/audioService';
+import { BridgeIcon, CampIcon, DroneIcon, BoatIcon } from './common/TacticalIcons';
 
 export interface MissionTelemetryLog {
   timeStr: string;
@@ -73,7 +74,7 @@ export const LiveMissionLaunchOverlay: React.FC<LiveMissionLaunchOverlayProps> =
               timeStr: 'T+00h 11m',
               phase: 1,
               type: 'airbridge',
-              text: '🚁 UAV-ALPHA AIRBRIDGE LAUNCHED: Cruising 85 km/h across Barak flood basin with 40 vials Anti-Snake Venom.',
+              text: 'UAV-ALPHA AIRBRIDGE LAUNCHED: Cruising 85 km/h across Barak flood basin with 40 vials Anti-Snake Venom.',
             },
           ]);
         }
@@ -85,7 +86,7 @@ export const LiveMissionLaunchOverlay: React.FC<LiveMissionLaunchOverlayProps> =
               timeStr: 'T+00h 38m',
               phase: 1,
               type: 'airbridge',
-              text: '🎯 PAYLOAD DELIVERED: 40 vials Anti-Snake Venom & Cold-Chain Insulin landed at 41m ASL Dry Drop-Zone (3h 48m before thermal spoilage!).',
+              text: 'PAYLOAD DELIVERED: 40 vials Anti-Snake Venom & Cold-Chain Insulin landed at 41m ASL Dry Drop-Zone (3h 48m before thermal spoilage!).',
             },
           ]);
         }
@@ -100,7 +101,7 @@ export const LiveMissionLaunchOverlay: React.FC<LiveMissionLaunchOverlayProps> =
               timeStr: 'T+01h 05m',
               phase: 2,
               type: 'marine',
-              text: '⚓ NDRF ZODIAC BOAT-04 DISPATCHED: Deploying water shuttle between North Launch Ramp & South Dry Pier.',
+              text: 'NDRF RESCUE BOAT-04 DISPATCHED: Deploying water shuttle between North Launch Ramp & South Dry Pier.',
             },
           ]);
         }
@@ -112,7 +113,7 @@ export const LiveMissionLaunchOverlay: React.FC<LiveMissionLaunchOverlayProps> =
               timeStr: 'T+01h 50m',
               phase: 2,
               type: 'marine',
-              text: '⚓ EXTRACTION COMPLETE: 14 Renal Dialysis & 9 High-Risk Maternal patients ferried across submerged channel within Golden Hour.',
+              text: 'EXTRACTION COMPLETE: 14 Renal Dialysis & 9 High-Risk Maternal patients ferried across submerged channel within Golden Hour.',
             },
           ]);
         }
@@ -127,7 +128,7 @@ export const LiveMissionLaunchOverlay: React.FC<LiveMissionLaunchOverlayProps> =
               timeStr: 'T+02h 45m',
               phase: 3,
               type: 'clinic',
-              text: '⛺ MOBILE FIELD CLINIC OPERATIONAL: Perimeter secured at Harinagar Dry Roadhead (29m ASL). Intercepting local casualties on-site.',
+              text: 'MOBILE FIELD CLINIC OPERATIONAL: Perimeter secured at Harinagar Dry Roadhead (29m ASL). Intercepting local casualties on-site.',
             },
           ]);
         }
@@ -143,7 +144,7 @@ export const LiveMissionLaunchOverlay: React.FC<LiveMissionLaunchOverlayProps> =
               timeStr: 'T+04h 10m',
               phase: 3,
               type: 'clinic',
-              text: '🩺 VALLEY HOSPITAL STABILIZED: 184 triage casualties filtered on dry ground! ICU load dropped from 191% Red to 108% Green.',
+              text: 'VALLEY HOSPITAL STABILIZED: 184 triage casualties filtered on dry ground! ICU load dropped from 191% Red to 108% Green.',
             },
           ]);
         }
@@ -158,7 +159,7 @@ export const LiveMissionLaunchOverlay: React.FC<LiveMissionLaunchOverlayProps> =
               timeStr: 'T+04h 45m',
               phase: 4,
               type: 'bridge',
-              text: '🛠️ CLASS-40 BAILEY BRIDGE LOCKED: 38-meter steel span pinned between North and South Dry Abutments on JT Road.',
+              text: 'CLASS-40 BAILEY BRIDGE LOCKED: 38-meter steel span pinned between North and South Dry Abutments on JT Road.',
             },
           ]);
         }
@@ -170,7 +171,7 @@ export const LiveMissionLaunchOverlay: React.FC<LiveMissionLaunchOverlayProps> =
               timeStr: 'T+05h 30m',
               phase: 4,
               type: 'bridge',
-              text: '🚛 16-TON CONVOY CROSSING: 18.5 MT FCI grain and bottled water delivered directly to 27 cut villages via reopened green corridor!',
+              text: '16-TON CONVOY CROSSING: 18.5 MT FCI grain and bottled water delivered directly to 27 cut villages via reopened green corridor!',
             },
           ]);
         }
@@ -254,10 +255,10 @@ export const LiveMissionLaunchOverlay: React.FC<LiveMissionLaunchOverlayProps> =
         {/* 4 Accelerated Operation Phases Bar */}
         <div className="grid grid-cols-4 gap-1.5 font-mono text-[9px]">
           {[
-            { num: 1, title: 'Airbridge Ignition', icon: Radio, sub: '0h-45m', color: 'text-purple-400', activeBg: 'bg-purple-950 border-purple-500' },
-            { num: 2, title: 'Marine Shuttle', icon: Anchor, sub: '45m-2h30m', color: 'text-cyan-400', activeBg: 'bg-cyan-950 border-cyan-500' },
-            { num: 3, title: 'Clinic Triage', icon: Activity, sub: '2h30m-4h30m', color: 'text-emerald-400', activeBg: 'bg-emerald-950 border-emerald-500' },
-            { num: 4, title: 'Bridge & 16T Convoy', icon: Truck, sub: '4h30m-6h', color: 'text-amber-400', activeBg: 'bg-amber-950 border-amber-500' },
+            { num: 1, title: 'Airbridge Ignition', icon: DroneIcon, sub: '0h-45m', color: 'text-purple-400', activeBg: 'bg-purple-950 border-purple-500' },
+            { num: 2, title: 'Marine Shuttle', icon: BoatIcon, sub: '45m-2h30m', color: 'text-cyan-400', activeBg: 'bg-cyan-950 border-cyan-500' },
+            { num: 3, title: 'Clinic Triage', icon: CampIcon, sub: '2h30m-4h30m', color: 'text-emerald-400', activeBg: 'bg-emerald-950 border-emerald-500' },
+            { num: 4, title: 'Bridge & 16T Convoy', icon: BridgeIcon, sub: '4h30m-6h', color: 'text-amber-400', activeBg: 'bg-amber-950 border-amber-500' },
           ].map((p) => {
             const isPhaseActive = currentPhase === p.num;
             const isPhasePassed = currentPhase > p.num || isCompleted;
@@ -371,6 +372,17 @@ export const LiveMissionLaunchOverlay: React.FC<LiveMissionLaunchOverlayProps> =
           {logs.slice(-3).map((log, i) => (
             <div key={i} className="flex items-start gap-1.5 text-slate-200 animate-in fade-in">
               <span className="text-cyan-400 font-bold shrink-0">[{log.timeStr}]</span>
+              <span className="shrink-0 mt-0.5">
+                {log.type === 'airbridge' ? (
+                  <DroneIcon size={12} color="#c084fc" />
+                ) : log.type === 'marine' ? (
+                  <BoatIcon size={12} color="#38bdf8" />
+                ) : log.type === 'clinic' ? (
+                  <CampIcon size={12} color="#facc15" />
+                ) : (
+                  <BridgeIcon size={12} color="#f59e0b" />
+                )}
+              </span>
               <span>{log.text}</span>
             </div>
           ))}

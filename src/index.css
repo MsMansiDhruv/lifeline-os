@@ -1,8 +1,51 @@
 @import "tailwindcss";
 
-/* Tactical Dark OpenStreetMap Tiles (100% Free, Keyless, with Crisp Place/Road Labels) */
+/* Tactical Dark OpenStreetMap Tiles: Monotone Dark Navigation Map (Uber / Google Maps style) */
 .tactical-dark-osm-tiles {
-  filter: brightness(90%) contrast(125%) hue-rotate(180deg) invert(100%) !important;
+  filter: grayscale(100%) invert(98%) contrast(90%) brightness(50%) !important;
+}
+
+.muted-satellite-tiles {
+  filter: grayscale(55%) brightness(52%) contrast(110%) !important;
+}
+
+.muted-street-osm-tiles {
+  filter: grayscale(80%) brightness(65%) contrast(95%) !important;
+}
+
+/* Glowing Route Illuminations for Active Navigation (Uber/Google Maps style) */
+path.active-restored-highway {
+  filter: drop-shadow(0 0 8px rgba(180, 83, 9, 0.95)) drop-shadow(0 0 16px rgba(180, 83, 9, 0.55)) !important;
+}
+
+path.active-camp-roadhead {
+  filter: drop-shadow(0 0 8px rgba(234, 179, 8, 0.95)) drop-shadow(0 0 16px rgba(234, 179, 8, 0.55)) !important;
+}
+
+path.active-breach-hazard {
+  filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.95)) drop-shadow(0 0 20px rgba(239, 68, 68, 0.6)) !important;
+}
+
+path.active-flood-detour {
+  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.8)) drop-shadow(0 0 14px rgba(245, 158, 11, 0.4)) !important;
+}
+
+path.active-drone-airbridge {
+  filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.95)) drop-shadow(0 0 20px rgba(192, 132, 252, 0.55)) !important;
+}
+
+path.active-boat-shuttle {
+  filter: drop-shadow(0 0 10px rgba(2, 132, 199, 0.95)) drop-shadow(0 0 20px rgba(2, 132, 199, 0.55)) !important;
+}
+
+.quiet-map-marker {
+  opacity: 0.65;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.quiet-map-marker:hover {
+  opacity: 1 !important;
+  transform: translate(-50%, -105%) scale(1.08) !important;
+  z-index: 9999 !important;
 }
 
 @keyframes pulse-red {
@@ -96,6 +139,55 @@
 .severed-breach-span,
 path.severed-span-anim {
   animation: flash-severed 1.2s ease-in-out infinite !important;
+}
+
+/* Water & River Inundation Animations */
+@keyframes water-flow {
+  0% {
+    stroke-dashoffset: 120;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes water-flood-pulse {
+  0%, 100% {
+    opacity: 0.25;
+    filter: drop-shadow(0 0 8px rgba(14, 165, 233, 0.4));
+  }
+  50% {
+    opacity: 0.55;
+    filter: drop-shadow(0 0 20px rgba(56, 189, 248, 0.85));
+  }
+}
+
+@keyframes drone-airbridge-flow {
+  0% {
+    stroke-dashoffset: 60;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+path.river-water-flow {
+  stroke-dasharray: 14, 14;
+  animation: water-flow 2.2s linear infinite !important;
+}
+
+path.river-flood-pulse {
+  animation: water-flood-pulse 3s ease-in-out infinite !important;
+}
+
+path.drone-airbridge-path {
+  stroke-dasharray: 10, 8;
+  animation: drone-airbridge-flow 1.5s linear infinite !important;
+}
+
+path.boat-ferry-path {
+  stroke-dasharray: 8, 8;
+  animation: water-flow 2s linear infinite !important;
 }
 
 .pulse-danger {
@@ -211,3 +303,37 @@ path.severed-span-anim {
   font-size: 10px !important;
   font-weight: 600 !important;
 }
+
+/* Wind Drift Streamlines Animation */
+@keyframes wind-drift-anim {
+  0% { stroke-dashoffset: 240; opacity: 0.15; }
+  50% { opacity: 0.85; }
+  100% { stroke-dashoffset: 0; opacity: 0.15; }
+}
+
+path.wind-streamline-drift {
+  stroke-dasharray: 40, 60 !important;
+  animation: wind-drift-anim 3.5s linear infinite !important;
+}
+
+/* Submerged Bridge Breach Hazard Pulse */
+@keyframes breach-hazard-pulse-anim {
+  0%, 100% { stroke-width: 8px; stroke: #ef4444; filter: drop-shadow(0 0 12px #ef4444); opacity: 1; }
+  50% { stroke-width: 11px; stroke: #ff7878; filter: drop-shadow(0 0 24px #ff3333); opacity: 0.8; }
+}
+
+path.breach-hazard-pulsing {
+  animation: breach-hazard-pulse-anim 1.2s ease-in-out infinite !important;
+}
+
+/* Inbound Phone Field SOS Magenta Beacon */
+@keyframes sos-magenta-halo-anim {
+  0% { transform: scale(0.6); opacity: 1; box-shadow: 0 0 0 0 rgba(217, 70, 239, 0.9); }
+  70% { transform: scale(2.2); opacity: 0; box-shadow: 0 0 0 16px rgba(217, 70, 239, 0); }
+  100% { transform: scale(0.6); opacity: 0; }
+}
+
+.sos-beacon-halo {
+  animation: sos-magenta-halo-anim 1.4s cubic-bezier(0, 0.2, 0.8, 1) infinite !important;
+}
+

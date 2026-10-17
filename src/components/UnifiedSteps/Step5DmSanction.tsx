@@ -58,7 +58,7 @@ export const Step5DmSanction: React.FC<Step5DmSanctionProps> = ({
       `ASSETS DEPLOYED:\n` +
       `- 1x Class-40 Modular Bailey Bridge (38m Gap, PWD Mechanical Div)\n` +
       `- 2x Forward Medical Clinic Booths (NHM Assam)\n` +
-      `- 4x NDRF Zodiac Mk-V Rescue Boats (8th Bn NDRF)\n` +
+      `- 4x NDRF Mk-V Rescue Boats (8th Bn NDRF)\n` +
       `- 3x Autonomous Heavy Cargo UAVs (Skye Air)\n` +
       `TOTAL SDRF SANCTION: ₹1.055 Crore\n` +
       `SIGNING AUTHORITY: District Magistrate & SEOC Incident Commander`;
@@ -147,7 +147,7 @@ export const Step5DmSanction: React.FC<Step5DmSanctionProps> = ({
             <div className="flex items-center gap-2">
               <Anchor className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
               <div>
-                <strong className="text-white">4x Zodiac Mk-V Rescue Boat Ferries</strong>
+                <strong className="text-white">4x Mk-V Rescue Boat Ferries</strong>
                 <p className="text-[9px] text-slate-400">8th Bn NDRF • Sadarghat & Sonabarighat Wharves</p>
               </div>
             </div>

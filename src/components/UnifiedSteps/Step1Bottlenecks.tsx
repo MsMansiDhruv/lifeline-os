@@ -22,6 +22,7 @@ import {
   Moon,
   Sun,
 } from 'lucide-react';
+import { BridgeIcon, CampIcon, DroneIcon, BoatIcon } from '../common/TacticalIcons';
 
 interface Step1BottlenecksProps {
   currentTheater: TheaterData;
@@ -280,13 +281,13 @@ export const Step1Bottlenecks: React.FC<Step1BottlenecksProps> = ({
                         isBaileyDisabled
                           ? 'opacity-40 cursor-not-allowed bg-slate-900 border-slate-800 text-slate-500'
                           : currentTool === 'bridge'
-                          ? 'bg-emerald-700 text-white border-emerald-400 shadow-md shadow-emerald-900/50 cursor-pointer'
+                          ? 'bg-amber-900 text-amber-100 border-amber-600 shadow-md shadow-amber-950/50 cursor-pointer'
                           : hoveredTool === 'bridge'
                           ? 'bg-slate-800 text-white border-slate-600 cursor-pointer'
                           : 'bg-slate-900 text-slate-300 hover:text-white border-slate-800 hover:border-slate-700 cursor-pointer'
                       } ${
                         isTask2Target
-                          ? 'ring-4 ring-emerald-400 shadow-[0_0_15px_#10b981] animate-pulse bg-emerald-950 text-emerald-200'
+                          ? 'ring-4 ring-amber-400 shadow-[0_0_15px_#d97706] animate-pulse bg-amber-950 text-amber-200'
                           : ''
                       }`}
                       title={
@@ -295,18 +296,18 @@ export const Step1Bottlenecks: React.FC<Step1BottlenecksProps> = ({
                           : 'Class-40 Bailey Bridge: Spans gap, restores 16T Trucks and Ambulances'
                       }
                     >
-                      <Construction className="w-3.5 h-3.5 mb-0.5 text-emerald-400" />
+                      <BridgeIcon size={16} className="mb-0.5 text-amber-200" />
                       <span className="truncate">{isBaileyDisabled ? 'Span >60m' : 'Bailey Bridge'}</span>
-                      <span className="text-[9px] text-slate-400">{isBaileyDisabled ? 'Disabled' : '₹72L • 48h'}</span>
+                      <span className="text-[9px] text-slate-400">{isBaileyDisabled ? 'Disabled' : '₹1.8 Cr • 72h'}</span>
                     </button>
                     {isTask2Target && !isBaileyDisabled && (
-                      <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-30 bg-emerald-400 text-slate-950 font-mono font-bold text-[8px] px-1.5 py-0.2 rounded-full shadow-[0_0_10px_#10b981] whitespace-nowrap animate-bounce">
+                      <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-30 bg-amber-400 text-slate-950 font-mono font-bold text-[8px] px-1.5 py-0.2 rounded-full shadow-[0_0_10px_#d97706] whitespace-nowrap animate-bounce">
                         👇 SNAP BAILEY BRIDGE
                       </div>
                     )}
                   </div>
 
-                  {/* Tool 2: Field Clinic Booth */}
+                  {/* Tool 2: Hospital Camp (MMU) (YELLOW) */}
                   <div className="relative">
                     <button
                       type="button"
@@ -323,21 +324,21 @@ export const Step1Bottlenecks: React.FC<Step1BottlenecksProps> = ({
                       }}
                       className={`w-full py-2 px-1 rounded-lg font-semibold flex flex-col items-center justify-center transition-all cursor-pointer border ${
                         currentTool === 'booth'
-                          ? 'bg-emerald-800 text-white border-emerald-400 shadow-md'
+                          ? 'bg-yellow-500 text-yellow-950 font-bold border-yellow-400 shadow-md shadow-yellow-900/50'
                           : hoveredTool === 'booth'
                           ? 'bg-slate-800 text-white border-slate-600'
                           : 'bg-slate-900 text-slate-300 hover:text-white border-slate-800 hover:border-slate-700'
                       } ${
-                        hoveredTool === 'booth' ? 'ring-2 ring-emerald-500/50' : ''
+                        hoveredTool === 'booth' ? 'ring-2 ring-yellow-500/50' : ''
                       }`}
                     >
-                      <Activity className="w-3.5 h-3.5 mb-0.5 text-emerald-400" />
-                      <span className="truncate">Field Clinic</span>
-                      <span className="text-[9px] text-slate-400">₹15L • 6h</span>
+                      <CampIcon size={16} className="mb-0.5 text-yellow-300" />
+                      <span className="truncate">Hospital Camp</span>
+                      <span className="text-[9px] text-slate-400">₹25L • 6h</span>
                     </button>
                   </div>
 
-                  {/* Tool 3: Medical UAV Drone */}
+                  {/* Tool 3: Medical UAV Drone (PURPLE) */}
                   <div className="relative">
                     <button
                       type="button"
@@ -369,10 +370,10 @@ export const Step1Bottlenecks: React.FC<Step1BottlenecksProps> = ({
                           : 'Autonomous Medical UAV Drone'
                       }
                     >
-                      <Radio className="w-3.5 h-3.5 mb-0.5 text-purple-400" />
+                      <DroneIcon size={16} className="mb-0.5 text-purple-300" />
                       <span className="truncate">Med Drone</span>
                       <span className="text-[9px] text-slate-400">
-                        {opsMode === 'night' ? 'FLIR Night' : '₹8L • 45m'}
+                        {opsMode === 'night' ? 'FLIR Night' : '₹12L • 45m'}
                       </span>
                     </button>
                     {isHeavy && (
@@ -387,7 +388,7 @@ export const Step1Bottlenecks: React.FC<Step1BottlenecksProps> = ({
                     )}
                   </div>
 
-                  {/* Tool 4: Zodiac Boat Ferry */}
+                  {/* Tool 4: Rescue Boat Ferry (BLUE) */}
                   <div className="relative">
                     <button
                       type="button"
@@ -408,23 +409,23 @@ export const Step1Bottlenecks: React.FC<Step1BottlenecksProps> = ({
                         opsMode === 'night'
                           ? 'opacity-40 cursor-not-allowed bg-slate-900 border-slate-800 text-slate-500'
                           : currentTool === 'boat'
-                          ? 'bg-cyan-700 text-white border-cyan-400 shadow-md shadow-cyan-900/50 cursor-pointer'
+                          ? 'bg-blue-600 text-white border-blue-400 shadow-md shadow-blue-900/50 cursor-pointer'
                           : hoveredTool === 'boat'
                           ? 'bg-slate-800 text-white border-slate-600 cursor-pointer'
                           : 'bg-slate-900 text-slate-300 hover:text-white border-slate-800 hover:border-slate-700 cursor-pointer'
                       }`}
                       title={
                         opsMode === 'night'
-                          ? '🚤 Boat Ferry Grounded at Night (Barak River Zero Nav Visibility)'
+                          ? 'Boat Ferry Grounded at Night (Barak River Zero Nav Visibility)'
                           : isHeavy
                           ? '⚠️ Carries Light Passengers Only — Requires Bailey Bridge for 16T Ration Trucks'
-                          : 'Deploy Zodiac Inflatable Boat Ferry'
+                          : 'Deploy Rescue Boat Ferry'
                       }
                     >
-                      <Anchor className="w-3.5 h-3.5 mb-0.5 text-cyan-400" />
-                      <span className="truncate">Boat Ferry</span>
+                      <BoatIcon size={16} className="mb-0.5 text-blue-300" />
+                      <span className="truncate">Rescue Boat</span>
                       <span className="text-[9px] text-slate-400">
-                        {opsMode === 'night' ? 'Grounded' : '₹3.5L • 3h'}
+                        {opsMode === 'night' ? 'Grounded' : '₹6.5L • 3h'}
                       </span>
                     </button>
                     {isHeavy && opsMode !== 'night' && (

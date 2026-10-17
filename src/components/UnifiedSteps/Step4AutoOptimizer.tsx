@@ -232,7 +232,7 @@ export const Step4AutoOptimizer: React.FC<Step4AutoOptimizerProps> = ({
         },
         {
           department: 'National Disaster Response Force (NDRF) / SDRF Marine Battalion',
-          asset: 'Motorized Inflatable Rescue Crafts (Zodiac / Rigids)',
+          asset: 'Motorized Inflatable Rescue Boats (40HP / Rigids)',
           quantity: rescueBoatsCount,
           cost_lakhs: rescueBoatsCount * 3.5,
           staging_dry_roadhead_gps: [secChoke.lat, secChoke.lon],
@@ -664,7 +664,7 @@ export const Step4AutoOptimizer: React.FC<Step4AutoOptimizerProps> = ({
                 <div>
                   <span className="text-neutral-500 block">Operation:</span>
                   <span className="text-white font-semibold">
-                    {rescueBoatsCount}x Zodiac crafts • 3-hr continuous river ferry shuttle
+                    {rescueBoatsCount}x Rescue Boats • 3-hr continuous river ferry shuttle
                   </span>
                 </div>
               </div>

@@ -11,6 +11,13 @@ venv/
 .venv/
 env/
 .env
+.env.*
+!.env.example
+.dev.env.json
+
+# Node & Build Outputs
+node_modules/
+dist/
 
 # Sensitive credentials & API keys
 *key*.txt

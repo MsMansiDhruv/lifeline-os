@@ -38,7 +38,7 @@ export const CopilotTab: React.FC<CopilotTabProps> = ({
     settlements.find((s) => s.village_name === 'Binnākāndi')?.village_id || settlements[0].village_id
   );
   const [baileySpansCount, setBaileySpansCount] = useState<number>(4);
-  const [zodiacBoatsCount, setZodiacBoatsCount] = useState<number>(8);
+  const [rescueBoatsCount, setRescueBoatsCount] = useState<number>(8);
   const [mmuUnitsCount, setMmuUnitsCount] = useState<number>(6);
   const [showJsonPayload, setShowJsonPayload] = useState<boolean>(false);
 
@@ -110,7 +110,7 @@ export const CopilotTab: React.FC<CopilotTabProps> = ({
       ],
       tacticalResources: {
         baileySpansAvailable: baileySpansCount,
-        zodiacBoatsAvailable: zodiacBoatsCount,
+        rescueBoatsAvailable: rescueBoatsCount,
         mmuUnitsAvailable: mmuUnitsCount,
       },
     };
@@ -135,15 +135,15 @@ export const CopilotTab: React.FC<CopilotTabProps> = ({
       // Resilient deterministic tactical fallback plan
       if (isJtRoadHardened && isHarinagarHardened) {
         setMemoResult(`• TACTICAL DISPATCH DIRECTIVE: Dual-corridor counterfactual hardening operational — #1 ${topChokeName} & #2 ${secChokeName} reinforced via Class-40 Bailey spans (${baileySpansCount} sections remaining in reserve), securing ${totalRescued} habitations and stepping down Max Cut Vulnerability sequentially (27 ➔ 14 ➔ ${remainingMaxCut} habitats).
-• CIVIL DEFENSE REALLOCATION: All primary engineering battalions and ${zodiacBoatsCount}x ${authorityShort} motorized rescue boats successfully reallocated from ${topChokeName} to secondary breach sectors.
+• CIVIL DEFENSE REALLOCATION: All primary engineering battalions and ${rescueBoatsCount}x ${authorityShort} motorized rescue boats successfully reallocated from ${topChokeName} to secondary breach sectors.
 • URGENCY & TRIAGE DIRECTIVE: MODERATE TO HIGH (Action window: 6–12 hours). Hospital catchment surges at ${topHospitalName} stabilized; pre-position ${mmuUnitsCount}x Mobile Medical Units across vulnerable settlements.`);
       } else if (isJtRoadHardened) {
         setMemoResult(`• TACTICAL DISPATCH DIRECTIVE: Counterfactual hardening verified — ${topChokeName} successfully reinforced with modular Bailey bridging, restoring egress for 27 downstream habitations, reducing Max Cut Vulnerability to ${remainingMaxCut} habitats, and relieving ${topHospitalName} ICU surge by -73%.
-• CIVIL DEFENSE REALLOCATION: Reallocate remaining ${baileySpansCount}x Bailey bridging sections, ${zodiacBoatsCount}x motorized rescue craft, and ${mmuUnitsCount}x 4x4 Mobile Medical Units away from primary bridgehead to the NEXT prioritized unhardened choke point: ${secChokeName}.
+• CIVIL DEFENSE REALLOCATION: Reallocate remaining ${baileySpansCount}x Bailey bridging sections, ${rescueBoatsCount}x motorized rescue craft, and ${mmuUnitsCount}x 4x4 Mobile Medical Units away from primary bridgehead to the NEXT prioritized unhardened choke point: ${secChokeName}.
 • URGENCY & TRIAGE DIRECTIVE: HIGH (Action window: 6–12 hours). Maintain emergency amphibious resupply corridors while trauma convoys utilize the restored direct arterial link.`);
       } else if (targetRow.modeled_status === 'MODEL_ISOLATED') {
         setMemoResult(`• Ground-truth topological isolation verified: ${targetRow.village_name} has suffered a total loss of egress with 0 viable land routes to ${targetRow.baseline_facility_name} (baseline: ${targetRow.baseline_km} km / ${targetRow.baseline_min} min).
-• Immediate priority physical intervention required: Dispatch ${zodiacBoatsCount}x ${authorityShort} motorized rescue boats from tactical Staging Base along with rotary-wing emergency food/medical airdrops; dispatch 1x Class-40 Bailey bridge convoy (${baileySpansCount} spans available) to primary bridgehead.
+• Immediate priority physical intervention required: Dispatch ${rescueBoatsCount}x ${authorityShort} motorized rescue boats from tactical Staging Base along with rotary-wing emergency food/medical airdrops; dispatch 1x Class-40 Bailey bridge convoy (${baileySpansCount} spans available) to primary bridgehead.
 • Operational urgency is CRITICAL (Window: 0–6 hours) to prevent preventable civilian mortalities in cut-off habitations.`);
       } else {
         setMemoResult(`• Severe healthcare access degradation confirmed: ${targetRow.village_name} requires a +${targetRow.additional_km} km detour surcharge (+${targetRow.additional_min} min delay) bypassing severed corridors to reach ${targetRow.scenario_facility_name} (${targetRow.detour_ratio}x detour ratio).
@@ -327,7 +327,7 @@ export const CopilotTab: React.FC<CopilotTabProps> = ({
             </div>
           </div>
 
-          {/* 2. Tactical Resource Sliders (Class 40 Spans, Zodiacs, MMUs) */}
+          {/* 2. Tactical Resource Sliders (Class 40 Spans, Rescue Boats, MMUs) */}
           <div className="bg-[#161b22] border border-[#30363d] rounded-2xl p-4 space-y-4">
             <div className="flex items-center justify-between border-b border-[#30363d] pb-2">
               <span className="text-xs font-bold text-white flex items-center gap-2">
@@ -363,7 +363,7 @@ export const CopilotTab: React.FC<CopilotTabProps> = ({
               </div>
             </div>
 
-            {/* Zodiac Rescue Boats Slider */}
+            {/* NDRF Rescue Boats Slider */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-neutral-300 flex items-center gap-1.5">
@@ -371,15 +371,15 @@ export const CopilotTab: React.FC<CopilotTabProps> = ({
                   Motorized Rescue Boats:
                 </span>
                 <span className="font-mono font-bold text-cyan-300 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800/40">
-                  {zodiacBoatsCount} Inflatables
+                  {rescueBoatsCount} Inflatables
                 </span>
               </div>
               <input
                 type="range"
                 min="0"
                 max="16"
-                value={zodiacBoatsCount}
-                onChange={(e) => setZodiacBoatsCount(Number(e.target.value))}
+                value={rescueBoatsCount}
+                onChange={(e) => setRescueBoatsCount(Number(e.target.value))}
                 className="w-full accent-cyan-500 cursor-pointer h-1.5 bg-[#0d1117] rounded-lg"
               />
               <div className="flex justify-between text-[10px] text-neutral-500 font-mono">

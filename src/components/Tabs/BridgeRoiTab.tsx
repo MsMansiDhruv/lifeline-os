@@ -4,6 +4,7 @@ import { BridgeInterventionRecord } from '../../types';
 import { TheaterData } from '../../data/theaters';
 import { LeafletMap } from '../LeafletMap';
 import { Wrench, Download, Compass, Shield, Award } from 'lucide-react';
+import { BridgeIcon } from '../common/TacticalIcons';
 
 interface BridgeRoiTabProps {
   currentTheater?: TheaterData;
@@ -93,8 +94,9 @@ export const BridgeRoiTab: React.FC<BridgeRoiTabProps> = ({ currentTheater }) =>
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold text-white">
-                🌉 Micro-Intervention ROI Engine (The Engineering Fix)
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <BridgeIcon size={18} color="#f59e0b" />
+                <span>Micro-Intervention ROI Engine (The Engineering Fix)</span>
               </h3>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-700 font-bold">
                 {authorityShort}
@@ -274,7 +276,10 @@ export const BridgeRoiTab: React.FC<BridgeRoiTabProps> = ({ currentTheater }) =>
             floodPolygon={currentTheater?.floodPolygon}
           />
           <div className="text-[11px] text-[#8b949e] italic flex items-center justify-between">
-            <span>🛠️ Green markers = Candidate bridge repair sites</span>
+            <span className="flex items-center gap-1.5">
+              <BridgeIcon size={13} color="#10b981" />
+              <span>Green markers = Candidate bridge repair sites</span>
+            </span>
             <span>Badge indicates calculated accessibility ROI</span>
           </div>
         </div>

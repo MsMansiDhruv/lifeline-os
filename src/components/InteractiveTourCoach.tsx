@@ -14,44 +14,53 @@ export interface InteractiveTask {
 export const INTERACTIVE_TASKS: InteractiveTask[] = [
   {
     taskNum: 1,
-    stepId: 'step1_what_broke',
-    title: 'Phase 1: Diagnose Road Cut-Offs & 16T Truck Block',
-    targetDescription: 'Step 1: Operational Fleet Mode',
+    stepId: 'chapter1_prevent',
+    title: 'Chapter 1 (Prevent): Inspect Single Points of Failure',
+    targetDescription: 'Corridor Percolation & Hospital Bed Audit',
     instruction:
-      'Notice how JT Road is severed by a 38m water gap. Click the "16-Ton Supply Truck" button to test heavy axle restrictions across rural bypasses.',
-    actionPrompt: '👉 Click "16-Ton Supply Truck" or select the JT Road card to advance',
+      'Graph criticality identifies severed rural corridors. Observe how Valley Hospital is full (0 available beds, 100% capacity) while SMCH and Civil Hospital retain open surgical beds.',
+    actionPrompt: '👉 Click on JT Road or proceed to 02. PREDICT',
   },
   {
     taskNum: 2,
-    stepId: 'step2_who_is_at_risk',
-    title: 'Phase 2: Relieve Valley Hospital ICU Surge',
-    targetDescription: 'Step 2: Valley Hospital Card',
+    stepId: 'chapter2_predict',
+    title: 'Chapter 2 (Predict): Verify Hydrology & Wind Limits',
+    targetDescription: 'Open-Meteo & Copernicus Hydrology',
     instruction:
-      'Washed-out roads force ambulances onto a 65-min detour, overloading Valley Hospital to 191% ICU capacity. Click "Reroute Ambulances to Backup Hospital" to drop the surge to 145%.',
-    actionPrompt: '👉 Click "Reroute Ambulances" toggle button to balance the clinical load',
+      'Inspect physical environmental constraints. Drones are grounded if wind exceeds 45 km/h, and NDRF boats are grounded if river current exceeds 3.5 m/s.',
+    actionPrompt: '👉 Test Gale Wind Simulator or proceed to 03. PROTECT',
   },
   {
     taskNum: 3,
-    stepId: 'step3_test_fixes',
-    title: 'Phase 3: Allocate Constrained Warehouse Stock',
-    targetDescription: 'Step 3: Warehouse Inventory Bar',
+    stepId: 'chapter3_protect',
+    title: 'Chapter 3 (Protect): Balance Hospital Surge & Review Detours',
+    targetDescription: 'Detour Visualization & Deterministic Diversion',
     instruction:
-      'District warehouse stock is strictly capped (only 1 Bailey Bridge, ₹130L budget). Click "✨ Auto-Recommend Best Mix" to assign optimal assets across all corridors.',
-    actionPrompt: '👉 Click "✨ Auto-Recommend Best Mix Within Stock"',
+      'Washed-out roads create a +47 min delay. Click "Engage Surge Balancing" to divert 34 patients to SMCH and Civil Hospital, stabilizing Valley Hospital down to 74%.',
+    actionPrompt: '👉 Click "Engage Surge Balancing" toggle button',
   },
   {
     taskNum: 4,
-    stepId: 'step4_edit_launch',
-    title: 'Phase 4: Sign Sanction Order & Dispatch Live Fleet',
-    targetDescription: 'Step 4: Statutory Dispatch Order',
+    stepId: 'chapter4_respond',
+    title: 'Chapter 4 (Respond): Select Tactical Fix & Sign Sanction Form-3B',
+    targetDescription: 'Multi-Modal Interventions & Statutory Dispatch',
     instruction:
-      'Review the itemized SDRF Form-3B departmental orders for PWD, NHM, and NDRF. Click "Sign Sanction Order" to dispatch the live GPS fleet along real street coordinates on the map.',
-    actionPrompt: '👉 Click "✍️ Sign Sanction Order & Dispatch Fleet on Map"',
+      'Assign an intervention (e.g. Class-40 Bailey Bridge or MMU Camp) and click "Review & Sign Sanction" to review structured facts under explicit simulation governance.',
+    actionPrompt: '👉 Click "Review & Sign Sanction" and authorize Form-3B',
+  },
+  {
+    taskNum: 5,
+    stepId: 'chapter5_learn',
+    title: 'Chapter 5 (Learn): Review Immutable Audit Trail & Export Logs',
+    targetDescription: 'Cryptographic Audit Trail & Historical Replays',
+    instruction:
+      'Every command and asset dispatch is immutably recorded. Review the timeline, benchmark against historical disasters (Silchar, Wayanad, Nepal), and export statutory CSV/JSON logs.',
+    actionPrompt: '👉 Click "Export CSV Audit" or test scenario replay',
   },
 ];
 
 interface InteractiveTourCoachProps {
-  currentTask: number; // 1..4, or 5 for completed
+  currentTask: number; // 1..5, or 6 for completed
   onClose: () => void;
   onNextTask: () => void;
   onPrevTask: () => void;
@@ -69,7 +78,7 @@ export const InteractiveTourCoach: React.FC<InteractiveTourCoachProps> = ({
 }) => {
   if (currentTask <= 0) return null;
 
-  const isCompleted = currentTask > 4;
+  const isCompleted = currentTask > 5;
   const task = !isCompleted ? INTERACTIVE_TASKS[currentTask - 1] : null;
 
   return (
@@ -94,7 +103,7 @@ export const InteractiveTourCoach: React.FC<InteractiveTourCoachProps> = ({
           </div>
           <div>
             <span className="text-xs uppercase font-bold tracking-wider text-emerald-400 block">
-              {isCompleted ? 'GUIDED TOUR COMPLETE' : `GUIDED TOUR • STEP ${currentTask} OF 4`}
+              {isCompleted ? 'GUIDED TOUR COMPLETE' : `GUIDED TOUR • STEP ${currentTask} OF 5`}
             </span>
             <h3 className="text-base font-bold text-white tracking-tight">
               {isCompleted ? 'Mission Ready' : task?.title}

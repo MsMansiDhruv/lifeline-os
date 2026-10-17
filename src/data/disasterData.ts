@@ -263,7 +263,7 @@ export const STAGING_HUBS: StagingHubRecord[] = [
     avg_boat_transit_km: 6.2,
     max_boat_transit_km: 9.8,
     est_boat_transit_min: 20.7,
-    recommended_relief_assets: '3x SDRF Motorized Zodiacs + 2x Mobile Intensive Care Ambulances (4x4) + SATCOM Base',
+    recommended_relief_assets: '3x SDRF Motorized Rescue Boats + 2x Mobile Intensive Care Ambulances (4x4) + SATCOM Base',
     hub_tier: 'PRIMARY_MULTI_CLUSTER_HUB',
   },
   {
@@ -278,7 +278,7 @@ export const STAGING_HUBS: StagingHubRecord[] = [
     avg_boat_transit_km: 4.8,
     max_boat_transit_km: 7.1,
     est_boat_transit_min: 16.0,
-    recommended_relief_assets: '3x SDRF Motorized Zodiacs + 2x Mobile Intensive Care Ambulances (4x4) + SATCOM Base',
+    recommended_relief_assets: '3x SDRF Motorized Rescue Boats + 2x Mobile Intensive Care Ambulances (4x4) + SATCOM Base',
     hub_tier: 'PRIMARY_MULTI_CLUSTER_HUB',
   },
   {
