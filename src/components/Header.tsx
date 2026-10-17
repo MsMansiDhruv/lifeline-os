@@ -47,12 +47,13 @@ interface HeaderProps {
   onOpenEcosystemBus?: () => void;
   liveWindSpeed?: number;
   isSimulatedHighWind?: boolean;
-  viewMode?: 'map' | 'satellite' | '3d';
+  viewMode?: 'map' | 'satellite' | 'street' | '3d';
   onToggleViewMode?: () => void;
-  onSelectViewMode?: (mode: 'map' | 'satellite' | '3d') => void;
+  onSelectViewMode?: (mode: 'map' | 'satellite' | 'street' | '3d') => void;
   onRunResponseSimulation?: () => void;
   isSimulationRunning?: boolean;
   simulationProgress?: string;
+  onOpenWhatWeDontKnow?: () => void;
   onOpenCloudArchitecture?: () => void;
 }
 
@@ -83,6 +84,7 @@ export const Header: React.FC<HeaderProps> = ({
   onRunResponseSimulation,
   isSimulationRunning = false,
   simulationProgress = '',
+  onOpenWhatWeDontKnow,
   onOpenCloudArchitecture,
 }) => {
   const [cityQuery, setCityQuery] = useState<string>('');
@@ -397,6 +399,20 @@ export const Header: React.FC<HeaderProps> = ({
 
           <button
             type="button"
+            onClick={() => onSelectViewMode ? onSelectViewMode('street') : onToggleViewMode?.()}
+            className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              viewMode === 'street'
+                ? 'bg-slate-800 text-blue-300 border border-blue-500/50 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+            title="Street View (Standard OpenStreetMap network & labels)"
+          >
+            <Map className="w-3.5 h-3.5 text-blue-400" />
+            <span className="hidden sm:inline">Street</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => onSelectViewMode ? onSelectViewMode('satellite') : onToggleViewMode?.()}
             className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
               viewMode === 'satellite'
@@ -424,9 +440,43 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         </div>
 
+        {/* Requirement F: What We Don't Know Button */}
+        {onOpenWhatWeDontKnow && (
+          <button
+            type="button"
+            onClick={onOpenWhatWeDontKnow}
+            className="px-2.5 py-1 rounded-xl text-xs font-mono font-bold bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white flex items-center gap-1.5 cursor-pointer shadow-sm transition-all"
+            title="Inspect epistemological blindspots, unlinked telemetry, and unverified assumptions"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
+            <span className="hidden md:inline">What We Don't Know</span>
+            <span className="md:hidden">Uncertainties</span>
+            <span className="text-[9px] font-mono px-1 rounded bg-zinc-800 text-zinc-400 border border-zinc-700 font-bold">
+              UNKNOWN
+            </span>
+          </button>
+        )}
+
+        {/* Cloud Architecture Modal Button */}
+        {onOpenCloudArchitecture && (
+          <button
+            type="button"
+            onClick={onOpenCloudArchitecture}
+            className="px-2.5 py-1 rounded-xl text-xs font-mono font-bold bg-sky-950/80 hover:bg-sky-900 border border-sky-700/60 text-sky-300 hover:text-white flex items-center gap-1.5 cursor-pointer shadow-sm transition-all"
+            title="Inspect Google Cloud & Gemini MCP Architecture"
+          >
+            <Cloud className="w-3.5 h-3.5 text-sky-400" />
+            <span className="hidden lg:inline">Cloud Topology</span>
+            <span className="text-[9px] font-mono px-1 rounded bg-sky-900 text-sky-300 border border-sky-700 font-bold">
+              GCP
+            </span>
+          </button>
+        )}
+
         {/* Mode Pill Badge */}
-        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-300 border border-emerald-700/60 tracking-wider uppercase">
-          SIMULATION
+        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-rose-950/80 text-rose-300 border border-rose-700/60 tracking-wider uppercase flex items-center gap-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+          SIMULATED
         </span>
 
         {/* One Concise Evidence / Status Indicator */}
@@ -507,18 +557,6 @@ export const Header: React.FC<HeaderProps> = ({
             title={opsMode === 'night' ? 'Night Ops (Marine boats restricted)' : 'Day Ops (Full visibility)'}
           >
             {opsMode === 'night' ? <Moon className="w-3.5 h-3.5 text-indigo-400" /> : <Sun className="w-3.5 h-3.5 text-amber-400" />}
-          </button>
-        )}
-
-        {/* GCP Cloud Architecture Inspector */}
-        {onOpenCloudArchitecture && (
-          <button
-            type="button"
-            onClick={onOpenCloudArchitecture}
-            className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-blue-500/50 text-blue-400 hover:text-white text-xs cursor-pointer transition-colors shadow-sm"
-            title="Inspect Google Cloud & Gemini MCP Architecture"
-          >
-            <Cloud className="w-3.5 h-3.5" />
           </button>
         )}
 

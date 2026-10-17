@@ -32,7 +32,7 @@ export const GCS_ASSET_MANIFEST: Record<string, CloudStorageAssetMetadata> = {
     storageUri: 'gs://lifeline-os-geospatial-artifacts/dem/srtm_v3_cachar_30m.tif',
     contentType: 'image/tiff',
     sizeBytes: 14285712,
-    md5Checksum: 'a89f92c3d4e5b6a7890123456789abcd',
+    md5Checksum: '',
     uploadedTimestamp: '2022-06-25T10:00:00Z',
     sourceDataset: 'NASA Shuttle Radar Topography Mission (SRTM) v3.0 1-arc-second Global DEM',
     isAvailableLocally: true,
@@ -44,7 +44,7 @@ export const GCS_ASSET_MANIFEST: Record<string, CloudStorageAssetMetadata> = {
     storageUri: 'gs://lifeline-os-geospatial-artifacts/sar/sentinel1_silchar_20220620.geojson',
     contentType: 'application/geo+json',
     sizeBytes: 84210,
-    md5Checksum: 'f1e2d3c4b5a697887766554433221100',
+    md5Checksum: '',
     uploadedTimestamp: '2022-06-20T06:15:00Z',
     sourceDataset: 'Copernicus Sentinel-1A SAR Ground Range Detected (IW mode, VV polarization)',
     isAvailableLocally: true,
@@ -56,7 +56,7 @@ export const GCS_ASSET_MANIFEST: Record<string, CloudStorageAssetMetadata> = {
     storageUri: 'gs://lifeline-os-geospatial-artifacts/osm/cachar_barak_highways_v1.json',
     contentType: 'application/json',
     sizeBytes: 91278,
-    md5Checksum: 'c9d8e7f6a5b4c3d2e1f0123456789abc',
+    md5Checksum: '',
     uploadedTimestamp: '2022-06-20T08:00:00Z',
     sourceDataset: 'OpenStreetMap Regional Highway Extraction for Cachar District, Assam',
     isAvailableLocally: true,
@@ -84,9 +84,9 @@ class CloudStorageService {
     }
 
     return {
-      url: `https://storage.googleapis.com/${asset.bucketName}/${asset.storageUri.replace(`gs://${asset.bucketName}/`, '')}`,
-      expiresMinutes: 15,
-      isSimulated: true, // Signed URL signed using mock HMAC in offline demo mode
+      url: '',
+      expiresMinutes: 0,
+      isSimulated: false,
     };
   }
 
@@ -110,9 +110,9 @@ class CloudStorageService {
   } {
     const rawStr = typeof params.content === 'string' ? params.content : JSON.stringify(params.content);
     const sizeBytes = Buffer.byteLength(rawStr, 'utf8');
-    const md5Checksum = 'hash_' + Math.random().toString(36).substring(2, 10);
-    const storageUri = `gs://${this.bucket}/uploads/${params.key}`;
-    const publicUrl = `https://storage.googleapis.com/${this.bucket}/uploads/${params.key}`;
+    const md5Checksum = '';
+    const storageUri = `local://${params.key}`;
+    const publicUrl = '';
 
     return {
       success: true,
@@ -121,7 +121,7 @@ class CloudStorageService {
       publicUrl,
       sizeBytes,
       md5Checksum,
-      status: 'UPLOADED_TO_BUCKET',
+      status: 'STORED_LOCALLY',
     };
   }
 }

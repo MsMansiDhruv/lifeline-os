@@ -225,12 +225,12 @@ export const CloudArchitectureModal: React.FC<CloudArchitectureModalProps> = ({
                 <h2 className="text-base font-extrabold text-white tracking-tight flex items-center gap-2">
                   4-Tier Google Cloud &amp; Gemini MCP Architecture
                 </h2>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800 font-bold uppercase">
-                  Production Verified
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-bold uppercase">
+                  LOCAL ADAPTER ACTIVE
                 </span>
               </div>
               <p className="text-xs text-slate-400 font-mono mt-0.5">
-                Active Theater: {activeTheaterName} • End-to-End Latency: &lt;45ms • Zero Hallucination
+                Active Theater: {activeTheaterName} • LOCAL_ADAPTER (not connected to Google Cloud)
               </p>
             </div>
           </div>
@@ -276,57 +276,57 @@ export const CloudArchitectureModal: React.FC<CloudArchitectureModalProps> = ({
                 <Radio className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
                 Live Google Cloud Service Integration Health
               </span>
-              <span className="text-[10px] text-cyan-300">
-                {isLoadingStatus ? 'Probing Cloud APIs...' : 'Verified Live Architecture'}
+              <span className="text-[10px] text-slate-400">
+                {isLoadingStatus ? 'Probing Cloud APIs...' : 'LOCAL_ADAPTER (not connected to Google Cloud)'}
               </span>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs font-mono">
               <div className="p-2 rounded-lg bg-slate-950/80 border border-slate-800 flex flex-col gap-0.5">
                 <span className="text-[10px] text-slate-400">Vertex AI (Gemini)</span>
-                <span className="font-bold text-emerald-400 flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                  {gcpStatus?.services?.vertexAi?.status === 'CONNECTED' ? 'LIVE (gemini-3.8-flash)' : 'DETERMINISTIC FALLBACK'}
+                <span className="font-bold text-slate-300 flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3 text-slate-400" />
+                  {gcpStatus?.services?.vertexAi?.status === 'CONNECTED' ? 'LIVE (gemini-3.8-flash)' : 'LOCAL_ADAPTER (not connected to Google Cloud)'}
                 </span>
               </div>
 
               <div className="p-2 rounded-lg bg-slate-950/80 border border-slate-800 flex flex-col gap-0.5">
                 <span className="text-[10px] text-slate-400">Google Cloud Run</span>
-                <span className="font-bold text-cyan-300 flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3 text-cyan-400" />
-                  SERVERLESS (Port 3000/8080)
+                <span className="font-bold text-slate-300 flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3 text-slate-400" />
+                  UNVERIFIED (LOCAL_ADAPTER)
                 </span>
               </div>
 
               <div className="p-2 rounded-lg bg-slate-950/80 border border-slate-800 flex flex-col gap-0.5">
                 <span className="text-[10px] text-slate-400">Earth Engine (GEE)</span>
-                <span className="font-bold text-teal-300 flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3 text-teal-400" />
-                  S1_GRD Otsu -14.2dB
+                <span className="font-bold text-slate-300 flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3 text-slate-400" />
+                  LOCAL_ADAPTER (not connected to Google Cloud)
                 </span>
               </div>
 
               <div className="p-2 rounded-lg bg-slate-950/80 border border-slate-800 flex flex-col gap-0.5">
                 <span className="text-[10px] text-slate-400">BigQuery GIS</span>
-                <span className="font-bold text-blue-300 flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3 text-blue-400" />
-                  ST_INTERSECTS Engine
+                <span className="font-bold text-slate-300 flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3 text-slate-400" />
+                  LOCAL_ADAPTER (not connected to Google Cloud)
                 </span>
               </div>
 
               <div className="p-2 rounded-lg bg-slate-950/80 border border-slate-800 flex flex-col gap-0.5">
                 <span className="text-[10px] text-slate-400">Cloud Storage (GCS)</span>
-                <span className="font-bold text-amber-300 flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3 text-amber-400" />
-                  3 Assets Manifested
+                <span className="font-bold text-slate-300 flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3 text-slate-400" />
+                  LOCAL_ADAPTER (not connected to Google Cloud)
                 </span>
               </div>
 
               <div className="p-2 rounded-lg bg-slate-950/80 border border-slate-800 flex flex-col gap-0.5">
                 <span className="text-[10px] text-slate-400">Cloud Pub/Sub</span>
-                <span className="font-bold text-purple-300 flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3 text-purple-400" />
-                  Idempotent Bus Active
+                <span className="font-bold text-slate-300 flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3 text-slate-400" />
+                  LOCAL_ADAPTER (not connected to Google Cloud)
                 </span>
               </div>
             </div>

@@ -41,8 +41,79 @@ export type RouteClassification =
 export type EvidenceClass =
   | 'OBSERVED'
   | 'OFFICIAL'
+  | 'REPORTED'
   | 'MODELLED'
-  | 'ASSUMED';
+  | 'ASSUMED'
+  | 'SIMULATED'
+  | 'UNKNOWN';
+export const EVIDENCE_CLASS_CONFIG: Record<
+  EvidenceClass,
+  {
+    label: string;
+    badgeBg: string;
+    badgeText: string;
+    badgeBorder: string;
+    colorHex: string;
+    dotColor: string;
+  }
+> = {
+  OBSERVED: {
+    label: 'OBSERVED',
+    badgeBg: 'bg-emerald-950/80',
+    badgeText: 'text-emerald-300',
+    badgeBorder: 'border-emerald-600/60',
+    colorHex: '#10b981',
+    dotColor: 'bg-emerald-400',
+  },
+  OFFICIAL: {
+    label: 'OFFICIAL',
+    badgeBg: 'bg-sky-950/80',
+    badgeText: 'text-sky-300',
+    badgeBorder: 'border-sky-600/60',
+    colorHex: '#0ea5e9',
+    dotColor: 'bg-sky-400',
+  },
+  REPORTED: {
+    label: 'REPORTED',
+    badgeBg: 'bg-amber-950/80',
+    badgeText: 'text-amber-300',
+    badgeBorder: 'border-amber-600/60',
+    colorHex: '#f59e0b',
+    dotColor: 'bg-amber-400',
+  },
+  MODELLED: {
+    label: 'MODELLED',
+    badgeBg: 'bg-purple-950/80',
+    badgeText: 'text-purple-300',
+    badgeBorder: 'border-purple-600/60',
+    colorHex: '#a855f7',
+    dotColor: 'bg-purple-400',
+  },
+  ASSUMED: {
+    label: 'ASSUMED',
+    badgeBg: 'bg-orange-950/80',
+    badgeText: 'text-orange-300',
+    badgeBorder: 'border-orange-600/60',
+    colorHex: '#f97316',
+    dotColor: 'bg-orange-400',
+  },
+  SIMULATED: {
+    label: 'SIMULATED',
+    badgeBg: 'bg-rose-950/80',
+    badgeText: 'text-rose-300',
+    badgeBorder: 'border-rose-600/60',
+    colorHex: '#f43f5e',
+    dotColor: 'bg-rose-400',
+  },
+  UNKNOWN: {
+    label: 'UNKNOWN',
+    badgeBg: 'bg-zinc-900/90',
+    badgeText: 'text-zinc-400',
+    badgeBorder: 'border-zinc-700',
+    colorHex: '#71717a',
+    dotColor: 'bg-zinc-500',
+  },
+};
 
 // 5. Geographic Search & Selection Modes (Section 5.4)
 export type GeoSelectionMode =

@@ -46,6 +46,8 @@ import { BottomScenarioNavigator } from './components/BottomScenarioNavigator';
 import { EvidenceCatalogueModal } from './components/EvidenceCatalogueModal';
 import { FieldEvidenceEditorModal } from './components/FieldEvidenceEditorModal';
 import { CloudArchitectureModal } from './components/CloudArchitectureModal';
+import { BaselineScenarioAccessSlider } from './components/BaselineScenarioAccessSlider';
+import { WhatWeDontKnowModal } from './components/WhatWeDontKnowModal';
 import {
   ShieldAlert,
   Activity,
@@ -106,8 +108,8 @@ export function App() {
   // Step 4 Official Live Dispatch State
   const [isLiveDispatched, setIsLiveDispatched] = useState<boolean>(false);
 
-  // 3D Terrain & Satellite & Map View Mode (Section 1 & 2 Brief Requirements)
-  const [viewMode, setViewMode] = useState<'map' | 'satellite' | '3d'>('map');
+  // 3D Terrain & Satellite & Street & Map View Mode
+  const [viewMode, setViewMode] = useState<'map' | 'satellite' | 'street' | '3d'>('map');
   const [isSimulationRunning, setIsSimulationRunning] = useState<boolean>(false);
   const [simulationStep, setSimulationStep] = useState<number>(0);
   const [simulationProgress, setSimulationProgress] = useState<string>('');
@@ -121,6 +123,24 @@ export function App() {
   const [isCloudModalOpen, setIsCloudModalOpen] = useState<boolean>(false);
   const [ecosystemState, setEcosystemState] = useState<EcosystemBusState>(ecosystemBus.getState());
   const [isSosDismissed, setIsSosDismissed] = useState<boolean>(false);
+  const [isWhatWeDontKnowOpen, setIsWhatWeDontKnowOpen] = useState<boolean>(false);
+
+  // Baseline vs Scenario Access View (Requirement C)
+  const [baselineAccessSliderValue, setBaselineAccessSliderValue] = useState<number>(100);
+  const [isSimulatedClosureActive, setIsSimulatedClosureActive] = useState<boolean>(true);
+
+  const handleToggleSimulatedClosure = () => {
+    setIsSimulatedClosureActive((prev) => {
+      const next = !prev;
+      setBaselineAccessSliderValue(next ? 100 : 0);
+      return next;
+    });
+  };
+
+  const handleChangeAccessSlider = (val: number) => {
+    setBaselineAccessSliderValue(val);
+    setIsSimulatedClosureActive(val > 0);
+  };
 
   // Left SEOC Drawer Dynamic Width & Drag State (380px to 640px)
   const [panelWidth, setPanelWidth] = useState<number>(440);
@@ -1122,12 +1142,35 @@ export function App() {
             isWindVisualized={ecosystemState.weather.wind_speed_10m > 30 || isSimulatedHighWind}
             windSpeed={isSimulatedHighWind ? 52.4 : ecosystemState.weather.wind_speed_10m}
             fieldSosEvents={ecosystemState.activeSosEvents}
-            mapMode={viewMode === 'satellite' ? 'satellite' : 'vector'}
-            onMapModeChange={(mode) => setViewMode(mode === 'satellite' ? 'satellite' : 'map')}
+            mapMode={viewMode === 'satellite' ? 'satellite' : viewMode === 'street' ? 'street' : 'vector'}
+            onMapModeChange={(mode) => setViewMode(mode === 'satellite' ? 'satellite' : mode === 'street' ? 'street' : 'map')}
             rerouteAmbulances={rerouteAmbulances}
             isSimulationRunning={isSimulationRunning}
+            baselineAccessSliderValue={baselineAccessSliderValue}
+            onSelectFeature={(feat) => setInspectedFeature(feat)}
           />
         )}
+      </div>
+
+      {/* Requirement C: Baseline vs Scenario Access View Slider & Live Counter */}
+      <div
+        className="fixed top-16 z-30 transition-all duration-300 pointer-events-auto hidden sm:block"
+        style={{
+          left: `calc(${isDrawerCollapsed ? 60 : panelWidth}px + 20px)`,
+        }}
+      >
+        <BaselineScenarioAccessSlider
+          sliderValue={baselineAccessSliderValue}
+          onChangeSliderValue={handleChangeAccessSlider}
+          isSimulatedClosureActive={isSimulatedClosureActive}
+          onToggleSimulatedClosure={handleToggleSimulatedClosure}
+          isRerouted={rerouteAmbulances}
+          onToggleReroute={() => setRerouteAmbulances((prev) => !prev)}
+          reachableCount={baselineAccessSliderValue === 0 ? 334 : 269}
+          reroutedCount={baselineAccessSliderValue === 0 ? 0 : rerouteAmbulances ? 65 : 38}
+          isolatedCount={baselineAccessSliderValue === 0 ? 0 : rerouteAmbulances ? 0 : 27}
+          totalCount={334}
+        />
       </div>
 
       {/* FIRST 10 SECONDS HERO BANNER (Section 1 Brief Requirement) */}
@@ -1248,6 +1291,7 @@ export function App() {
         isSimulationRunning={isSimulationRunning}
         simulationProgress={simulationProgress}
         onOpenCloudArchitecture={() => setIsCloudModalOpen(true)}
+        onOpenWhatWeDontKnow={() => setIsWhatWeDontKnowOpen(true)}
       />
 
       {/* 3. EDITORIAL 5-CHAPTER INCIDENT COMMAND PANEL DOCKED ON LEFT */}
@@ -1334,31 +1378,6 @@ export function App() {
           onDispatchFleet={() => {
             setIsLiveDispatched(true);
             setActiveStep('step4_edit_launch');
-            const primaryChoke = currentTheater.chokePoints[0];
-            const primaryTool = (primaryChoke ? interventions[primaryChoke.id] : 'bridge') || 'bridge';
-            dispatchLivePhoneAlert({
-              topic: (() => {
-                try {
-                  return localStorage.getItem('lifeline_alert_topic') || 'lifeline-os-alert-2026';
-                } catch {
-                  return 'lifeline-os-alert-2026';
-                }
-              })(),
-              phone: (() => {
-                try {
-                  return localStorage.getItem('lifeline_phone_number') || '+91 98765 43210';
-                } catch {
-                  return '+91 98765 43210';
-                }
-              })(),
-              theaterName: currentTheater.name,
-              corridorName: primaryChoke?.road_name.split('(')[0].trim() || 'JT Road',
-              breachWidth: primaryChoke?.exposed_meters || 38,
-              allocationTool: primaryTool,
-              nearestHospital: currentTheater.hospitals[0]?.name || 'Valley Hospital',
-              detourMins: 65,
-              dryRoadheadName: `${primaryChoke?.road_name.split('(')[0].trim() || 'JT'} North Roadhead`,
-            });
           }}
         />
       )}
@@ -1477,6 +1496,12 @@ export function App() {
         isOpen={isCloudModalOpen}
         onClose={() => setIsCloudModalOpen(false)}
         activeTheaterName={currentTheater.name}
+      />
+
+      {/* Requirement F: What We Don't Know Epistemic Uncertainty Modal */}
+      <WhatWeDontKnowModal
+        isOpen={isWhatWeDontKnowOpen}
+        onClose={() => setIsWhatWeDontKnowOpen(false)}
       />
     </div>
   );

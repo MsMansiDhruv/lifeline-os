@@ -28,7 +28,7 @@ export function generateCapXml(params: CapExportParams): string {
   <identifier>${identifier}</identifier>
   <sender>seoc@disastermanagement.gov.in</sender>
   <sent>${sentTime}</sent>
-  <status>Actual</status>
+  <status>Exercise</status>
   <msgType>Alert</msgType>
   <scope>Public</scope>
   <info>

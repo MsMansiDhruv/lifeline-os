@@ -141,7 +141,7 @@ export const Chapter5Learn: React.FC<Chapter5LearnProps> = ({
                   Bethukandi dyke breach replica across the Barak river basin. 38m structural breach severed JT Road into Valley Hospital.
                 </p>
                 <div className="text-[11px] text-cyan-300 font-mono mt-1">
-                  Target: Class-40 Bailey Bridge + MMU drops ICU surge from 191% to 104% (safe zone).
+                  Target: Class-40 Bailey Bridge + MMU restores corridor access (SIMULATED CLOSURE on OSM graph; hospital beds are assumed demo values).
                 </div>
               </div>
               <button

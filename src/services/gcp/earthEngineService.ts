@@ -29,7 +29,7 @@ export interface EarthEngineFloodExtentMetadata {
     maxLon: number;
   };
   backscatterThresholdDb: number;
-  inundationAreaSqKm: number;
+  inundationAreaSqKm: number | string;
   permanentWaterExcludedSqKm: number;
   confidenceScore: number;
   processingMethod: string;
@@ -50,7 +50,7 @@ class EarthEngineService {
       maxLon: 24.920,
     },
     backscatterThresholdDb: -14.2,
-    inundationAreaSqKm: 82.4,
+    inundationAreaSqKm: 'unavailable',
     permanentWaterExcludedSqKm: 14.8,
     confidenceScore: 0.892,
     processingMethod:

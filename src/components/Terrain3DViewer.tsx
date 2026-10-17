@@ -1109,7 +1109,7 @@ export const Terrain3DViewer: React.FC<Terrain3DViewerProps> = ({
               <div>
                 <span className="font-semibold text-white block">Sentinel-1 SAR Flood Inundation Extent</span>
                 <span className="text-[11px] text-slate-400 leading-relaxed block">
-                  Copernicus C-band SAR backscatter thresholding (σ₀ &lt; -14.2 dB). Mapped extent: 82.4 km² (June 20, 2022).
+                  Copernicus C-band SAR backscatter thresholding (σ₀ &lt; -14.2 dB). Mapped extent: unavailable (Silchar_Flood_Polygon_2022.geojson: origin undocumented; shown as reference only).
                 </span>
               </div>
             </div>

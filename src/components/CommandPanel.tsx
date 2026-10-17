@@ -692,7 +692,7 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                             )}
 
                             <div className="mt-2 pt-1.5 border-t border-slate-800/60 flex items-center justify-between text-[10px] font-mono">
-                              <span className="text-slate-500 truncate max-w-[180px]">{r.source}</span>
+                              <span className="text-slate-500 truncate max-w-[210px]">{r.source} • <span className="text-amber-400/90 italic">source link not verified</span></span>
                               <span className="text-cyan-400 flex items-center gap-1 font-semibold hover:underline">
                                 <span>Inspect on Map</span>
                                 <ExternalLink className="w-3 h-3" />
@@ -1246,7 +1246,7 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                         <span>Deterministic Ambulance Surge Balancing</span>
                       </h3>
                       <span className="text-[10px] text-slate-400">
-                        Hard capacity limits • Zero negative beds • Full facilities excluded
+                        Hard capacity limits • Zero negative beds • Hospital beds are assumed demo values
                       </span>
                     </div>
                     <button
@@ -1258,7 +1258,7 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                           action_type: rerouteAmbulances ? 'MANUAL_OVERRIDE' : 'RESOURCE_ASSIGNED',
                           rationale: rerouteAmbulances
                             ? 'Ambulance surge balancing reset to baseline direct dispatch.'
-                            : `Deterministic surge balancing engaged for ${selectedChoke.road_name}. Valley stabilized from 100% to 74%. 34 patients diverted to SMCH and Civil Hospital.`,
+                            : `Deterministic surge balancing engaged for ${selectedChoke.road_name}. Hospital beds are assumed demo values (SIMULATED CLOSURE on OSM graph).`,
                           user_id: 'INCIDENT_COMMANDER_CACHAR',
                           user_role: 'INCIDENT_COMMANDER',
                           human_authorized: true,
@@ -1281,10 +1281,10 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                       <span>Healthcare Surge Impact Disclosure</span>
                     </div>
                     <div className="grid grid-cols-2 gap-1 text-[10px] font-mono text-slate-400">
-                      <div>What Changes: <span className="text-slate-200">Diverts 34 patients away from Valley to SMCH & Civil</span></div>
-                      <div>Data Source: <span className="text-slate-200">NHM Cachar Bed Registry + START Triage</span></div>
-                      <div>Evidence Class: <span className="text-cyan-300">MODELLED DETERMINISTIC SURGE</span></div>
-                      <div>Clinical Outcome: <span className={rerouteAmbulances ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>{rerouteAmbulances ? 'Valley Stabilized at 74% (260/350 beds)' : 'Valley Saturated at 100% (High risk)'}</span></div>
+                      <div>What Changes: <span className="text-slate-200">Rebalances patients away from Valley to SMCH &amp; Civil (SIMULATED CLOSURE on OSM graph)</span></div>
+                      <div>Data Source: <span className="text-slate-200">NHM Cachar Bed Registry (assumed demo values)</span></div>
+                      <div>Evidence Class: <span className="text-cyan-300">SIMULATED CLOSURE on OSM graph</span></div>
+                      <div>Hospital Beds: <span className="text-amber-300 font-bold">assumed demo values</span></div>
                     </div>
                   </div>
 

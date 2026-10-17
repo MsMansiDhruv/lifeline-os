@@ -36,7 +36,7 @@ export const AUTO_DEMO_SCENES: DemoScene[] = [
     durationSeconds: 11,
     title: '2. Hospital Surge Balancing',
     script:
-      'Because primary roads are cut, detour ambulances surge into Valley Hospital at 191% ICU overload. We activate ambulance rerouting to SMCH Regional, dropping the surge to 145%.',
+      'Because primary roads are cut (SIMULATED CLOSURE on OSM graph), ambulances surge towards nearest facilities. We activate ambulance rerouting to SMCH Regional to stabilize capacity (assumed demo values).',
     judgeFocus: '👁️ JUDGE FOCUS: Observe the blue ambulance-diversion line to SMCH Regional and Valley Hospital load drop',
   },
   {

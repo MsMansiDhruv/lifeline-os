@@ -578,17 +578,17 @@ export const HealthcareSurgeTab: React.FC<HealthcareSurgeTabProps> = ({
               </strong>
               <span>
                 {currentTheater && currentTheater.id !== 'silchar'
-                  ? `${hardenedCorridorIds.length} corridor(s) counterfactually hardened. Influx overload dropped across ${currentTheater.hospitals[0]?.name || 'primary hospitals'} (-73% surge relief)!`
+                  ? `${hardenedCorridorIds.length} corridor(s) counterfactually hardened. Influx overload dropped across ${currentTheater.hospitals[0]?.name || 'primary hospitals'} (assumed demo values; SIMULATED CLOSURE on OSM graph)!`
                   : isJtRoadHardened
-                  ? 'JT Road Hardening relieved Valley Hospital from +191% down to +118% ICU Surge (-73% drop) & unblocked starved Nightingale Hospital!'
-                  : `${hardenedCorridorIds.length} corridors hardened in Vulnerability Profiler. Hospital influx overload dropped across Barak Valley.`}
+                  ? 'JT Road Hardening relieved Valley Hospital from simulated patient overload & unblocked starved Nightingale Hospital (assumed demo values; SIMULATED CLOSURE on OSM graph)!'
+                  : `${hardenedCorridorIds.length} corridors hardened in Vulnerability Profiler. Hospital influx stabilized (assumed demo values).`}
               </span>
             </div>
           </div>
           <span className="shrink-0 px-2.5 py-1 rounded-md bg-emerald-900/80 text-emerald-300 border border-emerald-400 font-mono font-bold text-[11px]">
             {currentTheater && currentTheater.id !== 'silchar'
-              ? `${currentTheater.hospitals[0]?.name.split('(')[0].trim() || 'HOSPITAL'}: -73% SURGE RELIEF`
-              : 'VALLEY HOSPITAL: +191% ➔ +118% SURGE'}
+              ? `${currentTheater.hospitals[0]?.name.split('(')[0].trim() || 'HOSPITAL'}: STABILIZED (DEMO)`
+              : 'VALLEY HOSPITAL: STABILIZED (DEMO)'}
           </span>
         </div>
       )}
@@ -692,7 +692,7 @@ export const HealthcareSurgeTab: React.FC<HealthcareSurgeTabProps> = ({
                   : 'bg-[#161b22] text-rose-300 border border-rose-900/60 hover:bg-rose-950/60'
               }`}
             >
-              Valley Hospital {isJtRoadHardened ? '(+118% Relieved)' : '(+191%)'}
+              Valley Hospital {isJtRoadHardened ? '(Relieved)' : '(High Load)'}
             </button>
             <button
               type="button"
@@ -703,7 +703,7 @@ export const HealthcareSurgeTab: React.FC<HealthcareSurgeTabProps> = ({
                   : 'bg-[#161b22] text-rose-300 border border-rose-900/60 hover:bg-rose-950/60'
               }`}
             >
-              South City (+181%)
+              South City (Demo Load)
             </button>
             <button
               type="button"

@@ -53,7 +53,7 @@ export const TOUR_STEPS: TourStepInfo[] = [
     title: 'The Hospital Domino Effect (Cross-Module Relief)',
     badge: 'Step 4 of 5 • Healthcare Cascade',
     description:
-      'Roads and hospitals are intimately linked. Deploying a Health Booth or Bridge in Step 1 drops primary ICU patient surge from +191% down to +114% (-77% relief) and reconnected starved hospital clinics!',
+      'Roads and hospitals are intimately linked. Deploying a Health Booth or Bridge in Step 1 relieves destination hospital load (SIMULATED CLOSURE on OSM graph; hospital beds are assumed demo values) and reconnects starved clinics!',
     actionNote: 'Next will inspect the Automated Resource Optimizer.',
     targetId: 'tour-step-4-hospital-surge',
   },

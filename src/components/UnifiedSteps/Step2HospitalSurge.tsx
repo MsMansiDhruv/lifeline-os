@@ -193,7 +193,7 @@ export const Step2HospitalSurge: React.FC<Step2HospitalSurgeProps> = ({
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
             <span>
-              <strong>All Choke Points Unfixed:</strong> Destination hospitals are suffering critical patient surge (+191%). Test deploying a Health Booth or Bailey Bridge in Step 1 to relieve them!
+              <strong>All Choke Points Unfixed:</strong> Destination hospitals are suffering critical patient surge (SIMULATED CLOSURE on OSM graph; hospital beds are assumed demo values). Test deploying a Health Booth or Bailey Bridge in Step 1 to relieve them!
             </span>
           </div>
           <button

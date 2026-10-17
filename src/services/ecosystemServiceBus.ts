@@ -194,17 +194,30 @@ class EcosystemServiceBus {
         return this.state.weather;
       }
     } catch {
-      // Fallback
+      // Fetch failure
     }
 
-    const fallbackWind = this.windOverride !== null ? this.windOverride : 15.4;
+    if (this.windOverride !== null) {
+      const fallbackWind = this.windOverride;
+      this.state.weather = {
+        ...this.state.weather,
+        wind_speed_10m: fallbackWind,
+        isDroneViable: fallbackWind <= 45,
+        droneLockReason: fallbackWind > 45 ? `🚫 Grounded: Live Wind ${fallbackWind.toFixed(1)} km/h > 45 km/h limit` : undefined,
+        latencyMs: Math.round(performance.now() - t0),
+        status: 'simulated',
+      };
+      this.notify();
+      return this.state.weather;
+    }
+
     this.state.weather = {
       ...this.state.weather,
-      wind_speed_10m: fallbackWind,
-      isDroneViable: fallbackWind <= 45,
-      droneLockReason: fallbackWind > 45 ? `🚫 Grounded: Live Wind ${fallbackWind.toFixed(1)} km/h > 45 km/h limit` : undefined,
+      wind_speed_10m: NaN,
+      isDroneViable: false,
+      droneLockReason: 'Telemetry UNAVAILABLE — Drone viability UNKNOWN',
       latencyMs: Math.round(performance.now() - t0),
-      status: this.windOverride !== null ? 'simulated' : 'degraded',
+      status: 'degraded',
     };
     this.notify();
     return this.state.weather;
@@ -255,22 +268,39 @@ class EcosystemServiceBus {
         return this.state.hydrology;
       }
     } catch {
-      // Fallback
+      // Fetch failure
     }
 
-    const fallbackDischarge = this.dischargeOverride !== null ? this.dischargeOverride : 1380;
-    const velocity = Math.round((Math.sqrt(fallbackDischarge) * 0.062 + 0.3) * 10) / 10;
+    if (this.dischargeOverride !== null) {
+      const fallbackDischarge = this.dischargeOverride;
+      const velocity = Math.round((Math.sqrt(fallbackDischarge) * 0.062 + 0.3) * 10) / 10;
+      this.state.hydrology = {
+        dischargeM3s: fallbackDischarge,
+        surfaceVelocityMs: velocity,
+        isBoatViable: velocity <= 3.5,
+        boatLockReason: velocity > 3.5 ? `🚫 Capsize Hazard: Live River Current ${velocity.toFixed(1)} m/s > 3.5 m/s limit` : undefined,
+        gaugeObservation: 'River gauge telemetric link unavailable (No local CWC gauge stream)',
+        gaugeStatus: 'UNAVAILABLE',
+        riverWaterLevelMeters: null,
+        floodStageMeters: 3.2,
+        latencyMs: Math.round(performance.now() - t0),
+        status: 'simulated',
+      };
+      this.notify();
+      return this.state.hydrology;
+    }
+
     this.state.hydrology = {
-      dischargeM3s: fallbackDischarge,
-      surfaceVelocityMs: velocity,
-      isBoatViable: velocity <= 3.5,
-      boatLockReason: velocity > 3.5 ? `🚫 Capsize Hazard: Live River Current ${velocity.toFixed(1)} m/s > 3.5 m/s limit` : undefined,
-      gaugeObservation: 'River gauge telemetric link unavailable (No local CWC gauge stream)',
+      dischargeM3s: NaN,
+      surfaceVelocityMs: NaN,
+      isBoatViable: false,
+      boatLockReason: 'Telemetry UNAVAILABLE — Boat viability UNKNOWN',
+      gaugeObservation: 'Telemetry UNAVAILABLE — River discharge unverified',
       gaugeStatus: 'UNAVAILABLE',
       riverWaterLevelMeters: null,
-      floodStageMeters: 3.2,
+      floodStageMeters: undefined,
       latencyMs: Math.round(performance.now() - t0),
-      status: this.dischargeOverride !== null ? 'simulated' : 'degraded',
+      status: 'degraded',
     };
     this.notify();
     return this.state.hydrology;

@@ -204,6 +204,7 @@ export async function getOsrmRoute(
   options?: {
     chokeId?: string;
     isDetour?: boolean;
+    illustrative?: boolean;
   }
 ): Promise<[number, number][]> {
   const [startLat, startLon] = start;
@@ -253,11 +254,14 @@ export async function getOsrmRoute(
       }
     }
   } catch {
-    // Network fallback
+    // Network failure
   }
 
-  // 3. Fallback to dense curved road envelope snapped to start and end
-  const fallback = generateDenseRoadCurve(start, end);
-  routeCache.set(cacheKey, fallback);
-  return fallback;
+  // 3. Fallback: only generate curves for items explicitly labelled "illustrative"
+  if (options?.illustrative) {
+    return generateDenseRoadCurve(start, end);
+  }
+
+  // Otherwise return empty array (ROUTE_UNKNOWN) without caching synthetic curves
+  return [];
 }

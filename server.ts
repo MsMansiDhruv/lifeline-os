@@ -193,47 +193,47 @@ app.get('/api/gcp/status', (_req, res) => {
     timestamp: new Date().toISOString(),
     credentialsConfigured: {
       geminiApiKey: Boolean(apiKey),
-      googleApplicationCredentials: hasGcpCredentials,
+      googleApplicationCredentials: false,
     },
     services: {
       vertexAi: {
-        status: apiKey ? 'CONNECTED' : 'MISSING_CREDENTIALS',
+        status: apiKey ? 'UNVERIFIED' : 'MISSING_CREDENTIALS',
         model: 'gemini-3.8-flash',
-        mode: apiKey ? 'CLOUD_DIRECT' : 'DETERMINISTIC_ARGON_FALLBACK',
+        mode: 'LOCAL_ADAPTER (not connected to Google Cloud)',
         credentialsAvailable: Boolean(apiKey),
       },
       cloudStorage: {
-        status: hasGcpCredentials ? 'CONNECTED' : 'CREDENTIALS_UNLINKED',
-        mode: hasGcpCredentials ? 'CLOUD_DIRECT' : 'LOCAL_ADAPTER',
+        status: 'MISSING_CREDENTIALS',
+        mode: 'LOCAL_ADAPTER (not connected to Google Cloud)',
         bucket: 'lifeline-os-geospatial-artifacts',
         assetsCount: cloudStorageService.getAllAssets().length,
-        note: hasGcpCredentials ? 'Live bucket connected' : 'Local manifest active; authentic GCS bucket paths and HMAC signed URL generator',
+        note: 'LOCAL_ADAPTER (not connected to Google Cloud)',
       },
       bigQuery: {
-        status: hasGcpCredentials ? 'CONNECTED' : 'CREDENTIALS_UNLINKED',
-        mode: hasGcpCredentials ? 'CLOUD_DIRECT' : 'LOCAL_PARAMETRIC_ADAPTER',
+        status: 'MISSING_CREDENTIALS',
+        mode: 'LOCAL_ADAPTER (not connected to Google Cloud)',
         dataset: 'lifeline_os_disaster_analytics',
         tablesCount: bigQueryAnalyticsService.getTableDefinitions().length,
-        note: hasGcpCredentials ? 'Live BigQuery dataset connected' : 'Partitioned and clustered schemas registered; ST_INTERSECTS queries executed via local parametric engine',
+        note: 'LOCAL_ADAPTER (not connected to Google Cloud)',
       },
       earthEngine: {
-        status: hasGcpCredentials ? 'CONNECTED' : 'CREDENTIALS_UNLINKED',
-        mode: hasGcpCredentials ? 'CLOUD_DIRECT' : 'LOCAL_ADAPTER',
+        status: 'MISSING_CREDENTIALS',
+        mode: 'LOCAL_ADAPTER (not connected to Google Cloud)',
         collection: 'COPERNICUS/S1_GRD',
         polarization: 'VV',
-        note: hasGcpCredentials ? 'GEE API connected' : 'Authentic Sentinel-1 IW GRD Otsu thresholding script and metadata available; live GEE session unlinked',
+        note: 'LOCAL_ADAPTER (not connected to Google Cloud)',
       },
       pubSub: {
-        status: hasGcpCredentials ? 'CONNECTED' : 'LOCAL_EVENT_BUS',
-        mode: hasGcpCredentials ? 'CLOUD_DIRECT' : 'IN_MEMORY_IDEMPOTENT_BUS',
-        note: hasGcpCredentials ? 'GCP Pub/Sub topic connected' : 'Idempotent in-process Pub/Sub event bus with deduplication active',
+        status: 'MISSING_CREDENTIALS',
+        mode: 'LOCAL_ADAPTER (not connected to Google Cloud)',
+        note: 'LOCAL_ADAPTER (not connected to Google Cloud)',
       },
       cloudRun: {
-        status: 'READY',
+        status: 'UNVERIFIED',
         port: process.env.PORT || 3000,
         stateless: true,
         dockerfile: 'Present (multi-stage node:20-slim)',
-        buildStatus: 'VERIFIED_PRODUCTION_BUILD_PASSING',
+        buildStatus: 'UNVERIFIED',
       },
     },
   });
@@ -250,19 +250,17 @@ app.post('/api/gcp/pubsub/publish', async (req, res) => {
 
 // Health check endpoint
 app.get('/api/health', (_req, res) => {
-  const hasGcpCredentials = Boolean(process.env.GOOGLE_APPLICATION_CREDENTIALS || process.env.GCP_PROJECT);
-
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
     aiReady: Boolean(ai),
     gcpServices: {
-      vertexAi: Boolean(ai) ? 'LIVE (gemini-3.8-flash)' : 'MISSING_API_KEY',
-      earthEngine: hasGcpCredentials ? 'LIVE' : 'ADAPTER_ACTIVE (CREDENTIALS_UNLINKED)',
-      bigQuery: hasGcpCredentials ? 'LIVE' : 'ADAPTER_ACTIVE (CREDENTIALS_UNLINKED)',
-      cloudStorage: hasGcpCredentials ? 'LIVE' : 'ADAPTER_ACTIVE (CREDENTIALS_UNLINKED)',
-      cloudRun: 'MANAGED_COMPATIBLE (DOCKER_VERIFIED)',
-      pubSub: hasGcpCredentials ? 'LIVE' : 'LOCAL_IDEMPOTENT_BUS',
+      vertexAi: Boolean(ai) ? 'UNVERIFIED' : 'MISSING_CREDENTIALS',
+      earthEngine: 'LOCAL_ADAPTER (not connected to Google Cloud)',
+      bigQuery: 'LOCAL_ADAPTER (not connected to Google Cloud)',
+      cloudStorage: 'LOCAL_ADAPTER (not connected to Google Cloud)',
+      cloudRun: 'UNVERIFIED',
+      pubSub: 'LOCAL_ADAPTER (not connected to Google Cloud)',
     },
   });
 });

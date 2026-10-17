@@ -119,7 +119,7 @@ export const JuryScorecard: React.FC<JuryScorecardProps> = ({
         <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800 flex flex-col justify-between">
           <span className="text-xs uppercase tracking-wider text-slate-400 font-semibold flex items-center gap-1.5">
             <Activity className="w-4 h-4 text-cyan-400" />
-            ICU Status
+            ICU Status (demo)
           </span>
           <div className="mt-2 flex items-baseline gap-1">
             <span
@@ -127,10 +127,10 @@ export const JuryScorecard: React.FC<JuryScorecardProps> = ({
                 currentIcuLoad <= 110 ? 'text-emerald-400' : 'text-amber-400'
               }`}
             >
-              {activeDeploymentsCount > 0 ? `${currentIcuLoad}%` : '191%'}
+              {activeDeploymentsCount > 0 ? `${currentIcuLoad}%` : 'High Load'}
             </span>
             <span className="text-xs text-slate-400">
-              {currentIcuLoad <= 110 ? 'Safe' : 'Critical'}
+              {currentIcuLoad <= 110 ? 'Safe' : 'Assumed'}
             </span>
           </div>
         </div>
