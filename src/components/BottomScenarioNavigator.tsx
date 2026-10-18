@@ -106,7 +106,7 @@ export const BottomScenarioNavigator: React.FC<BottomScenarioNavigatorProps> = (
 
           {/* Unified Result & Transition Controls */}
           <div className="flex items-center gap-2">
-            {!isNepal && onToggleSimulatedClosure && (
+            {onToggleSimulatedClosure && (
               <button
                 type="button"
                 onClick={onToggleSimulatedClosure}
@@ -118,7 +118,15 @@ export const BottomScenarioNavigator: React.FC<BottomScenarioNavigatorProps> = (
                 title="Toggle between Baseline Normal Access and Simulated Closure Impact"
               >
                 <ArrowLeftRight className="w-3.5 h-3.5" />
-                <span>{isSimulatedClosureActive ? 'After (Closure Active)' : 'Before (Baseline Normal)'}</span>
+                <span>
+                  {isNepal
+                    ? isSimulatedClosureActive
+                      ? 'After (120m Gorge Washout)'
+                      : 'Before (Intact Baseline)'
+                    : isSimulatedClosureActive
+                    ? 'After (Closure Active)'
+                    : 'Before (Baseline Normal)'}
+                </span>
               </button>
             )}
 
@@ -260,8 +268,14 @@ export const BottomScenarioNavigator: React.FC<BottomScenarioNavigatorProps> = (
                     </div>
                     <div className="flex items-center justify-between text-[10px]">
                       <span className="text-slate-400">Access Telemetry:</span>
-                      <span className="text-amber-400 font-bold italic">
-                        Not available for this corridor
+                      <span className={isolatedCount > 0 ? "text-rose-400 font-bold" : "text-emerald-400 font-bold"}>
+                        {isolatedCount > 0 ? `${isolatedCount} Hamlets Cut Off (16,300 Pop)` : `${reachableCount} Hamlets Connected (16,300 Pop)`}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-slate-400">Corridor Status:</span>
+                      <span className="text-amber-400 font-bold">
+                        {isolatedCount > 0 ? '120m Gorge Washout (0 Bypass)' : 'Modular Bridge Active (28m Transit)'}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-[10px]">

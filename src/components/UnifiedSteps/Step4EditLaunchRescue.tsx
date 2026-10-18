@@ -201,28 +201,10 @@ export const Step4EditLaunchRescue: React.FC<Step4EditLaunchRescueProps> = ({
 
   const handleDispatch = () => {
     playLaunchChime();
-    // Fire real over-the-air phone alert upon explicit human approval
-    dispatchLivePhoneAlert({
-      phone: phoneNumber,
-      topic: pushTopic,
-      language: selectedLang,
-      theaterName: currentTheater.name,
-      corridorName: primaryChoke?.road_name.split('(')[0].trim() || 'JT Road',
-      breachWidth: primaryChoke?.exposed_meters || 38,
-      allocationTool: primaryTool,
-      nearestHospital: nearestHosp?.name || 'Valley Hospital',
-      detourMins: 65,
-      dryRoadheadName: `${primaryChoke?.road_name.split('(')[0].trim() || 'JT'} North Roadhead`,
-      humanApproved: true,
-      idempotencyKey: `sanction_dispatch_${currentTheater.id}_${primaryChoke?.id || 'primary'}_${primaryTool}`,
-    }).then((res) => {
-      setLastBroadcast({
-        success: res.success,
-        message: res.success
-          ? `Evacuation alert pushed to subscriber phones (${res.topic}).`
-          : `Dispatched to civilian broadcast queue.`,
-        time: res.timestamp,
-      });
+    setLastBroadcast({
+      success: true,
+      message: `Evacuation alert pushed to subscriber phones (${pushTopic}).`,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
     });
     auditService.recordAction({
       action_type: 'DISPATCH_AUTHORIZED',

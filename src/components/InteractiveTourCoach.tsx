@@ -54,7 +54,7 @@ export const INTERACTIVE_TASKS: InteractiveTask[] = [
     title: 'Chapter 5 (Learn): Review Immutable Audit Trail & Export Logs',
     targetDescription: 'Cryptographic Audit Trail & Historical Replays',
     instruction:
-      'Every command and asset dispatch is immutably recorded. Review the timeline, benchmark against historical disasters (Silchar, Wayanad, Nepal), and export statutory CSV/JSON logs.',
+      'Every command and asset dispatch is immutably recorded. Review the timeline, benchmark against historical disasters (Silchar, Nepal), and export statutory CSV/JSON logs.',
     actionPrompt: '👉 Click "Export CSV Audit" or test scenario replay',
   },
 ];

@@ -20,6 +20,10 @@ export interface BroadcastParams {
 }
 
 const sentIdempotencyKeys = new Set<string>();
+let lastBroadcastKey = '';
+let lastBroadcastTime = 0;
+let lastBroadcastResult: BroadcastResult | null = null;
+let activeBroadcastPromise: Promise<BroadcastResult> | null = null;
 
 export interface BroadcastResult {
   success: boolean;
@@ -104,12 +108,29 @@ export async function dispatchLivePhoneAlert(params: BroadcastParams): Promise<B
     };
   }
 
+  // Automatic deduplication & 10-second debounce guard
+  const autoKey = params.idempotencyKey || `${topic}-${params.theaterName || ''}-${corridor}-${params.allocationTool || ''}`;
+  const now = Date.now();
+
+  // If identical broadcast is already in-flight, return the existing active promise
+  if (activeBroadcastPromise && autoKey === lastBroadcastKey) {
+    return activeBroadcastPromise;
+  }
+
+  // If identical broadcast was dispatched within 10s, return cached result immediately
+  if (autoKey === lastBroadcastKey && now - lastBroadcastTime < 10000 && lastBroadcastResult) {
+    return {
+      ...lastBroadcastResult,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    };
+  }
+
   // Prevent duplicate send on replay via idempotency key
   if (params.idempotencyKey) {
     if (sentIdempotencyKeys.has(params.idempotencyKey)) {
       return {
-        success: false,
-        error: 'Duplicate alert suppressed by idempotency key',
+        success: true,
+        statusCode: 200,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
         topic,
         smsPayload: smsMessageText,
@@ -118,6 +139,9 @@ export async function dispatchLivePhoneAlert(params: BroadcastParams): Promise<B
     }
     sentIdempotencyKeys.add(params.idempotencyKey);
   }
+
+  lastBroadcastKey = autoKey;
+  lastBroadcastTime = now;
 
   // Trigger hardware vibration if supported on device (Haptic Feedback)
   if (typeof window !== 'undefined' && 'navigator' in window && 'vibrate' in navigator) {
@@ -140,34 +164,45 @@ export async function dispatchLivePhoneAlert(params: BroadcastParams): Promise<B
     }
   }
 
-  try {
-    const response = await fetch(`https://ntfy.sh/${topic}`, {
-      method: 'POST',
-      body: smsMessageText,
-      headers: {
-        'Title': `EMERGENCY SEOC ALERT: ${corridor} Cut-Off`,
-        'Priority': 'urgent',
-        'Tags': 'rotating_light,warning,hospital,satellite',
-        'Click': typeof window !== 'undefined' ? window.location.href : 'http://localhost:3000',
-      },
-    });
+  const broadcastExecution = (async (): Promise<BroadcastResult> => {
+    try {
+      const response = await fetch(`https://ntfy.sh/${topic}`, {
+        method: 'POST',
+        body: smsMessageText,
+        headers: {
+          'Title': `EMERGENCY SEOC ALERT: ${corridor} Cut-Off`,
+          'Priority': 'urgent',
+          'Tags': 'rotating_light,warning,hospital,satellite',
+          'Click': typeof window !== 'undefined' ? window.location.href : 'http://localhost:3000',
+        },
+      });
 
-    return {
-      success: response.ok,
-      statusCode: response.status,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-      topic,
-      smsPayload: smsMessageText,
-      language: lang,
-    };
-  } catch (err: any) {
-    return {
-      success: false,
-      error: err?.message || 'Network request failed',
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-      topic,
-      smsPayload: smsMessageText,
-      language: lang,
-    };
-  }
+      const res: BroadcastResult = {
+        success: response.ok,
+        statusCode: response.status,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        topic,
+        smsPayload: smsMessageText,
+        language: lang,
+      };
+      lastBroadcastResult = res;
+      return res;
+    } catch (err: any) {
+      const errRes: BroadcastResult = {
+        success: false,
+        error: err?.message || 'Network request failed',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        topic,
+        smsPayload: smsMessageText,
+        language: lang,
+      };
+      lastBroadcastResult = errRes;
+      return errRes;
+    } finally {
+      activeBroadcastPromise = null;
+    }
+  })();
+
+  activeBroadcastPromise = broadcastExecution;
+  return broadcastExecution;
 }

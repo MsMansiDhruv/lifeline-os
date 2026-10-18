@@ -125,22 +125,6 @@ const ROAD_SEGMENTS: RoadSegmentCondition[] = [
     breachWidthMeters: 75,
     notes: 'Riverbank erosion undercutting highway. Single-lane emergency light vehicle access only.',
   },
-
-  // WAYANAD ROAD SEGMENTS
-  {
-    segmentId: 'SEG-WAYANAD-CHOORAL-01',
-    roadName: 'Meppadi-Chooralmala Main Road',
-    corridorId: 'chooralmala',
-    condition: 'REPORTED_DESTROYED',
-    evidenceSource: 'Kerala PWD / Indian Army Madras Sappers',
-    observationTime: '2024-07-30T04:30:00Z',
-    verificationStatus: 'VERIFIED',
-    isClosureConfirmed: true,
-    isSimulatedClosure: false,
-    intersectsFloodPolygon: true,
-    breachWidthMeters: 95,
-    notes: 'Bridge structure swept away by debris flow. Bypassed only after Bailey Bridge installation.',
-  },
 ];
 
 export class RoadConditionService {

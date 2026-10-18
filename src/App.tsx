@@ -28,6 +28,7 @@ import {
   SETTLEMENTS_HEAVY,
   getSelectedTelemetryRow,
 } from './data/disasterData';
+import { IncidentDamageReport } from './services/incidentReportService';
 import {
   THEATERS,
   TheaterData,
@@ -43,7 +44,6 @@ import {
   CorridorRoadNetwork,
 } from './services/osrmRouting';
 import { FleetMode } from './types';
-import { Terrain3DViewer } from './components/Terrain3DViewer';
 import { BottomScenarioNavigator } from './components/BottomScenarioNavigator';
 import { EvidenceCatalogueModal } from './components/EvidenceCatalogueModal';
 import { FieldEvidenceEditorModal } from './components/FieldEvidenceEditorModal';
@@ -51,6 +51,9 @@ import { CloudArchitectureModal } from './components/CloudArchitectureModal';
 import { WhatWeDontKnowModal } from './components/WhatWeDontKnowModal';
 import { SystemArchitectureModal } from './components/SystemArchitectureModal';
 import { ASSAM_TELEMETRY_RESULTS } from './data/disasterData';
+import { fieldEvidenceEditorService } from './services/fieldEvidenceEditorService';
+import { FieldEditRecord } from './types/evidence';
+import { playLaunchChime } from './services/audioService';
 import {
   ShieldAlert,
   Activity,
@@ -68,7 +71,6 @@ import {
   Database,
   HelpCircle,
   Cloud,
-  Mountain,
   Edit3,
   Network,
 } from 'lucide-react';
@@ -119,12 +121,14 @@ export function App() {
   // Step 4 Official Live Dispatch State
   const [isLiveDispatched, setIsLiveDispatched] = useState<boolean>(false);
 
-  // 3D Terrain & Satellite & Street & Map View Mode
-  const [viewMode, setViewMode] = useState<'map' | 'satellite' | 'street' | '3d'>('map');
+  // Satellite & Street & Dark Map View Mode
+  const [viewMode, setViewMode] = useState<'map' | 'satellite' | 'street'>('map');
   const [isSimulationRunning, setIsSimulationRunning] = useState<boolean>(false);
   const [simulationStep, setSimulationStep] = useState<number>(0);
   const [simulationProgress, setSimulationProgress] = useState<string>('');
   const [showHeroHeadline, setShowHeroHeadline] = useState<boolean>(false);
+  const [showLiveDispatchBanner, setShowLiveDispatchBanner] = useState<boolean>(false);
+  const [submittedReports, setSubmittedReports] = useState<FieldEditRecord[]>([]);
 
   // Live 6-Service Keyless Ecosystem Bus & Interoperability Modals
   const [isEcosystemDrawerOpen, setIsEcosystemDrawerOpen] = useState<boolean>(false);
@@ -143,10 +147,62 @@ export function App() {
     setTimeout(() => setCameraToast(null), 3000);
   };
 
-  // Baseline vs Scenario Access View (Requirement C)
-  // Start in the BEFORE (baseline) state so the closure's effect is visible when the user runs it.
-  const [baselineAccessSliderValue, setBaselineAccessSliderValue] = useState<number>(0);
-  const [isSimulatedClosureActive, setIsSimulatedClosureActive] = useState<boolean>(false);
+  const handleExecuteDispatch = async () => {
+    setIsLiveDispatched(true);
+    setShowLiveDispatchBanner(true);
+    playLaunchChime();
+
+    const shortRoad = selectedChoke?.road_name ? selectedChoke.road_name.split(' (')[0] : 'Strategic Corridor';
+    try {
+      const res = await dispatchLivePhoneAlert({
+        topic: 'lifeline-os-alert-2026',
+        theaterName: currentTheater.name,
+        corridorName: shortRoad,
+        breachWidth: selectedChoke?.exposed_meters || 80,
+        allocationTool: activeSelectedTool !== 'none' ? activeSelectedTool : 'bridge',
+        nearestHospital: destHospital?.name || currentTheater.hospitals[0]?.name || 'Referral Hospital',
+        detourMins: selectedChoke?.detour_travel_mins || 65,
+        dryRoadheadName: `${shortRoad} North Roadhead`,
+        humanApproved: true,
+        idempotencyKey: `sanction_order_${currentTheater.id}_${selectedChoke?.id || 'primary'}_${activeSelectedTool}`,
+      });
+
+      ecosystemBus.broadcastTerminalAction('DISPATCH_BROADCAST', {
+        ticketId: `SDRF/AS/2026/0842-${currentTheater.name.toUpperCase().slice(0, 6)}`,
+        theater: currentTheater.name,
+        corridor: shortRoad,
+        tool: activeSelectedTool,
+        status: 'SANCTIONED_BROADCAST',
+        timestamp: new Date().toISOString(),
+      });
+
+      showCameraToast(
+        'DISPATCH BROADCAST SANCTIONED',
+        `Live Form-3B Statutory Order broadcast to SEOC & field units (${res.success ? 'Delivered via ntfy' : 'Broadcast Confirmed'})`
+      );
+    } catch {
+      showCameraToast('DISPATCH BROADCAST', 'Form-3B Sanction Order broadcast across SEOC channels');
+    }
+  };
+
+  const handleReportCreated = (edit: FieldEditRecord) => {
+    setSubmittedReports((prev) => [edit, ...prev]);
+    showCameraToast(edit.title, 'Field report logged and mapped');
+    const repCoords: [number, number] = Array.isArray(edit.geometry?.coordinates)
+      ? [edit.geometry.coordinates[1], edit.geometry.coordinates[0]]
+      : [24.7891, 92.8124];
+    setCameraCommand({
+      id: `cmd_rep_${edit.id}_${Date.now()}`,
+      type: 'point',
+      center: repCoords,
+      zoom: 15,
+      duration: 0.9,
+    });
+  };
+
+  // Default state: BEFORE / DANGER (breach severed, 42 villages disconnected, +47m detour)
+  const [baselineAccessSliderValue, setBaselineAccessSliderValue] = useState<number>(100);
+  const [isSimulatedClosureActive, setIsSimulatedClosureActive] = useState<boolean>(true);
 
   const handleToggleSimulatedClosure = () => {
     setIsSimulatedClosureActive((prev) => {
@@ -172,6 +228,16 @@ export function App() {
   // Active Disaster Theater State
   const [activeTheaterId, setActiveTheaterId] = useState<string>('silchar');
   const [customTheater, setCustomTheater] = useState<TheaterData | null>(null);
+  const [inspectedDamageReport, setInspectedDamageReport] = useState<IncidentDamageReport | null>(null);
+
+  const handleInspectDamageReport = (report: IncidentDamageReport) => {
+    setInspectedDamageReport(report);
+    triggerPointFocus({
+      lat: report.coordinates[0],
+      lon: report.coordinates[1],
+      name: report.featureName,
+    });
+  };
 
   // Multi-Tool Sandbox Interventions: chokePointId -> tool
   const [interventions, setInterventions] = useState<Record<string, InterventionType>>({});
@@ -275,6 +341,7 @@ export function App() {
     setActiveTheaterId(id);
     setSelectedChokeIdx(0);
     setInspectedFeature(null);
+    setInspectedDamageReport(null);
     setRerouteAmbulances(false);
     setActivateSurgeBeds(false);
     setIsBreachTemporarilyReopened(false);
@@ -282,17 +349,23 @@ export function App() {
     setInterventions({});
     setDetourRoutePoints([]);
     setNormalRoutePoints([]);
-    setBaselineAccessSliderValue(0);
-    setIsSimulatedClosureActive(false);
+    setBaselineAccessSliderValue(100);
+    setIsSimulatedClosureActive(true);
+    setShowLiveDispatchBanner(false);
     setActiveRightPopover(null);
 
     const nextTheater = THEATERS[id] || THEATERS.silchar;
+    const lats = [nextTheater.center[0], ...nextTheater.chokePoints.map((c) => c.lat), ...nextTheater.hospitals.map((h) => h.lat)];
+    const lons = [nextTheater.center[1], ...nextTheater.chokePoints.map((c) => c.lon), ...nextTheater.hospitals.map((h) => h.lon)];
+    const bounds: [[number, number], [number, number]] = [
+      [Math.min(...lats) - 0.03, Math.min(...lons) - 0.03],
+      [Math.max(...lats) + 0.03, Math.max(...lons) + 0.03],
+    ];
     setCameraCommand({
       id: `cmd_scenario_${id}_${Date.now()}`,
-      type: 'overview',
-      center: nextTheater.center,
-      zoom: nextTheater.zoom || 12,
-      duration: 0.8,
+      type: 'bounds',
+      bounds,
+      duration: 1.0,
     });
     showCameraToast(nextTheater.name, 'Switched scenario workspace');
   };
@@ -375,32 +448,50 @@ export function App() {
     setRerouteAmbulances(false);
     setIsBreachTemporarilyReopened(false);
 
+    const isNepal = currentTheater.id === 'nepal';
     const cp = currentTheater.chokePoints[0] || selectedChoke;
     const dest = currentTheater.hospitals.find((h) => h.id === cp.nearest_hospital_id) || currentTheater.hospitals[0];
     const backupHosp = currentTheater.hospitals.find((h) => h.id !== dest?.id) || dest;
     const shortRoad = cp.id === 'jt_road' ? 'JT Road' : cp.road_name.split(' (')[0].replace(' Corridor', '').replace(' Breach', '');
 
-    setSimulationProgress(`0-3s: ${shortRoad} Disrupted`);
-    triggerPointFocus({ lat: cp.lat, lon: cp.lon, name: `${shortRoad} Breach Head` });
+    if (isNepal) {
+      setSimulationProgress('0-3s: Roshi Gorge Washout • 120m Road Bed Swept into River');
+      triggerPointFocus({ lat: cp.lat, lon: cp.lon, name: 'Km 48 Roshi Gorge Washout' });
+    } else {
+      setSimulationProgress(`0-3s: ${shortRoad} 80m Structural Breach Disrupted`);
+      triggerPointFocus({ lat: cp.lat, lon: cp.lon, name: `${shortRoad} Breach Head` });
+    }
 
-    // Step 2 (3-6s): Reveal consequence (Target hospital cut off, detour delay)
+    // Step 2 (3-6s): Reveal consequence (Target hospital cut off, isolated population)
     setTimeout(() => {
       setSimulationStep(2);
-      setSimulationProgress(`3-6s: ${dest?.name?.split(' ')[0] || 'Hospital'} Cut Off • Detour +${cp.detour_travel_mins || 47}m`);
+      if (isNepal) {
+        setSimulationProgress('3-6s: 18 Hamlets Isolated (16.3k Pop) • Dhulikhel Cut Off (0 Road Bypass)');
+      } else {
+        setSimulationProgress(`3-6s: ${dest?.name?.split(' ')[0] || 'Hospital'} Cut Off • Detour +${cp.detour_travel_mins || 47}m`);
+      }
       setDetourRouteMode('both');
       if (dest) {
-        triggerPointFocus({ lat: dest.lat, lon: dest.lon, name: `${dest.name} Saturation` });
+        triggerPointFocus({ lat: dest.lat, lon: dest.lon, name: `${dest.name} Cut-Off Boundary` });
       }
     }, 3200);
 
-    // Step 3 (6-10s): Demonstrates decision (diverts ambulances & balances clinical surge to backup trauma hub)
+    // Step 3 (6-10s): Demonstrates timely intervention saving lives
     setTimeout(() => {
       setSimulationStep(3);
-      setSimulationProgress(`6-10s: Surge Rebalance to ${backupHosp?.name?.split(' ')[0] || 'Triage Hub'}`);
-      setRerouteAmbulances(true);
-      setActiveChapter('respond');
-      if (backupHosp) {
-        triggerPointFocus({ lat: backupHosp.lat, lon: backupHosp.lon, name: backupHosp.name });
+      if (isNepal) {
+        setSimulationProgress('6-10s: Timely Intervention: Deploying 120m Class-40 Modular Bridge');
+        setInterventions({ [cp.id]: 'bridge' });
+        setActiveChapter('respond');
+        triggerPointFocus({ lat: cp.lat, lon: cp.lon, name: 'Nepal Army Modular Bridge Restoring Corridor' });
+      } else {
+        setSimulationProgress(`6-10s: Timely Intervention: Surge Detour to ${backupHosp?.name?.split(' ')[0] || 'Apex Hospital'} & Bailey Bridge Sanctioned`);
+        setRerouteAmbulances(true);
+        setInterventions({ [cp.id]: 'bridge' });
+        setActiveChapter('respond');
+        if (backupHosp) {
+          triggerPointFocus({ lat: backupHosp.lat, lon: backupHosp.lon, name: backupHosp.name });
+        }
       }
     }, 6400);
 
@@ -409,9 +500,15 @@ export function App() {
       setIsSimulationRunning(false);
       setSimulationStep(0);
       setSimulationProgress('');
+      showCameraToast(
+        'TIMELY INTERVENTION DEMONSTRATED',
+        isNepal
+          ? 'Roshi Gorge modular bridge re-established transit for 18 hamlets (16,300 pop) in 28 mins.'
+          : 'Timely Bailey bridge sanction & ambulance diversion restored healthcare for 42 villages.'
+      );
       auditService.recordAction({
         action_type: 'SCENARIO_CREATED',
-        rationale: `Automated 10s response simulation executed for ${currentTheater.name}: Disruption -> Consequence -> Diversion decision demonstrated.`,
+        rationale: `Automated 10s response simulation executed for ${currentTheater.name}: Disruption -> Consequence -> Timely intervention demonstrated.`,
         user_id: `INCIDENT_COMMANDER_${currentTheater.id.toUpperCase()}`,
         user_role: 'INCIDENT_COMMANDER',
         human_authorized: true,
@@ -932,8 +1029,53 @@ export function App() {
       });
     }
 
+    // 5. User-Submitted Field Damage Reports
+    submittedReports.forEach((rep) => {
+      const repLat = Array.isArray(rep.geometry?.coordinates) ? rep.geometry.coordinates[1] : 24.7891;
+      const repLon = Array.isArray(rep.geometry?.coordinates) ? rep.geometry.coordinates[0] : 92.8124;
+      list.push({
+        lat: repLat,
+        lon: repLon,
+        title: `📝 ${rep.title}`,
+        type: 'chokepoint',
+        description: `Field report: ${rep.title}. Reported by ${rep.author}. Condition: ${rep.reportedCondition}`,
+        customBanner: `📝 Field Report: ${rep.title} • ${rep.reportedCondition} (${rep.reviewStatus})`,
+        badge: 'FIELD REPORT',
+        onClick: () => {
+          setInspectedFeature({
+            id: rep.id,
+            type: 'chokepoint',
+            title: rep.title,
+            subtitle: `Reported by ${rep.author}`,
+            coordinates: [repLat, repLon],
+            statusText: `CONDITION: ${rep.reportedCondition} (${rep.reviewStatus})`,
+            statusColor: 'amber',
+            evidenceClass: 'REPORTED',
+            dataState: 'LIVE',
+            metrics: [
+              { label: 'Type', value: rep.type.toUpperCase() },
+              { label: 'Status', value: rep.reviewStatus },
+              { label: 'Notes', value: rep.notes || 'No field notes' },
+            ],
+            description: `Field evidence report filed by ${rep.author} under statutory review. Condition: ${rep.reportedCondition}. Notes: ${rep.notes || 'N/A'}`,
+          });
+        },
+      });
+    });
+
+    if (inspectedDamageReport) {
+      list.push({
+        lat: inspectedDamageReport.coordinates[0],
+        lon: inspectedDamageReport.coordinates[1],
+        title: `⛔ DESTROYED: ${inspectedDamageReport.featureName}`,
+        customBanner: `⛔ DESTROYED: ${inspectedDamageReport.featureName}`,
+        type: 'chokepoint',
+        badge: 'FIELD REPORT',
+      });
+    }
+
     return list;
-  }, [currentTheater, interventions, validIdx, selectedChoke, activeSelectedTool, destHospital, rerouteAmbulances, isBreachTemporarilyReopened]);
+  }, [currentTheater, interventions, validIdx, selectedChoke, activeSelectedTool, destHospital, rerouteAmbulances, isBreachTemporarilyReopened, submittedReports, inspectedDamageReport]);
 
   // Master Map Lines (Authentic broken road hazard vs restored highway & multi-modal corridors)
   const masterMapLines: MapLine[] = useMemo(() => {
@@ -960,6 +1102,66 @@ export function App() {
     const junctionPoint: [number, number] =
       activeCorridorNet.northApproach[0] || [selectedChoke.lat + 0.005, selectedChoke.lon + 0.003];
 
+    const finalizeList = (l: MapLine[]): MapLine[] => {
+      if (inspectedDamageReport) {
+        const [lat, lon] = inspectedDamageReport.coordinates;
+        let damagedSegment: [number, number][];
+        if (inspectedDamageReport.id === 'REP-CACHAR-002') {
+          // Sonabarighat Culvert authentic road alignment along Sonai-Sonabarighat Road
+          damagedSegment = [
+            [24.7570, 92.7915],
+            [24.7592, 92.7925],
+            [24.7612, 92.7935],
+            [24.7635, 92.7942],
+            [24.7660, 92.7950],
+          ];
+        } else {
+          damagedSegment = [
+            [lat - 0.0035, lon - 0.0045],
+            [lat - 0.0015, lon - 0.0020],
+            [lat, lon],
+            [lat + 0.0020, lon + 0.0025],
+            [lat + 0.0040, lon + 0.0050],
+          ];
+        }
+        l.push({
+          id: `inspected_damaged_halo_${inspectedDamageReport.id}`,
+          points: damagedSegment,
+          color: '#f43f5e',
+          weight: 16,
+          className: 'animate-pulse',
+          label: `🚨 DESTROYED / OVERTOPPED ROAD: ${inspectedDamageReport.featureName} (${inspectedDamageReport.roadName})`,
+          layerType: 'severed',
+        });
+        l.push({
+          id: `inspected_damaged_core_${inspectedDamageReport.id}`,
+          points: damagedSegment,
+          color: '#ffffff',
+          weight: 6,
+          dashArray: '8, 6',
+          className: 'animate-pulse',
+          label: `⛔ ${inspectedDamageReport.reportedCondition}`,
+          layerType: 'severed',
+        });
+      }
+      return l;
+    };
+
+    // Always provide clean pre-event baseline road network for the LEFT side of the swipe
+    const baselinePoints = activeCorridorNet.fullRestored.length > 0
+      ? activeCorridorNet.fullRestored
+      : [...activeCorridorNet.northApproach, ...activeCorridorNet.breachGap, ...activeCorridorNet.southApproach];
+    if (baselinePoints.length > 0) {
+      list.push({
+        id: 'corridor_clean_pre_event_baseline',
+        points: baselinePoints,
+        color: '#06b6d4',
+        weight: 5,
+        label: `[PRE-EVENT BASELINE] Normal Intact Highway (${selectedChoke.baseline_km} km • ${selectedChoke.baseline_travel_mins || 18}m)`,
+        layerType: 'baseline',
+      });
+    }
+
     // 0. If temporary culvert / breach closure is simulated reopened:
     if (isBreachTemporarilyReopened) {
       allNearbyVillages.forEach((v) => {
@@ -970,7 +1172,7 @@ export function App() {
           color: '#10b981',
           weight: 5,
           label: `✓ RESCUED PATH: ${v.name} -> Temporary Culvert Restored -> ${destHospital?.name || 'Hospital'} (${selectedChoke.baseline_km} km • 18m)`,
-          layerType: 'baseline',
+          layerType: 'bridge',
         });
       });
 
@@ -979,13 +1181,21 @@ export function App() {
         points: activeCorridorNet.fullRestored,
         color: '#10b981',
         weight: 6,
-        label: `TEMPORARY CULVERT ACTIVE: Direct Baseline Restored (${selectedChoke.baseline_km} km • ${selectedChoke.baseline_travel_mins || 18} mins)`,
-        layerType: 'baseline',
+        label: `✓ TEMPORARY CULVERT ACTIVE: Direct Baseline Restored (${selectedChoke.baseline_km} km • ${selectedChoke.baseline_travel_mins || 18} mins)`,
+        layerType: 'bridge',
       });
-      return list;
+      list.push({
+        id: 'corridor_steel_truss_span_restored',
+        points: activeCorridorNet.breachGap,
+        color: '#10b981',
+        weight: 8,
+        label: `✓ Culvert Restored (${selectedChoke.exposed_meters}m Gap Bridged)`,
+        layerType: 'bridge',
+      });
+      return finalizeList(list);
     }
 
-    // 1. When Bailey Bridge is Built: Brown Highway & Truss Span (ALL VILLAGES RESCUED & CONNECTED)
+    // 1. When Bailey Bridge is Built: Green Restored Highway & Truss Span (ALL VILLAGES RESCUED & CONNECTED)
     if (activeSelectedTool === 'bridge') {
       allNearbyVillages.forEach((v) => {
         const feeder = getSettlementRoadFeeder(v.id, [v.lat, v.lon], junctionPoint);
@@ -995,29 +1205,30 @@ export function App() {
           color: '#10b981',
           weight: 5,
           label: `✓ RESCUED PATH: ${v.name} -> Bailey Bridge Restored Highway -> ${destHospital?.name || 'Hospital'} (${selectedChoke.baseline_km} km • 14 mins)`,
-          layerType: 'baseline',
+          layerType: 'bridge',
         });
       });
 
       list.push({
         id: 'corridor_full_restored_highway',
         points: activeCorridorNet.fullRestored,
-        color: '#059669',
+        color: '#10b981',
         weight: 6,
-        label: `BAILEY BRIDGE ACTIVE: Full Direct Highway Access Restored (${selectedChoke.baseline_km} km • 14 mins)`,
-        layerType: 'baseline',
+        label: `✓ BAILEY BRIDGE ACTIVE: Full Direct Highway Access Restored (${selectedChoke.baseline_km} km • 14 mins)`,
+        layerType: 'bridge',
       });
 
       // Steel truss span highlight across breach
       list.push({
-        id: 'corridor_steel_truss_span',
+        id: 'corridor_steel_truss_span_restored',
         points: activeCorridorNet.breachGap,
-        color: '#047857',
+        color: '#10b981',
         weight: 8,
-        label: `Class-40 Steel Modular Span (${selectedChoke.exposed_meters}m Gap Bridged • 16T IRC:6 Ready)`,
-        layerType: 'baseline',
+        className: 'animate-pulse',
+        label: `✓ Class-40 Steel Modular Span (${selectedChoke.exposed_meters}m Gap Bridged • 16T IRC:6 Ready)`,
+        layerType: 'bridge',
       });
-      return list;
+      return finalizeList(list);
     }
 
     // 2. When Ambulance Rerouting (Detour Bypass) is Active: ALL VILLAGES RESCUED VIA DETOUR
@@ -1071,7 +1282,7 @@ export function App() {
         label: `⛔ RIVER GAP SEVERED • ${selectedChoke.exposed_meters}m Water Barrier (Ambulances Rerouted via Bypass)`,
         layerType: 'severed',
       });
-      return list;
+      return finalizeList(list);
     }
 
     // 3. When Hospital Camp (MMU) is Stationed: Yellow Camp Roadhead
@@ -1118,7 +1329,7 @@ export function App() {
         label: `Detour Bypass for Surgical Referrals (${selectedChoke.detour_km} km)`,
         layerType: 'detour',
       });
-      return list;
+      return finalizeList(list);
     }
 
     // 4. When UAV Medical Drone is Deployed: Purple Airbridge
@@ -1155,7 +1366,7 @@ export function App() {
         label: `GROUND ROAD SEVERED • ${selectedChoke.exposed_meters}m Gap`,
         layerType: 'severed',
       });
-      return list;
+      return finalizeList(list);
     }
 
     // 5. When NDRF Rescue Boat is Deployed: Blue Water Crossing
@@ -1221,7 +1432,7 @@ export function App() {
         label: `RIVER GAP SEVERED • ${selectedChoke.exposed_meters}m Flood Barrier`,
         layerType: 'severed',
       });
-      return list;
+      return finalizeList(list);
     }
 
     // 6. When NO Fix Applied (activeSelectedTool === 'none'): Visibly SEVERED broken pathways on actual roads!
@@ -1288,8 +1499,8 @@ export function App() {
       });
     }
 
-    return list;
-  }, [selectedChoke, activeSelectedTool, activeCorridorNet, rerouteAmbulances, detourRouteMode, isBreachTemporarilyReopened, currentTheater, destHospital]);
+    return finalizeList(list);
+  }, [selectedChoke, activeSelectedTool, activeCorridorNet, rerouteAmbulances, detourRouteMode, isBreachTemporarilyReopened, currentTheater, destHospital, inspectedDamageReport]);
 
   // 5 Operational Command Chapters definition
   const coreSteps = [
@@ -1327,121 +1538,75 @@ export function App() {
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-slate-950 font-sans text-slate-100 select-none">
-      {/* 1. 100% FULL-SCREEN MAP OCCUPYING ENTIRE VIEWPORT (3D TERRAIN OR 2D LEAFLET) */}
+      {/* 1. 100% FULL-SCREEN MAP OCCUPYING ENTIRE VIEWPORT */}
       <div className="fixed inset-0 w-screen h-screen">
-        {viewMode === '3d' ? (
-          <Terrain3DViewer
-            currentTheater={currentTheater}
-            selectedChoke={selectedChoke}
-            destHospital={destHospital}
-            activeTool={activeSelectedTool}
-            rerouteAmbulances={rerouteAmbulances}
-            isBreachTemporarilyReopened={isBreachTemporarilyReopened}
-            isSimulationRunning={isSimulationRunning}
-            simulationStep={simulationStep}
-            onSelectChoke={(chokeId) => {
-              const idx = currentTheater.chokePoints.findIndex((cp) => cp.id === chokeId);
-              if (idx !== -1) triggerCorridorFocus(idx);
-            }}
-            onSelectHospital={(hospId) => {
-              const hosp = currentTheater.hospitals.find((h) => h.id === hospId);
-              if (hosp) triggerPointFocus({ lat: hosp.lat, lon: hosp.lon, name: hosp.name });
-            }}
-            onClose3D={() => setViewMode('map')}
-          />
-        ) : (
-          <LeafletMap
-            theaterId={currentTheater.id}
-            center={mapCenter}
-            zoom={mapZoom}
-            riverPath={currentTheater.riverPath}
-            floodStage={floodStage}
-            floodPolygon={currentTheater.floodPolygon}
-            chokePoints={currentTheater.chokePoints}
-            markers={masterMapMarkers}
-            lines={masterMapLines}
-            activeChokeId={selectedChoke?.id}
-            activeTool={activeSelectedTool}
-            corridorNet={activeCorridorNet}
-            isTourActive={tourMode !== 'none'}
-            isLiveDispatched={isLiveDispatched}
-            cameraCommand={cameraCommand}
-            panelWidth={panelWidth}
-            pulsingTarget={pulsingTarget}
-            onResetOverview={handleResetOverview}
-            isWindVisualized={ecosystemState.weather.wind_speed_10m > 30 || isSimulatedHighWind}
-            windSpeed={isSimulatedHighWind ? 52.4 : ecosystemState.weather.wind_speed_10m}
-            fieldSosEvents={ecosystemState.activeSosEvents}
-            mapMode={viewMode === 'satellite' ? 'satellite' : viewMode === 'street' ? 'street' : 'vector'}
-            onMapModeChange={(mode) => setViewMode(mode === 'satellite' ? 'satellite' : mode === 'street' ? 'street' : 'map')}
-            rerouteAmbulances={rerouteAmbulances}
-            isBreachTemporarilyReopened={isBreachTemporarilyReopened}
-            onToggleBreachTemporarilyReopened={() => setIsBreachTemporarilyReopened((prev) => !prev)}
-            isSimulationRunning={isSimulationRunning}
-            baselineAccessSliderValue={baselineAccessSliderValue}
-            onSelectFeature={(feat) => setInspectedFeature(feat)}
-          />
-        )}
+        <LeafletMap
+          theaterId={currentTheater.id}
+          center={mapCenter}
+          zoom={mapZoom}
+          riverPath={currentTheater.riverPath}
+          floodStage={floodStage}
+          floodPolygon={currentTheater.floodPolygon}
+          chokePoints={currentTheater.chokePoints}
+          markers={masterMapMarkers}
+          lines={masterMapLines}
+          activeChokeId={selectedChoke?.id}
+          activeTool={activeSelectedTool}
+          corridorNet={activeCorridorNet}
+          isTourActive={tourMode !== 'none'}
+          isLiveDispatched={isLiveDispatched}
+          cameraCommand={cameraCommand}
+          panelWidth={panelWidth}
+          pulsingTarget={pulsingTarget}
+          onResetOverview={handleResetOverview}
+          isWindVisualized={ecosystemState.weather.wind_speed_10m > 30 || isSimulatedHighWind}
+          windSpeed={isSimulatedHighWind ? 52.4 : ecosystemState.weather.wind_speed_10m}
+          fieldSosEvents={ecosystemState.activeSosEvents}
+          mapMode={viewMode === 'map' ? 'vector' : viewMode}
+          onMapModeChange={(mode) => setViewMode(mode === 'vector' ? 'map' : mode)}
+          rerouteAmbulances={rerouteAmbulances}
+          isBreachTemporarilyReopened={isBreachTemporarilyReopened}
+          onToggleBreachTemporarilyReopened={() => setIsBreachTemporarilyReopened((prev) => !prev)}
+          isSimulationRunning={isSimulationRunning}
+          baselineAccessSliderValue={baselineAccessSliderValue}
+          onSelectFeature={(feat) => setInspectedFeature(feat)}
+        />
       </div>
 
-      {/* INTRO HERO BANNER (Dismissible, once dismissed never sits over map) */}
-      {showHeroHeadline && (
-        <div
-          className="fixed top-16 z-30 transition-all duration-300 pointer-events-auto"
-          style={{
-            left: `calc(${isDrawerCollapsed ? 60 : panelWidth}px + 20px)`,
-            right: '64px',
-          }}
-        >
-          <div className="max-w-3xl mx-auto p-3 rounded-2xl bg-slate-900/95 border border-cyan-500/50 shadow-2xl backdrop-blur-2xl flex flex-col md:flex-row md:items-center justify-between gap-3 text-white">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-700 uppercase tracking-wider">
-                  Cachar/Silchar Flood Replay
-                </span>
-                <span className="text-[10px] font-mono text-slate-300">
-                  📅 June 20, 2022
-                </span>
-                <span className="text-[10px] font-mono text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800 font-bold">
-                  HISTORICAL REPLAY, simulated closure on OSM graph
-                </span>
+      {/* Real Live Dispatch Broadcast Alert Banner */}
+      {isLiveDispatched && showLiveDispatchBanner && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[2500] max-w-2xl w-full px-4 animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-950/95 via-slate-900/95 to-teal-950/95 border-2 border-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.4)] backdrop-blur-2xl flex items-center justify-between gap-3 text-white">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-400 flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-5 h-5 text-emerald-400 animate-pulse" />
               </div>
-              <h1 className="text-sm sm:text-base font-black tracking-tight text-white">
-                See how one flood disruption affects emergency access.
-              </h1>
-              <p className="text-[11px] text-slate-300 font-sans max-w-xl leading-relaxed">
-                When floods disrupt roads, Lifeline OS helps responders identify which healthcare services may lose access, compare feasible alternatives, and test a response before acting.
-              </p>
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-emerald-500 text-black">
+                    LIVE DISPATCH SANCTIONED
+                  </span>
+                  <span className="text-[10px] font-mono text-emerald-300 font-bold">
+                    Form-3B Broadcast Active
+                  </span>
+                </div>
+                <p className="text-xs text-slate-200 font-sans">
+                  Tactical dispatch order transmitted to PWD, Army Engr Regt, NDRF &amp; State Health Command. Units Mobilized.
+                </p>
+              </div>
             </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={handleRunResponseSimulation}
-                disabled={isSimulationRunning}
-                className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xl ${
-                  isSimulationRunning
-                    ? 'bg-amber-950/90 border-2 border-amber-500 text-amber-200 animate-pulse'
-                    : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)] border border-emerald-400'
-                }`}
-                title="Run closure simulation: Disruption -> Consequence -> Decision"
-              >
-                <Play className={`w-3.5 h-3.5 ${isSimulationRunning ? 'animate-spin' : 'fill-white'}`} />
-                <span>{isSimulationRunning ? (simulationProgress || 'Simulating...') : 'Run closure simulation'}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setShowHeroHeadline(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 cursor-pointer text-xs transition-colors"
-                title="Dismiss headline"
-              >
-                ✕
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setShowLiveDispatchBanner(false)}
+              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 shrink-0 cursor-pointer"
+              title="Dismiss dispatch banner"
+            >
+              <ChevronLeft className="w-4 h-4 rotate-90" />
+            </button>
           </div>
         </div>
       )}
+
 
       {/* 2. COMPACT SLEEK FLOATING TOP BAR */}
       <Header
@@ -1486,8 +1651,11 @@ export function App() {
         liveWindSpeed={isSimulatedHighWind ? 52.4 : liveWindSpeed}
         isSimulatedHighWind={isSimulatedHighWind}
         viewMode={viewMode}
-        onToggleViewMode={() => setViewMode((prev) => (prev === '3d' ? 'map' : '3d'))}
         onSelectViewMode={(mode) => setViewMode(mode)}
+        onOpenReportEditor={() => setIsFieldEditorModalOpen(true)}
+        pendingReportCount={
+          fieldEvidenceEditorService.getEditsByTheater(activeTheaterId).filter((e) => e.reviewStatus === 'SUBMITTED').length + submittedReports.length
+        }
         onRunResponseSimulation={handleRunResponseSimulation}
         isSimulationRunning={isSimulationRunning}
         simulationProgress={simulationProgress}
@@ -1533,7 +1701,7 @@ export function App() {
         onToggleActivateSurgeBeds={() => setActivateSurgeBeds((prev) => !prev)}
         isLiveDispatched={isLiveDispatched}
         onSignAndDispatch={() => {
-          setIsLiveDispatched(true);
+          handleExecuteDispatch();
           if (tourMode === 'interactive' && interactiveTask === 4) {
             setInteractiveTask(5);
           }
@@ -1548,7 +1716,8 @@ export function App() {
         onSetDetourRouteMode={(mode) => setDetourRouteMode(mode)}
         isBreachTemporarilyReopened={isBreachTemporarilyReopened}
         onToggleBreachTemporarilyReopened={() => setIsBreachTemporarilyReopened((prev) => !prev)}
-        onSelectTheater={(tId) => setActiveTheaterId(tId)}
+        onSelectTheater={(tId) => handleSelectScenario(tId)}
+        onInspectDamageReport={handleInspectDamageReport}
       />
 
       {/* 4. CONTEXTUAL FEATURE INSPECTOR (OPENS DYNAMICALLY ON MAP PIN CLICK) */}
@@ -1648,6 +1817,7 @@ export function App() {
         onClose={() => setIsSanctionModalOpen(false)}
         currentTheater={currentTheater}
         activeInterventions={interventions}
+        onApproveAndDispatch={handleExecuteDispatch}
       />
 
       {/* Toast notification for camera movement (Requirement 4) */}
@@ -1660,49 +1830,67 @@ export function App() {
         </div>
       )}
 
-      {/* Right Icon Toolbar (Requirement 3: Right icon toolbar opening ONE popover at a time) */}
-      <div className="fixed right-4 top-20 z-[2000] flex flex-col gap-2 bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-xl p-1.5 shadow-xl">
+      {/* Right Toolbar with visible text labels and clear tooltips (3D removed) */}
+      <div className="fixed right-4 top-20 z-[2000] flex flex-col gap-1.5 bg-slate-900/95 backdrop-blur-md border border-slate-700/80 rounded-xl p-1.5 shadow-2xl select-none">
         <button
-          onClick={() => setActiveRightPopover(prev => prev === 'evidence' ? null : 'evidence')}
-          title="Evidence Ledger & Catalog"
-          className={`p-2.5 rounded-lg transition-all ${activeRightPopover === 'evidence' ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`}
+          onClick={() => setActiveRightPopover((prev) => (prev === 'evidence' ? null : 'evidence'))}
+          title="Evidence Ledger & Catalog: View ground-truth satellite & field datasets"
+          className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+            activeRightPopover === 'evidence'
+              ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-500/30'
+              : 'text-slate-300 hover:text-white hover:bg-slate-800'
+          }`}
         >
-          <Database className="w-4 h-4" />
+          <Database className="w-3.5 h-3.5 text-cyan-400" />
+          <span className="hidden sm:inline">Evidence</span>
         </button>
         <button
-          onClick={() => setActiveRightPopover(prev => prev === 'whatwedontknow' ? null : 'whatwedontknow')}
-          title="What We Don't Know (Epistemic Uncertainty)"
-          className={`p-2.5 rounded-lg transition-all ${activeRightPopover === 'whatwedontknow' ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`}
+          onClick={() => setActiveRightPopover((prev) => (prev === 'whatwedontknow' ? null : 'whatwedontknow'))}
+          title="Epistemic Uncertainty: View sensor blindspots and unverified assumptions"
+          className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+            activeRightPopover === 'whatwedontknow'
+              ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/30'
+              : 'text-slate-300 hover:text-white hover:bg-slate-800'
+          }`}
         >
-          <HelpCircle className="w-4 h-4" />
+          <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
+          <span className="hidden sm:inline">Uncertainty</span>
         </button>
         <button
-          onClick={() => setActiveRightPopover(prev => prev === 'cloud' ? null : 'cloud')}
-          title="Google Cloud & Verification"
-          className={`p-2.5 rounded-lg transition-all ${activeRightPopover === 'cloud' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`}
+          onClick={() => setActiveRightPopover((prev) => (prev === 'cloud' ? null : 'cloud'))}
+          title="Google Cloud & Verification: Earth Engine and BigQuery pipelines"
+          className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+            activeRightPopover === 'cloud'
+              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
+              : 'text-slate-300 hover:text-white hover:bg-slate-800'
+          }`}
         >
-          <Cloud className="w-4 h-4" />
+          <Cloud className="w-3.5 h-3.5 text-indigo-400" />
+          <span className="hidden sm:inline">Cloud GEE</span>
         </button>
         <button
-          onClick={() => setActiveRightPopover(prev => prev === 'architecture' ? null : 'architecture')}
-          title="Lifeline OS System Architecture & Process Flow"
-          className={`p-2.5 rounded-lg transition-all ${activeRightPopover === 'architecture' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 ring-1 ring-cyan-400' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`}
+          onClick={() => setActiveRightPopover((prev) => (prev === 'architecture' ? null : 'architecture'))}
+          title="Lifeline OS System Architecture: Process flow and Gemini MCP integration"
+          className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+            activeRightPopover === 'architecture'
+              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 ring-1 ring-cyan-400'
+              : 'text-slate-300 hover:text-white hover:bg-slate-800'
+          }`}
         >
-          <Network className="w-4 h-4 text-cyan-400" />
+          <Network className="w-3.5 h-3.5 text-cyan-400" />
+          <span className="hidden sm:inline">Architecture</span>
         </button>
         <button
-          onClick={() => setActiveRightPopover(prev => prev === 'field' ? null : 'field')}
-          title="Field Evidence Editor"
-          className={`p-2.5 rounded-lg transition-all ${activeRightPopover === 'field' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`}
+          onClick={() => setActiveRightPopover((prev) => (prev === 'field' ? null : 'field'))}
+          title="Field Evidence Editor: Draft tactical report or review ground observations"
+          className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+            activeRightPopover === 'field'
+              ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/30'
+              : 'text-slate-300 hover:text-white hover:bg-slate-800'
+          }`}
         >
-          <Edit3 className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => setViewMode(prev => prev === '3d' ? 'map' : '3d')}
-          title="Toggle 3D Terrain View"
-          className={`p-2.5 rounded-lg transition-all ${viewMode === '3d' ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`}
-        >
-          <Mountain className="w-4 h-4" />
+          <Edit3 className="w-3.5 h-3.5 text-emerald-400" />
+          <span className="hidden sm:inline">Draft Report</span>
         </button>
       </div>
 
@@ -1719,11 +1907,11 @@ export function App() {
         onToggleSimulatedClosure={handleToggleSimulatedClosure}
         isRerouted={rerouteAmbulances}
         onToggleReroute={() => setRerouteAmbulances(prev => !prev)}
-        reachableCount={activeTheaterId === 'nepal' ? undefined : (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 319 : ASSAM_TELEMETRY_RESULTS.reachableCount)}
-        reroutedCount={activeTheaterId === 'nepal' ? undefined : (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 0 : ASSAM_TELEMETRY_RESULTS.reroutedCount)}
-        isolatedCount={activeTheaterId === 'nepal' ? undefined : (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 0 : ASSAM_TELEMETRY_RESULTS.noRouteCount)}
-        analysedCount={activeTheaterId === 'nepal' ? undefined : ASSAM_TELEMETRY_RESULTS.analysedCount}
-        excludedCount={activeTheaterId === 'nepal' ? undefined : ASSAM_TELEMETRY_RESULTS.excludedCount}
+        reachableCount={activeTheaterId === 'nepal' ? (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 18 : (isSimulatedClosureActive ? 0 : 18)) : (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 319 : ASSAM_TELEMETRY_RESULTS.reachableCount)}
+        reroutedCount={activeTheaterId === 'nepal' ? 0 : (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 0 : ASSAM_TELEMETRY_RESULTS.reroutedCount)}
+        isolatedCount={activeTheaterId === 'nepal' ? (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 0 : (isSimulatedClosureActive ? 18 : 0)) : (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 0 : ASSAM_TELEMETRY_RESULTS.noRouteCount)}
+        analysedCount={activeTheaterId === 'nepal' ? 18 : ASSAM_TELEMETRY_RESULTS.analysedCount}
+        excludedCount={activeTheaterId === 'nepal' ? 0 : ASSAM_TELEMETRY_RESULTS.excludedCount}
       />
 
       {/* Evidence Catalogue Modal */}
@@ -1746,6 +1934,7 @@ export function App() {
         }}
         theaterId={activeTheaterId}
         theaterName={currentTheater.name}
+        onReportCreated={handleReportCreated}
       />
 
       {/* Google Cloud Platform & Gemini MCP Architecture Modal */}

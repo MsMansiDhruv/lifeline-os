@@ -177,7 +177,7 @@ class GeocodingService {
       }
       console.warn('Geocoding service network warning:', err?.message || err);
 
-      // Honest fallback: match against known verified historical theaters (Silchar, Wayanad, Nepal)
+      // Honest fallback: match against known verified historical theaters (Silchar, Nepal)
       const localMatches = this.searchKnownTheaters(trimmed);
       return localMatches;
     }
@@ -238,7 +238,6 @@ class GeocodingService {
   } {
     // Check proximity to verified historical baseline theaters
     const isNearSilchar = Math.hypot(lat - 24.8333, lon - 92.7789) < 0.35;
-    const isNearWayanad = Math.hypot(lat - 11.608, lon - 76.082) < 0.45;
     const isNearNepal = Math.hypot(lat - 28.065, lon - 84.815) < 0.50;
 
     const hasGlobalWeather = true; // Open-Meteo covers global coordinates
@@ -259,7 +258,7 @@ class GeocodingService {
       };
     }
 
-    if (isNearWayanad || isNearNepal) {
+    if (isNearNepal) {
       return {
         state: 'PARTIAL',
         summary: {

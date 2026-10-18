@@ -11,7 +11,7 @@ import { EvidenceState, EvidenceCategory } from '../types/evidence';
 
 export interface EvidenceDatasetItem {
   id: string;
-  theaterId: 'silchar' | 'nepal' | 'wayanad' | 'all';
+  theaterId: 'silchar' | 'nepal' | 'all';
   name: string;
   category: EvidenceCategory;
   evidenceState: EvidenceState;
@@ -333,64 +333,6 @@ const CATALOGUE_DATA: EvidenceDatasetItem[] = [
     limitations: 'Informal agricultural sheds and temporary tin-roof shelters not mapped',
     featureCount: 4210,
     layerId: 'buildings',
-  },
-
-  // 3. WAYANAD THEATER (MEPPADI / CHOORALMALA / MUNDAKKAI)
-  {
-    id: 'wayanad-s2-pre',
-    theaterId: 'wayanad',
-    name: 'Copernicus Sentinel-2 Pre-Disaster Kerala Western Ghats',
-    category: 'imagery',
-    evidenceState: 'OBSERVED',
-    source: 'ESA Copernicus Sentinel-2',
-    sourceUrl: 'https://dataspace.copernicus.eu',
-    acquisitionDate: '2024-02-15T05:12:00Z',
-    retrievalTime: '2026-10-17T06:00:00Z',
-    geographicCoverage: 'Meppadi, Chooralmala, Mundakkai (11.5°N - 11.6°N, 76.1°E - 76.25°E)',
-    spatialResolution: '10m True Colour (Band 4-3-2)',
-    licence: 'Copernicus Open Access / CC-BY 4.0',
-    attribution: 'Contains modified Copernicus Sentinel data (2024)',
-    freshness: 'Pre-monsoon pristine landscape baseline',
-    limitations: 'Tea plantation slope terraces have uniform reflectance',
-    featureCount: 1,
-    isPreEvent: true,
-  },
-  {
-    id: 'wayanad-nrsc-bhuvan-post',
-    theaterId: 'wayanad',
-    name: 'ISRO / NRSC Bhuvan Rapid Debris & Inundation Mapping',
-    category: 'flood_extent',
-    evidenceState: 'OFFICIAL',
-    source: 'National Remote Sensing Centre (NRSC) / ISRO Disaster Support',
-    sourceUrl: 'https://bhuvan.nrsc.gov.in',
-    acquisitionDate: '2024-07-31T09:00:00Z',
-    retrievalTime: '2026-10-17T07:30:00Z',
-    geographicCoverage: 'Iruvanjippuzha riverbed & Mundakkai valley (34.6 sq km impact)',
-    spatialResolution: 'Cartosat-3 / RISAT SAR 2.5m merged',
-    licence: 'ISRO Disaster Management Support Programme',
-    attribution: 'National Remote Sensing Centre (NRSC), ISRO',
-    freshness: 'T+8h post-debris flow rapid assessment',
-    limitations: 'Dense monsoon cloud required radar-only delineation for upper catchment origins',
-    featureCount: 1,
-    isPostEvent: true,
-  },
-  {
-    id: 'wayanad-ksdma-reports',
-    theaterId: 'wayanad',
-    name: 'KSDMA Chooralmala Bridge Collapse Field Assessment',
-    category: 'ground_reports',
-    evidenceState: 'OFFICIAL',
-    source: 'Kerala State Disaster Management Authority & Indian Army Madras Sappers',
-    sourceUrl: 'https://sdma.kerala.gov.in',
-    acquisitionDate: '2024-07-30T15:30:00Z',
-    retrievalTime: '2026-10-17T09:00:00Z',
-    geographicCoverage: 'Chooralmala bridge span, Mundakkai riverhead',
-    spatialResolution: 'Point survey ±2m',
-    licence: 'Government of Kerala Official Records',
-    attribution: 'KSDMA Emergency Operations Centre (SEOC)',
-    freshness: 'Official engineering assessment for Bailey Bridge erection',
-    limitations: 'Debris field thickness varies from 1.5m to 6.0m along approach road',
-    featureCount: 3,
   },
 ];
 

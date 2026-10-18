@@ -20,6 +20,7 @@ interface SanctionOrderModalProps {
   onClose: () => void;
   currentTheater: TheaterData;
   activeInterventions: Record<string, InterventionType>;
+  onApproveAndDispatch?: () => void;
 }
 
 export const SanctionOrderModal: React.FC<SanctionOrderModalProps> = ({
@@ -27,6 +28,7 @@ export const SanctionOrderModal: React.FC<SanctionOrderModalProps> = ({
   onClose,
   currentTheater,
   activeInterventions,
+  onApproveAndDispatch,
 }) => {
   const [isCopied, setIsCopied] = useState<boolean>(false);
 
@@ -247,13 +249,30 @@ export const SanctionOrderModal: React.FC<SanctionOrderModalProps> = ({
             </button>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="py-2 px-4 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold cursor-pointer"
-          >
-            Close
-          </button>
+          <div className="flex items-center gap-2">
+            {onApproveAndDispatch && (
+              <button
+                type="button"
+                onClick={() => {
+                  playClickSound();
+                  onApproveAndDispatch();
+                  onClose();
+                }}
+                className="py-2 px-4 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-lg shadow-emerald-500/20 border border-emerald-400/50"
+              >
+                <CheckCircle2 className="w-4 h-4 text-white" />
+                <span>Approve &amp; Sanction Dispatch</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="py-2 px-4 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold cursor-pointer"
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
     </div>

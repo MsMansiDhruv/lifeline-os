@@ -155,36 +155,6 @@ export const Chapter5Learn: React.FC<Chapter5LearnProps> = ({
             </div>
           </div>
 
-          {/* Scenario 2: Wayanad 2024 */}
-          <div className={`p-3 rounded-xl border transition-all ${currentTheater.id === 'wayanad' ? 'bg-blue-950/50 border-blue-500' : 'bg-slate-950 border-slate-800'}`}>
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-white text-xs">
-                    Kerala: Wayanad Landslide &amp; River Severance (July 2024)
-                  </span>
-                  <span className="text-[10px] bg-amber-950 text-amber-300 px-1.5 py-0.2 rounded font-mono border border-amber-800">
-                    Chooralmala Breach
-                  </span>
-                </div>
-                <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                  Debris flow washed out primary river bridge to Mundakkai. Heavy 16T axle restriction in effect (IRC:6).
-                </p>
-                <div className="text-[11px] text-cyan-300 font-mono mt-1">
-                  Target: Heavy Med-Drone airbridge deploys in 45m for antivenom before 190-ft military Bailey installation.
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleReplayScenario('wayanad', 'Wayanad Landslide 2024')}
-                className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shrink-0 cursor-pointer shadow flex items-center gap-1.5"
-              >
-                <Play className="w-3 h-3" />
-                <span>{currentTheater.id === 'wayanad' ? 'Active' : 'Load Replay'}</span>
-              </button>
-            </div>
-          </div>
-
           {/* Scenario 3: Nepal 2024 */}
           <div className={`p-3 rounded-xl border transition-all ${currentTheater.id === 'nepal' ? 'bg-blue-950/50 border-blue-500' : 'bg-slate-950 border-slate-800'}`}>
             <div className="flex items-start justify-between gap-2">

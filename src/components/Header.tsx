@@ -8,6 +8,8 @@ import {
   ChevronDown,
   Map,
   Satellite,
+  Navigation,
+  Edit3,
   MoreVertical,
   Compass,
   RotateCcw,
@@ -42,13 +44,15 @@ interface HeaderProps {
   onOpenEcosystemBus?: () => void;
   liveWindSpeed?: number;
   isSimulatedHighWind?: boolean;
-  viewMode?: 'map' | 'satellite' | 'street' | '3d';
+  viewMode?: 'map' | 'satellite' | 'street';
   onToggleViewMode?: () => void;
-  onSelectViewMode?: (mode: 'map' | 'satellite' | 'street' | '3d') => void;
+  onSelectViewMode?: (mode: 'map' | 'satellite' | 'street') => void;
   onRunResponseSimulation?: () => void;
   isSimulationRunning?: boolean;
   simulationProgress?: string;
   onResetOverview?: () => void;
+  onOpenReportEditor?: () => void;
+  pendingReportCount?: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -69,6 +73,8 @@ export const Header: React.FC<HeaderProps> = ({
   simulationProgress = '',
   onResetOverview,
   onOpenArchitecture,
+  onOpenReportEditor,
+  pendingReportCount = 0,
 }) => {
   const [cityQuery, setCityQuery] = useState<string>('');
   const [isSearching, setIsSearching] = useState<boolean>(false);
@@ -182,7 +188,6 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 <option value="silchar" className="bg-slate-950 text-white font-semibold">🇮🇳 Assam: Silchar / Cachar</option>
                 <option value="nepal" className="bg-slate-950 text-white font-semibold">🇳🇵 Nepal: Roshi Khola / BP Highway</option>
-                <option value="wayanad" className="bg-slate-950 text-white font-semibold">🇮🇳 Wayanad: Meppadi</option>
                 {customTheater && <option value="custom" className="bg-slate-950 text-white font-semibold">{customTheater.name}</option>}
               </select>
               <ChevronDown className="w-3.5 h-3.5 text-cyan-400 absolute right-2 pointer-events-none" />
@@ -240,36 +245,68 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* 3, 4, 5. Map Mode + Single Run Button + More Menu */}
       <div className="flex items-center gap-2 shrink-0">
-        {/* 3. Map Mode Switcher (Map / Street / Satellite) */}
+        {/* 3. Basemap Switcher (Dark Canvas / Satellite / Street) */}
         <div className="flex items-center bg-slate-900/90 border border-slate-700/80 rounded-xl p-0.5 shadow-md">
           <button
             type="button"
             onClick={() => onSelectViewMode ? onSelectViewMode('map') : onToggleViewMode?.()}
-            className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1 cursor-pointer ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
               viewMode === 'map'
                 ? 'bg-slate-800 text-cyan-300 border border-cyan-500/50 shadow-sm'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
-            title="Tactical Map View"
+            title="Dark Tactical Canvas Vector Basemap"
           >
             <Map className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden md:inline">Map</span>
+            <span className="hidden sm:inline">Dark Canvas</span>
           </button>
 
           <button
             type="button"
             onClick={() => onSelectViewMode ? onSelectViewMode('satellite') : onToggleViewMode?.()}
-            className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1 cursor-pointer ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
               viewMode === 'satellite'
                 ? 'bg-slate-800 text-emerald-300 border border-emerald-500/50 shadow-sm'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
-            title="Satellite View"
+            title="High-Resolution Satellite Basemap"
           >
             <Satellite className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="hidden md:inline">Satellite</span>
+            <span className="hidden sm:inline">Satellite</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onSelectViewMode ? onSelectViewMode('street') : onToggleViewMode?.()}
+            className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              viewMode === 'street'
+                ? 'bg-slate-800 text-amber-300 border border-amber-500/50 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+            title="OpenStreetMap Street Infrastructure Basemap"
+          >
+            <Navigation className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">Street</span>
           </button>
         </div>
+
+        {/* Dedicated Draft Field Report Button with Pending Review Counter */}
+        {onOpenReportEditor && (
+          <button
+            type="button"
+            onClick={onOpenReportEditor}
+            className="px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer bg-gradient-to-r from-emerald-950/70 to-teal-950/70 hover:from-emerald-900/80 hover:to-teal-900/80 text-emerald-300 border border-emerald-500/40 shadow-sm shadow-emerald-500/10"
+            title="Draft Tactical Field Damage Report or Review Pending Submissions"
+          >
+            <Edit3 className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="hidden md:inline">Draft Report</span>
+            {pendingReportCount > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-500 text-black">
+                {pendingReportCount}
+              </span>
+            )}
+          </button>
+        )}
 
         {/* System Architecture & Process Visualization Button */}
         {onOpenArchitecture && (
@@ -280,7 +317,7 @@ export const Header: React.FC<HeaderProps> = ({
             title="Explore Interactive System Architecture, Process Flow & Use Cases"
           >
             <Network className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden lg:inline">Architecture & Flow</span>
+            <span className="hidden lg:inline">Architecture &amp; Flow</span>
           </button>
         )}
 

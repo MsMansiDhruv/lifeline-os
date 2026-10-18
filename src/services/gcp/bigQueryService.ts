@@ -34,7 +34,7 @@ export const BIGQUERY_TABLES: Record<string, BigQueryTableDefinition> = {
     clusteringFields: ['catchment_id', 'disaster_theater_id'],
     schema: [
       { name: 'event_id', type: 'STRING', mode: 'REQUIRED', description: 'Unique disaster incident UUID' },
-      { name: 'disaster_theater_id', type: 'STRING', mode: 'REQUIRED', description: 'Theater code (e.g. silchar, wayanad)' },
+      { name: 'disaster_theater_id', type: 'STRING', mode: 'REQUIRED', description: 'Theater code (e.g. silchar, nepal)' },
       { name: 'catchment_id', type: 'STRING', mode: 'REQUIRED', description: 'HydroBASINS Level-6 catchment code' },
       { name: 'event_timestamp', type: 'TIMESTAMP', mode: 'REQUIRED', description: 'Satellite acquisition or peak crest time' },
       { name: 'flood_extent_polygon', type: 'GEOGRAPHY', mode: 'REQUIRED', description: 'WKT GeoJSON polygon of inundated extent' },

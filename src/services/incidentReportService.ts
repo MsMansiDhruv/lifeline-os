@@ -8,7 +8,7 @@ import { DamageReportStatus } from '../types/evidence';
 
 export interface IncidentDamageReport {
   id: string;
-  theaterId: 'silchar' | 'nepal' | 'wayanad';
+  theaterId: 'silchar' | 'nepal';
   featureType: 'bridge' | 'road' | 'embankment' | 'facility' | 'settlement';
   featureName: string;
   roadName: string;
@@ -273,66 +273,6 @@ const INCIDENT_REPORTS: IncidentDamageReport[] = [
     chokePointIdx: 2,
     breachMeters: 95,
     isolatedPopEst: 8200,
-  },
-
-  // WAYANAD INCIDENT REPORTS (MEPPADI / CHOORALMALA / MUNDAKKAI)
-  {
-    id: 'REP-WAYANAD-001',
-    theaterId: 'wayanad',
-    featureType: 'bridge',
-    featureName: 'Chooralmala Bridge & Riverfront',
-    roadName: 'Meppadi-Chooralmala-Mundakkai Road',
-    coordinates: [11.5320, 76.1840],
-    reportedCondition: 'Concrete bridge span totally obliterated by violent midnight debris flow carrying boulders and uprooted timber',
-    normalizedStatus: 'REPORTED_DESTROYED',
-    source: 'Kerala State Disaster Management Authority & Indian Army Madras Sappers',
-    sourceUrl: '',
-    observationTime: '2024-07-30T04:30:00Z',
-    retrievalTime: '',
-    verificationStatus: 'REPORTED/UNVERIFIED',
-    attachments: [
-      {
-        type: 'photo',
-        title: 'Chooralmala Bridge Ground Zero',
-        caption: 'Severed river chasm where permanent two-lane bridge stood; 24-tonne Bailey Bridge construction site',
-        credit: 'Indian Army Madras Sappers Engineering Regiment',
-        license: 'Official Armed Forces Rescue Public Release',
-      },
-    ],
-    notes: 'Critical ground report for the historic 190-foot Bailey Bridge assembly by Indian Army engineers.',
-    uncertainty: 'Subsurface foundation bedrock depth verified by military ground survey.',
-    chokePointIdx: 0,
-    breachMeters: 95,
-    isolatedPopEst: 41000,
-  },
-  {
-    id: 'REP-WAYANAD-002',
-    theaterId: 'wayanad',
-    featureType: 'road',
-    featureName: 'Mundakkai Hamlet Access Road',
-    roadName: 'Mundakkai Estate Road',
-    coordinates: [11.5540, 76.2120],
-    reportedCondition: '130m of roadway buried under 4 meters of viscous mud, boulders, and tree trunks; completely severed',
-    normalizedStatus: 'REPORTED_DESTROYED',
-    source: 'NDRF 4th Battalion Rescue Task Force',
-    sourceUrl: '',
-    observationTime: '2024-07-30T06:00:00Z',
-    retrievalTime: '',
-    verificationStatus: 'REPORTED/UNVERIFIED',
-    attachments: [
-      {
-        type: 'photo',
-        title: 'Mundakkai Debris Field',
-        caption: 'Mud deposits across plantation road; zip-line rescue established across river',
-        credit: 'NDRF 4th Battalion',
-        license: 'National Disaster Response Force Release',
-      },
-    ],
-    notes: 'Access restricted to helicopter drops and zip-line aerial ropes until Bailey Bridge is operational.',
-    uncertainty: 'Active mudflow hazard during heavy rainfall bursts.',
-    chokePointIdx: 1,
-    breachMeters: 130,
-    isolatedPopEst: 25000,
   },
 ];
 
