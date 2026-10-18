@@ -352,6 +352,17 @@ export const Header: React.FC<HeaderProps> = ({
 
           {isMoreMenuOpen && (
             <div className="absolute right-0 top-full mt-2 w-52 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-1 z-50 text-xs font-mono text-slate-300 space-y-0.5 animate-in fade-in">
+              <a
+                href="/lifeline-os"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setIsMoreMenuOpen(false)}
+                className="w-full px-2.5 py-1.5 rounded-lg text-left hover:bg-slate-800 hover:text-white flex items-center gap-2 cursor-pointer text-emerald-400 font-bold border-b border-slate-800 mb-1"
+                title="Open Lifeline OS Dedicated Showcase & Documentation Page"
+              >
+                <Shield className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Lifeline OS Page ↗</span>
+              </a>
               {onOpenArchitecture && (
                 <button
                   type="button"

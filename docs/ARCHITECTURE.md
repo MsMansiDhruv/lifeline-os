@@ -6,9 +6,19 @@ It transforms heterogeneous geospatial, meteorological, hydrological, and clinic
 
 ---
 
-## 2. Architecture Diagram
+## 2. Technical Visual Architecture & Process Flow
 
-```mermaid
+### System Architecture & Data Flow
+![Lifeline OS System Architecture](../lifeline_os_system_architecture.gif)
+*Figure 1: High-resolution animated system reference architecture showing ingestion from Copernicus Sentinel-1 SAR and Open-Meteo, local edge caching, Turf.js/NetworkX graph analysis, and multi-channel emergency dispatch. (Static PNG: [`lifeline_os_system_architecture.png`](../lifeline_os_system_architecture.png))*
+
+### End-to-End Operational Process Swimlanes
+![Lifeline OS Process Flow & Operational Swimlanes](../lifeline_os_process_swimlane.gif)
+*Figure 2: End-to-end operational decision flow across 7 distinct organizational swimlanes: External Data Providers, Ingestion & Cache, Epistemic Validation, Spatial Graph Core, Decision Optimization Engine, Civil Incident Commander Sanction, and State State Ledger. (Static PNG: [`lifeline_os_process_swimlane.png`](../lifeline_os_process_swimlane.png))*
+
+---
+
+## 3. Architecture Logic Diagram (Mermaid)
 flowchart TD
     subgraph DataIngestion ["1. Data Ingestion & External Keyless Telemetry"]
         OM_W["Open-Meteo Weather API<br/>(10m Wind, Precipitation, Temp)"]

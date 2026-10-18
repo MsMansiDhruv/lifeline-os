@@ -291,6 +291,15 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
+// Showcase Page route
+app.get(['/lifeline-os', '/about', '/showcase'], (_req, res) => {
+  const showcasePath = path.resolve('public/lifeline-os.html');
+  if (fs.existsSync(showcasePath)) {
+    return res.sendFile(showcasePath);
+  }
+  res.redirect('/');
+});
+
 async function startServer() {
   const isProd = process.env.NODE_ENV === 'production';
   if (!isProd) {

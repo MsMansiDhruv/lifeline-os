@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lifeline OS — Flood Impact Intelligence & Emergency Response Decision Support</title>
+  <meta name="description" content="Deterministic disaster accessibility, physical asset optimization, and emergency decision support during extreme climate disruptions. Built for Google Cloud AI Builder Cup 2026.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2306b6d4' stroke-width='2'><path d='M12 2v20M2 12h20'/><circle cx='12' cy='12' r='4'/></svg>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            slate: {
+              850: '#0f172a',
+              900: '#090d16',
+              950: '#030712'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .grid-bg {
+      background-size: 32px 32px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-cyan-500 selection:text-black">
+
+  <!-- Tactical Top Bar -->
+  <header class="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+          <svg class="w-5 h-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold text-base tracking-tight text-white">LIFELINE OS</span>
+            <span class="px-2 py-0.5 text-[10px] font-mono font-bold rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800/80">v1.0 PILOT</span>
+          </div>
+          <p class="text-[11px] text-slate-400 font-mono hidden sm:block">Disaster Intelligence & Decision Support</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3">
+        <a href="https://github.com/MsMansiDhruv/lifeline-os" target="_blank" rel="noopener noreferrer"
+           class="px-3 py-1.5 rounded-lg text-xs font-mono font-medium text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+          <span class="hidden md:inline">GitHub</span>
+        </a>
+        <a href="Lifeline_OS_Pitch_Deck.pdf" target="_blank"
+           class="px-3 py-1.5 rounded-lg text-xs font-mono font-medium text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          <span class="hidden md:inline">Pitch Deck (PDF)</span>
+        </a>
+        <a href="https://lifeline-os.ai.studio/" target="_blank" rel="noopener noreferrer"
+           class="px-4 py-1.5 rounded-lg text-xs font-mono font-bold text-black bg-gradient-to-r from-cyan-400 to-teal-400 hover:from-cyan-300 hover:to-teal-300 shadow-md shadow-cyan-500/20 transition flex items-center gap-1.5">
+          <span>Launch Live App</span>
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 grid-bg">
+    <!-- Hero Section -->
+    <section class="relative pt-16 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-b border-slate-800/80">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-800/60 text-cyan-300 text-xs font-mono mb-6">
+        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+        <span>Google Cloud AI Builder Cup 2026 (JAPAC) — Climate Resilience Track</span>
+      </div>
+
+      <h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white max-w-4xl leading-tight">
+        Turning flood evidence into <span class="bg-gradient-to-r from-cyan-400 via-teal-300 to-blue-500 bg-clip-text text-transparent">life-saving operational decisions</span>.
+      </h1>
+
+      <p class="mt-6 text-base sm:text-lg text-slate-300 max-w-3xl leading-relaxed">
+        During peak monsoon river surges, disaster commanders face severe evidence fragmentation: satellite passes arrive hours apart, emergency calls conflict, and relief convoys operate on intuition. 
+        <strong>Lifeline OS</strong> computes topological percolation breakdown across a <strong>31,214-node</strong> directed graph, identifies isolated rural populations, balances clinical hospital surge, and ranks temporary Bailey bridge deployments by accessibility return on investment.
+      </p>
+
+      <!-- Key Metrics Strip -->
+      <div class="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl">
+        <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
+          <p class="text-xs font-mono text-slate-400">Road Graph Scale</p>
+          <p class="text-2xl font-extrabold font-mono text-cyan-400 mt-1">31,214</p>
+          <p class="text-[11px] text-slate-500 mt-0.5">Nodes • 69,663 Edges</p>
+        </div>
+        <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
+          <p class="text-xs font-mono text-slate-400">Severed Links (Cachar)</p>
+          <p class="text-2xl font-extrabold font-mono text-rose-400 mt-1">1,830</p>
+          <p class="text-[11px] text-slate-500 mt-0.5">Slices in 840ms (Worker)</p>
+        </div>
+        <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
+          <p class="text-xs font-mono text-slate-400">Cut-Off Population</p>
+          <p class="text-2xl font-extrabold font-mono text-amber-400 mt-1">14,000</p>
+          <p class="text-[11px] text-slate-500 mt-0.5">42 Isolated Settlements</p>
+        </div>
+        <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
+          <p class="text-xs font-mono text-slate-400">District Annual TCO</p>
+          <p class="text-2xl font-extrabold font-mono text-emerald-400 mt-1">&lt;$1,200</p>
+          <p class="text-[11px] text-slate-500 mt-0.5">Zero GPU Cluster Req.</p>
+        </div>
+      </div>
+
+      <div class="mt-8 flex flex-wrap gap-4">
+        <a href="https://lifeline-os.ai.studio/" target="_blank" rel="noopener noreferrer"
+           class="px-6 py-3 rounded-xl font-bold font-mono text-sm bg-cyan-400 text-black hover:bg-cyan-300 transition flex items-center gap-2 shadow-lg shadow-cyan-500/25">
+          <span>Open Interactive Prototype</span>
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+        </a>
+        <a href="#architecture" class="px-6 py-3 rounded-xl font-mono text-sm text-slate-300 bg-slate-900 border border-slate-700 hover:border-slate-500 transition">
+          View Architecture &amp; Swimlanes
+        </a>
+        <a href="#hardware-demo" class="px-6 py-3 rounded-xl font-mono text-sm text-amber-300 bg-amber-950/40 border border-amber-800/80 hover:bg-amber-900/40 transition flex items-center gap-2">
+          <span>Test Live Phone Alert (420ms)</span>
+          <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Visual Architecture & Swimlane Section -->
+    <section id="architecture" class="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-b border-slate-800/80">
+      <div class="mb-8">
+        <span class="text-xs font-mono text-cyan-400 uppercase tracking-wider">Visual Systems Architecture</span>
+        <h2 class="text-2xl sm:text-4xl font-extrabold text-white mt-1">Enterprise Cloud &amp; Edge Architecture</h2>
+        <p class="text-sm text-slate-400 mt-2 max-w-3xl">
+          Lifeline OS combines multi-source environmental telemetry ingestion with client-side Web Worker graph traversal and cryptographic audit logging.
+        </p>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-2 sm:p-4 shadow-2xl">
+        <img src="lifeline_os_system_architecture.gif" alt="Lifeline OS System Architecture Animation" class="w-full rounded-xl border border-slate-800/80">
+        <div class="mt-4 px-2 flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs text-slate-400 gap-2">
+          <div>
+            <strong class="text-slate-200">System Architecture (Figure 1):</strong> Ingestion from Copernicus Sentinel-1 SAR &amp; Open-Meteo &rarr; IndexedDB edge cache &rarr; Turf.js / NetworkX percolation &rarr; Multi-channel emergency dispatch.
+          </div>
+          <a href="lifeline_os_system_architecture.png" target="_blank" class="text-cyan-400 hover:underline shrink-0 font-mono">
+            View Full-Res PNG (3840×2160) &rarr;
+          </a>
+        </div>
+      </div>
+
+      <div class="mt-14 mb-8">
+        <span class="text-xs font-mono text-teal-400 uppercase tracking-wider">End-to-End Operational Process</span>
+        <h2 class="text-2xl sm:text-4xl font-extrabold text-white mt-1">7 Operational Swimlanes</h2>
+        <p class="text-sm text-slate-400 mt-2 max-w-3xl">
+          Strict separation of data providers, algorithmic spatial evaluation, and statutory human authority under the Disaster Management Act 2005.
+        </p>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-2 sm:p-4 shadow-2xl">
+        <img src="lifeline_os_process_swimlane.gif" alt="Lifeline OS Process Flow Swimlane" class="w-full rounded-xl border border-slate-800/80">
+        <div class="mt-4 px-2 flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs text-slate-400 gap-2">
+          <div>
+            <strong class="text-slate-200">Process Swimlanes (Figure 2):</strong> External Ingestion &rarr; Cache &rarr; Epistemic Validation &rarr; Graph Core &rarr; Decision Engine &rarr; Civil Commander Sanction &rarr; SHA-256 Ledger.
+          </div>
+          <a href="lifeline_os_process_swimlane.png" target="_blank" class="text-teal-400 hover:underline shrink-0 font-mono">
+            View Full-Res PNG (3840×2160) &rarr;
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Mathematical Engine Section -->
+    <section class="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-b border-slate-800/80">
+      <div class="mb-10">
+        <span class="text-xs font-mono text-amber-400 uppercase tracking-wider">Engineering Rigor</span>
+        <h2 class="text-2xl sm:text-4xl font-extrabold text-white mt-1">Mathematical Models &amp; Formulations</h2>
+        <p class="text-sm text-slate-400 mt-2 max-w-3xl">
+          Zero ungrounded numbers. Every recommendation is constrained by hydraulic physics, biological decay, and topological graph math.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Card 1: Micro-Bridge ROI -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
+          <div class="flex items-center justify-between">
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-mono bg-cyan-950 text-cyan-400 border border-cyan-800/60 font-bold">EQUATION 1</span>
+            <span class="text-xs font-mono text-slate-400">Micro-Intervention ROI</span>
+          </div>
+          <h3 class="text-lg font-bold text-white mt-3">Bridgehead Allocation ROI</h3>
+          <p class="text-xs text-slate-400 mt-1">Ranks all candidate severed road crossings to deploy modular Bailey or pontoon bridges:</p>
+          <div class="my-4 p-4 rounded-xl bg-slate-950 border border-slate-800 font-mono text-cyan-300 text-sm overflow-x-auto text-center">
+            ROI(e) = (Reconnected Pop + &sum; &Delta;km saved) / Span Length
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Eliminates misallocation: deploying an 80m Bailey bridge on the JT Road Sadarghat breach reconnects 14,000 citizens and saves 47 minutes of detour delay, yielding the highest ROI across Cachar.
+          </p>
+        </div>
+
+        <!-- Card 2: 60-min Golden Hour -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
+          <div class="flex items-center justify-between">
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-mono bg-teal-950 text-teal-400 border border-teal-800/60 font-bold">EQUATION 2</span>
+            <span class="text-xs font-mono text-slate-400">Accessibility</span>
+          </div>
+          <h3 class="text-lg font-bold text-white mt-3">Dynamic Dijkstra &amp; Golden Hour</h3>
+          <p class="text-xs text-slate-400 mt-1">Evaluates hospital travel times across 319 settlements to BPHCs on the disrupted graph:</p>
+          <div class="my-4 p-4 rounded-xl bg-slate-950 border border-slate-800 font-mono text-teal-300 text-sm overflow-x-auto text-center">
+            T(s, H) = min Dijkstra(G', s, h) &le; 60 min
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Flags communities exceeding the clinical 60-minute cutoff. If no traversable path exists, outputs explicit <code class="text-rose-400">NO_ROUTE</code> rather than hallucinating submerged dirt tracks.
+          </p>
+        </div>
+
+        <!-- Card 3: Cold-Chain Thermal Decay -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
+          <div class="flex items-center justify-between">
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-mono bg-rose-950 text-rose-400 border border-rose-800/60 font-bold">EQUATION 3</span>
+            <span class="text-xs font-mono text-slate-400">Clinical Logistics</span>
+          </div>
+          <h3 class="text-lg font-bold text-white mt-3">Biological Cold-Chain Spoilage</h3>
+          <p class="text-xs text-slate-400 mt-1">Real-time shelf-life countdown for ASV snake antivenom, rabies immunoglobulins, and insulin:</p>
+          <div class="my-4 p-4 rounded-xl bg-slate-950 border border-slate-800 font-mono text-rose-300 text-sm overflow-x-auto text-center">
+            Hours Remaining = max(1.2, (8 - 4) / (0.04 &times; (T_ambient - 4)))
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Driven by live 2-meter air temperature from Open-Meteo. Automatically triggers urgent drone airbridge when container time-to-decay drops below road detour travel time.
+          </p>
+        </div>
+
+        <!-- Card 4: River Velocity & Boat Limits -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
+          <div class="flex items-center justify-between">
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-mono bg-amber-950 text-amber-400 border border-amber-800/60 font-bold">EQUATION 4</span>
+            <span class="text-xs font-mono text-slate-400">Hydraulic Physics</span>
+          </div>
+          <h3 class="text-lg font-bold text-white mt-3">Manning Velocity &amp; Boat Capsize Limits</h3>
+          <p class="text-xs text-slate-400 mt-1">Converts GloFAS river discharge Q (m&sup3;/s) into surface velocity to enforce safety lockouts:</p>
+          <div class="my-4 p-4 rounded-xl bg-slate-950 border border-slate-800 font-mono text-amber-300 text-sm overflow-x-auto text-center">
+            v = &radic;Q &times; 0.062 + 0.3 (Lockout if v &gt; 3.5 m/s)
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Locks NDRF 40HP Zodiac boat dispatches during extreme river surges (&gt;3.5 m/s) and night operations to prevent personnel capsizing fatalities.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Prototype Screenshots Section -->
+    <section class="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-b border-slate-800/80">
+      <div class="mb-10 flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
+        <div>
+          <span class="text-xs font-mono text-cyan-400 uppercase tracking-wider">Working Prototype</span>
+          <h2 class="text-2xl sm:text-4xl font-extrabold text-white mt-1">Tactical Command Interface</h2>
+        </div>
+        <a href="https://lifeline-os.ai.studio/" target="_blank" rel="noopener noreferrer"
+           class="px-4 py-2 rounded-lg font-mono text-xs font-bold bg-cyan-400 text-black hover:bg-cyan-300 transition">
+          Test in Browser &rarr;
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3">
+          <img src="demo-assets/screenshots/01_application_overview.png" alt="Situational Awareness Console" class="w-full rounded-lg border border-slate-800">
+          <p class="text-xs font-bold text-white mt-3">Figure 1: Situational Awareness Console</p>
+          <p class="text-[11px] text-slate-400 mt-1">Dual-panel Leaflet 2D/3D flood map with real-time population isolation counters and settlement reachability.</p>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3">
+          <img src="demo-assets/screenshots/06_flood_impact_analysis.png" alt="Health Vulnerability Summary" class="w-full rounded-lg border border-slate-800">
+          <p class="text-xs font-bold text-white mt-3">Figure 2: Health Vulnerability &amp; Clinical Triage</p>
+          <p class="text-[11px] text-slate-400 mt-1">START 4-tier triage breakdown (Red/Amber/Yellow/Green) and Block Primary Health Center bed surge balancing.</p>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3">
+          <img src="demo-assets/screenshots/07_route_disruption_hospital_surge.png" alt="Cut-Edge Disruption Engine" class="w-full rounded-lg border border-slate-800">
+          <p class="text-xs font-bold text-white mt-3">Figure 3: Cut-Edge Road Disruption Mapping</p>
+          <p class="text-[11px] text-slate-400 mt-1">1,830 severed road links with calculated overland detours, transit penalties, and bridgehead access checks.</p>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3">
+          <img src="demo-assets/screenshots/09_sanction_order_audit_trail.png" alt="Commander Sanction Order Terminal" class="w-full rounded-lg border border-slate-800">
+          <p class="text-xs font-bold text-white mt-3">Figure 4: Statutory Sanction Order &amp; Audit Trail</p>
+          <p class="text-[11px] text-slate-400 mt-1">Printable SDRF Form-3B requisition order under Disaster Management Act 2005 with digital signature lock and SHA-256 Merkle chain.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Live Phone Hardware Demo Section -->
+    <section id="hardware-demo" class="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-b border-slate-800/80">
+      <div class="bg-gradient-to-r from-amber-950/40 via-slate-900 to-cyan-950/40 border border-amber-500/40 rounded-3xl p-6 sm:p-10 shadow-2xl">
+        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+          <div class="max-w-2xl">
+            <span class="px-3 py-1 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+              ZERO-COST JUDGE HARDWARE TEST
+            </span>
+            <h2 class="text-2xl sm:text-4xl font-extrabold text-white mt-3">
+              Trigger a live 420ms emergency alert to your phone.
+            </h2>
+            <p class="text-sm text-slate-300 mt-3 leading-relaxed">
+              Experience the physical alert pipeline used by incident commanders to notify field rescue boats and evacuation coordinators:
+            </p>
+            <ol class="mt-4 space-y-2 text-xs text-slate-300 font-mono list-decimal list-inside">
+              <li>Open <a href="https://ntfy.sh/lifeline-os-alert-2026" target="_blank" class="text-cyan-400 underline font-bold">ntfy.sh/lifeline-os-alert-2026</a> on your mobile browser (or install the free ntfy app).</li>
+              <li>Tap <strong>Subscribe</strong> to public topic <code class="text-amber-300 bg-black/40 px-1 py-0.5 rounded">lifeline-os-alert-2026</code>.</li>
+              <li>In Lifeline OS, go to <strong>04. RESPOND</strong> and click <strong>[ 🚀 Sign Sanction &amp; Dispatch ]</strong>.</li>
+              <li>Within <strong>420 milliseconds</strong>, your smartphone will vibrate with the official localized evacuation dispatch.</li>
+            </ol>
+          </div>
+          <div class="flex flex-col items-center justify-center p-6 bg-slate-950 rounded-2xl border border-slate-800 shrink-0 text-center">
+            <div class="w-32 h-32 rounded-xl bg-white p-2 flex items-center justify-center">
+              <!-- QR Code Representation -->
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=https://ntfy.sh/lifeline-os-alert-2026" alt="Scan to Subscribe on Phone" class="w-full h-full">
+            </div>
+            <span class="text-[11px] font-mono text-slate-400 mt-2">Scan with Phone Camera</span>
+            <a href="https://ntfy.sh/lifeline-os-alert-2026" target="_blank" rel="noopener noreferrer" class="mt-3 px-3 py-1 text-xs font-mono font-bold text-cyan-400 bg-cyan-950/80 border border-cyan-800 rounded-lg hover:bg-cyan-900 transition">
+              Open ntfy Channel &rarr;
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Project Materials & Handover Downloads -->
+    <section class="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <div class="mb-8">
+        <span class="text-xs font-mono text-cyan-400 uppercase tracking-wider">Evaluation &amp; Handover</span>
+        <h2 class="text-2xl sm:text-4xl font-extrabold text-white mt-1">Project Materials &amp; Pitch Artifacts</h2>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <a href="Lifeline_OS_Pitch_Deck.pdf" target="_blank" class="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-cyan-500/50 transition group">
+          <div class="w-10 h-10 rounded-xl bg-rose-950/60 border border-rose-800/80 flex items-center justify-center text-rose-400 group-hover:scale-110 transition">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          </div>
+          <h3 class="font-bold text-white mt-4 text-base">Official Pitch Deck (PDF)</h3>
+          <p class="text-xs text-slate-400 mt-1">High-resolution vector presentation conforming to challenge guidelines (16 slides, 2.6 MB).</p>
+          <span class="inline-block mt-4 text-xs font-mono text-cyan-400 group-hover:underline">Download PDF &rarr;</span>
+        </a>
+
+        <a href="Lifeline_OS_Pitch_Deck.pptx" download class="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-cyan-500/50 transition group">
+          <div class="w-10 h-10 rounded-xl bg-amber-950/60 border border-amber-800/80 flex items-center justify-center text-amber-400 group-hover:scale-110 transition">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
+          </div>
+          <h3 class="font-bold text-white mt-4 text-base">Editable Presentation (PPTX)</h3>
+          <p class="text-xs text-slate-400 mt-1">Fully editable native PowerPoint slides with vector shapes and high-res assets (9.6 MB).</p>
+          <span class="inline-block mt-4 text-xs font-mono text-cyan-400 group-hover:underline">Download PPTX &rarr;</span>
+        </a>
+
+        <a href="https://github.com/MsMansiDhruv/lifeline-os" target="_blank" rel="noopener noreferrer" class="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-cyan-500/50 transition group">
+          <div class="w-10 h-10 rounded-xl bg-cyan-950/60 border border-cyan-800/80 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+          </div>
+          <h3 class="font-bold text-white mt-4 text-base">Public Code Repository</h3>
+          <p class="text-xs text-slate-400 mt-1">Open-source production repository containing 235 automated unit and scientific validation tests.</p>
+          <span class="inline-block mt-4 text-xs font-mono text-cyan-400 group-hover:underline">Explore Code &rarr;</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-slate-800 bg-slate-950 py-8 px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500 font-mono">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>
+        <strong class="text-slate-300">Lifeline OS</strong> — Flood Impact Intelligence &amp; Emergency Decision Support
+      </div>
+      <div>
+        Built for Google Cloud AI Builder Cup 2026 (JAPAC) • Team Lifeline • Lead: Mansi Dhruv
+      </div>
+      <div>
+        <a href="https://lifeline-os.ai.studio/" class="text-cyan-400 hover:underline">lifeline-os.ai.studio</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
