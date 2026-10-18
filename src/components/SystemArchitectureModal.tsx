@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   X,
   Play,
@@ -155,6 +155,15 @@ export const SystemArchitectureModal: React.FC<SystemArchitectureModalProps> = (
     }
   }, [activeView]);
 
+  // Close on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   if (!isOpen) return null;
 
   // Filtered Nodes & Edges
@@ -182,7 +191,7 @@ export const SystemArchitectureModal: React.FC<SystemArchitectureModalProps> = (
   });
 
   // Calculate dependency graph for selected node
-  const activeDependencies = useMemo(() => {
+  const activeDependencies = (() => {
     if (!selectedNodeId) return { upstream: new Set<string>(), downstream: new Set<string>() };
     const upstream = new Set<string>();
     const downstream = new Set<string>();
@@ -193,7 +202,7 @@ export const SystemArchitectureModal: React.FC<SystemArchitectureModalProps> = (
     });
 
     return { upstream, downstream };
-  }, [selectedNodeId, visibleEdges]);
+  })();
 
   // Selected Node Object
   const selectedNode = ARCHITECTURE_NODES.find((n) => n.id === selectedNodeId);
@@ -1257,11 +1266,17 @@ export const SystemArchitectureModal: React.FC<SystemArchitectureModalProps> = (
                     }
                   />
 
-                  {/* Animated Flow Particles */}
+                  {/* Animated Flow Indication via dash array */}
                   {!isReducedMotion && (edge.animated || isHighlighted) && (
-                    <circle r={2.5} fill={strokeColor} opacity={0.9}>
-                      <animateMotion path={pathD} dur="2.8s" repeatCount="indefinite" />
-                    </circle>
+                    <path
+                      d={pathD}
+                      fill="none"
+                      stroke={strokeColor}
+                      strokeWidth={isHighlighted ? 3 : 2}
+                      strokeDasharray="8 8"
+                      strokeOpacity={0.8}
+                      className="animate-pulse pointer-events-none"
+                    />
                   )}
 
                   {/* Edge Label (if present) */}

@@ -73,6 +73,8 @@ import {
   Cloud,
   Edit3,
   Network,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 export function App() {
@@ -254,6 +256,21 @@ export function App() {
   const [interactiveTask, setInteractiveTask] = useState<number>(1);
   const [autoDemoSceneIdx, setAutoDemoSceneIdx] = useState<number>(0);
   const [opsMode, setOpsMode] = useState<'day' | 'night'>('day');
+
+  // Zen Map Mode / Hide All Panels
+  const [hideAllPanels, setHideAllPanels] = useState<boolean>(false);
+
+  // Keyboard shortcut: 'H' or 'h' toggles all panels
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) return;
+      if (e.key === 'h' || e.key === 'H') {
+        setHideAllPanels((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Drag-to-Resize Mouse Events Handler (380px to 640px)
   useEffect(() => {
@@ -1610,6 +1627,8 @@ export function App() {
 
       {/* 2. COMPACT SLEEK FLOATING TOP BAR */}
       <Header
+        hideAllPanels={hideAllPanels}
+        onToggleHideAllPanels={() => setHideAllPanels((prev) => !prev)}
         currentTheater={currentTheater}
         interventions={interventions}
         fleetMode={fleetMode}
@@ -1662,63 +1681,80 @@ export function App() {
         onResetOverview={handleResetOverview}
       />
 
+      {/* Floating HUD Pill to Unhide All Panels */}
+      {hideAllPanels && (
+        <div className="fixed top-4 left-4 z-[3000] flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+          <button
+            type="button"
+            onClick={() => setHideAllPanels(false)}
+            className="px-4 py-2 rounded-xl bg-slate-900/95 backdrop-blur-md border border-cyan-500/70 text-cyan-300 font-mono text-xs font-bold shadow-[0_0_20px_rgba(6,182,212,0.4)] flex items-center gap-2 hover:bg-cyan-950/90 hover:text-white cursor-pointer transition-all"
+            title="Unhide all UI panels (Shortcut: H)"
+          >
+            <Eye className="w-4 h-4 text-cyan-400 animate-pulse" />
+            <span>Show All Panels (H)</span>
+          </button>
+        </div>
+      )}
+
       {/* 3. EDITORIAL 5-CHAPTER INCIDENT COMMAND PANEL DOCKED ON LEFT */}
-      <CommandPanel
-        currentTheater={currentTheater}
-        activeChapter={activeChapter}
-        onSelectChapter={(chapter) => {
-          setActiveChapter(chapter);
-          const stepMap: Record<IncidentChapter, string> = {
-            prevent: 'chapter1_prevent',
-            predict: 'chapter2_predict',
-            protect: 'chapter3_protect',
-            respond: 'chapter4_respond',
-            learn: 'chapter5_learn',
-          };
-          setActiveStep(stepMap[chapter]);
-        }}
-        selectedChokeIdx={validIdx}
-        onSelectChokeIdx={(idx) => triggerCorridorFocus(idx)}
-        interventions={interventions}
-        onSetIntervention={(chokeId, tool) => {
-          setInterventions((prev) => ({ ...prev, [chokeId]: tool }));
-          ecosystemBus.broadcastInterventionChange(chokeId, tool);
-          if (tourMode === 'interactive' && interactiveTask === 3) {
-            handleNextInteractiveTask();
-          }
-        }}
-        onResetInterventions={() => {
-          setInterventions({});
-          currentTheater.chokePoints.forEach((cp) =>
-            ecosystemBus.broadcastInterventionChange(cp.id, 'none')
-          );
-        }}
-        fleetMode={fleetMode}
-        onFleetChange={(mode) => setFleetMode(mode)}
-        rerouteAmbulances={rerouteAmbulances}
-        onToggleRerouteAmbulances={() => setRerouteAmbulances((prev) => !prev)}
-        activateSurgeBeds={activateSurgeBeds}
-        onToggleActivateSurgeBeds={() => setActivateSurgeBeds((prev) => !prev)}
-        isLiveDispatched={isLiveDispatched}
-        onSignAndDispatch={() => {
-          handleExecuteDispatch();
-          if (tourMode === 'interactive' && interactiveTask === 4) {
-            setInteractiveTask(5);
-          }
-        }}
-        onOpenSanctionModal={() => setIsSanctionModalOpen(true)}
-        onOpenEcosystemDrawer={() => setIsEcosystemDrawerOpen(true)}
-        isSimulatedHighWind={isSimulatedHighWind}
-        onToggleHighWind={handleToggleSimulateHighWind}
-        ecosystemState={ecosystemState}
-        onFocusMapPoint={triggerPointFocus}
-        detourRouteMode={detourRouteMode}
-        onSetDetourRouteMode={(mode) => setDetourRouteMode(mode)}
-        isBreachTemporarilyReopened={isBreachTemporarilyReopened}
-        onToggleBreachTemporarilyReopened={() => setIsBreachTemporarilyReopened((prev) => !prev)}
-        onSelectTheater={(tId) => handleSelectScenario(tId)}
-        onInspectDamageReport={handleInspectDamageReport}
-      />
+      {!hideAllPanels && (
+        <CommandPanel
+          currentTheater={currentTheater}
+          activeChapter={activeChapter}
+          onSelectChapter={(chapter) => {
+            setActiveChapter(chapter);
+            const stepMap: Record<IncidentChapter, string> = {
+              prevent: 'chapter1_prevent',
+              predict: 'chapter2_predict',
+              protect: 'chapter3_protect',
+              respond: 'chapter4_respond',
+              learn: 'chapter5_learn',
+            };
+            setActiveStep(stepMap[chapter]);
+          }}
+          selectedChokeIdx={validIdx}
+          onSelectChokeIdx={(idx) => triggerCorridorFocus(idx)}
+          interventions={interventions}
+          onSetIntervention={(chokeId, tool) => {
+            setInterventions((prev) => ({ ...prev, [chokeId]: tool }));
+            ecosystemBus.broadcastInterventionChange(chokeId, tool);
+            if (tourMode === 'interactive' && interactiveTask === 3) {
+              handleNextInteractiveTask();
+            }
+          }}
+          onResetInterventions={() => {
+            setInterventions({});
+            currentTheater.chokePoints.forEach((cp) =>
+              ecosystemBus.broadcastInterventionChange(cp.id, 'none')
+            );
+          }}
+          fleetMode={fleetMode}
+          onFleetChange={(mode) => setFleetMode(mode)}
+          rerouteAmbulances={rerouteAmbulances}
+          onToggleRerouteAmbulances={() => setRerouteAmbulances((prev) => !prev)}
+          activateSurgeBeds={activateSurgeBeds}
+          onToggleActivateSurgeBeds={() => setActivateSurgeBeds((prev) => !prev)}
+          isLiveDispatched={isLiveDispatched}
+          onSignAndDispatch={() => {
+            handleExecuteDispatch();
+            if (tourMode === 'interactive' && interactiveTask === 4) {
+              setInteractiveTask(5);
+            }
+          }}
+          onOpenSanctionModal={() => setIsSanctionModalOpen(true)}
+          onOpenEcosystemDrawer={() => setIsEcosystemDrawerOpen(true)}
+          isSimulatedHighWind={isSimulatedHighWind}
+          onToggleHighWind={handleToggleSimulateHighWind}
+          ecosystemState={ecosystemState}
+          onFocusMapPoint={triggerPointFocus}
+          detourRouteMode={detourRouteMode}
+          onSetDetourRouteMode={(mode) => setDetourRouteMode(mode)}
+          isBreachTemporarilyReopened={isBreachTemporarilyReopened}
+          onToggleBreachTemporarilyReopened={() => setIsBreachTemporarilyReopened((prev) => !prev)}
+          onSelectTheater={(tId) => handleSelectScenario(tId)}
+          onInspectDamageReport={handleInspectDamageReport}
+        />
+      )}
 
       {/* 4. CONTEXTUAL FEATURE INSPECTOR (OPENS DYNAMICALLY ON MAP PIN CLICK) */}
       <ContextualFeatureInspector
@@ -1831,88 +1867,100 @@ export function App() {
       )}
 
       {/* Right Toolbar with visible text labels and clear tooltips (3D removed) */}
-      <div className="fixed right-4 top-20 z-[2000] flex flex-col gap-1.5 bg-slate-900/95 backdrop-blur-md border border-slate-700/80 rounded-xl p-1.5 shadow-2xl select-none">
-        <button
-          onClick={() => setActiveRightPopover((prev) => (prev === 'evidence' ? null : 'evidence'))}
-          title="Evidence Ledger & Catalog: View ground-truth satellite & field datasets"
-          className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all flex items-center gap-2 cursor-pointer ${
-            activeRightPopover === 'evidence'
-              ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-500/30'
-              : 'text-slate-300 hover:text-white hover:bg-slate-800'
-          }`}
-        >
-          <Database className="w-3.5 h-3.5 text-cyan-400" />
-          <span className="hidden sm:inline">Evidence</span>
-        </button>
-        <button
-          onClick={() => setActiveRightPopover((prev) => (prev === 'whatwedontknow' ? null : 'whatwedontknow'))}
-          title="Epistemic Uncertainty: View sensor blindspots and unverified assumptions"
-          className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all flex items-center gap-2 cursor-pointer ${
-            activeRightPopover === 'whatwedontknow'
-              ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/30'
-              : 'text-slate-300 hover:text-white hover:bg-slate-800'
-          }`}
-        >
-          <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
-          <span className="hidden sm:inline">Uncertainty</span>
-        </button>
-        <button
-          onClick={() => setActiveRightPopover((prev) => (prev === 'cloud' ? null : 'cloud'))}
-          title="Google Cloud & Verification: Earth Engine and BigQuery pipelines"
-          className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all flex items-center gap-2 cursor-pointer ${
-            activeRightPopover === 'cloud'
-              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
-              : 'text-slate-300 hover:text-white hover:bg-slate-800'
-          }`}
-        >
-          <Cloud className="w-3.5 h-3.5 text-indigo-400" />
-          <span className="hidden sm:inline">Cloud GEE</span>
-        </button>
-        <button
-          onClick={() => setActiveRightPopover((prev) => (prev === 'architecture' ? null : 'architecture'))}
-          title="Lifeline OS System Architecture: Process flow and Gemini MCP integration"
-          className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all flex items-center gap-2 cursor-pointer ${
-            activeRightPopover === 'architecture'
-              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 ring-1 ring-cyan-400'
-              : 'text-slate-300 hover:text-white hover:bg-slate-800'
-          }`}
-        >
-          <Network className="w-3.5 h-3.5 text-cyan-400" />
-          <span className="hidden sm:inline">Architecture</span>
-        </button>
-        <button
-          onClick={() => setActiveRightPopover((prev) => (prev === 'field' ? null : 'field'))}
-          title="Field Evidence Editor: Draft tactical report or review ground observations"
-          className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all flex items-center gap-2 cursor-pointer ${
-            activeRightPopover === 'field'
-              ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/30'
-              : 'text-slate-300 hover:text-white hover:bg-slate-800'
-          }`}
-        >
-          <Edit3 className="w-3.5 h-3.5 text-emerald-400" />
-          <span className="hidden sm:inline">Draft Report</span>
-        </button>
-      </div>
+      {!hideAllPanels && (
+        <div className="fixed right-4 top-20 z-[2000] flex flex-col gap-1.5 bg-slate-900/95 backdrop-blur-md border border-slate-700/80 rounded-xl p-1.5 shadow-2xl select-none">
+          <button
+            onClick={() => setHideAllPanels(true)}
+            title="Hide all UI panels for clean map mode (Shortcut: H)"
+            className="px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white hover:bg-slate-800"
+          >
+            <EyeOff className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden sm:inline">Hide Panels</span>
+          </button>
+          <button
+            onClick={() => setActiveRightPopover((prev) => (prev === 'evidence' ? null : 'evidence'))}
+            title="Evidence Ledger & Catalog: View ground-truth satellite & field datasets"
+            className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+              activeRightPopover === 'evidence'
+                ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-500/30'
+                : 'text-slate-300 hover:text-white hover:bg-slate-800'
+            }`}
+          >
+            <Database className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden sm:inline">Evidence</span>
+          </button>
+          <button
+            onClick={() => setActiveRightPopover((prev) => (prev === 'whatwedontknow' ? null : 'whatwedontknow'))}
+            title="Epistemic Uncertainty: View sensor blindspots and unverified assumptions"
+            className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+              activeRightPopover === 'whatwedontknow'
+                ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/30'
+                : 'text-slate-300 hover:text-white hover:bg-slate-800'
+            }`}
+          >
+            <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">Uncertainty</span>
+          </button>
+          <button
+            onClick={() => setActiveRightPopover((prev) => (prev === 'cloud' ? null : 'cloud'))}
+            title="Google Cloud & Verification: Earth Engine and BigQuery pipelines"
+            className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+              activeRightPopover === 'cloud'
+                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
+                : 'text-slate-300 hover:text-white hover:bg-slate-800'
+            }`}
+          >
+            <Cloud className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="hidden sm:inline">Cloud GEE</span>
+          </button>
+          <button
+            onClick={() => setActiveRightPopover((prev) => (prev === 'architecture' ? null : 'architecture'))}
+            title="Lifeline OS System Architecture: Process flow and Gemini MCP integration"
+            className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+              activeRightPopover === 'architecture'
+                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 ring-1 ring-cyan-400'
+                : 'text-slate-300 hover:text-white hover:bg-slate-800'
+            }`}
+          >
+            <Network className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden sm:inline">Architecture</span>
+          </button>
+          <button
+            onClick={() => setActiveRightPopover((prev) => (prev === 'field' ? null : 'field'))}
+            title="Field Evidence Editor: Draft tactical report or review ground observations"
+            className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+              activeRightPopover === 'field'
+                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/30'
+                : 'text-slate-300 hover:text-white hover:bg-slate-800'
+            }`}
+          >
+            <Edit3 className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="hidden sm:inline">Draft Report</span>
+          </button>
+        </div>
+      )}
 
       {/* Bottom Floating Scenario Navigator & Investigation Workspace Dock */}
-      <BottomScenarioNavigator
-        activeScenarioId={(activeTheaterId === 'nepal' ? 'nepal' : 'silchar')}
-        onSelectScenario={handleSelectScenario}
-        onRunSimulation={handleRunResponseSimulation}
-        isSimulationRunning={isSimulationRunning}
-        simulationProgress={simulationProgress}
-        sliderValue={baselineAccessSliderValue}
-        onChangeSliderValue={handleChangeAccessSlider}
-        isSimulatedClosureActive={isSimulatedClosureActive}
-        onToggleSimulatedClosure={handleToggleSimulatedClosure}
-        isRerouted={rerouteAmbulances}
-        onToggleReroute={() => setRerouteAmbulances(prev => !prev)}
-        reachableCount={activeTheaterId === 'nepal' ? (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 18 : (isSimulatedClosureActive ? 0 : 18)) : (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 319 : ASSAM_TELEMETRY_RESULTS.reachableCount)}
-        reroutedCount={activeTheaterId === 'nepal' ? 0 : (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 0 : ASSAM_TELEMETRY_RESULTS.reroutedCount)}
-        isolatedCount={activeTheaterId === 'nepal' ? (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 0 : (isSimulatedClosureActive ? 18 : 0)) : (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 0 : ASSAM_TELEMETRY_RESULTS.noRouteCount)}
-        analysedCount={activeTheaterId === 'nepal' ? 18 : ASSAM_TELEMETRY_RESULTS.analysedCount}
-        excludedCount={activeTheaterId === 'nepal' ? 0 : ASSAM_TELEMETRY_RESULTS.excludedCount}
-      />
+      {!hideAllPanels && (
+        <BottomScenarioNavigator
+          activeScenarioId={(activeTheaterId === 'nepal' ? 'nepal' : 'silchar')}
+          onSelectScenario={handleSelectScenario}
+          onRunSimulation={handleRunResponseSimulation}
+          isSimulationRunning={isSimulationRunning}
+          simulationProgress={simulationProgress}
+          sliderValue={baselineAccessSliderValue}
+          onChangeSliderValue={handleChangeAccessSlider}
+          isSimulatedClosureActive={isSimulatedClosureActive}
+          onToggleSimulatedClosure={handleToggleSimulatedClosure}
+          isRerouted={rerouteAmbulances}
+          onToggleReroute={() => setRerouteAmbulances(prev => !prev)}
+          reachableCount={activeTheaterId === 'nepal' ? (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 18 : (isSimulatedClosureActive ? 0 : 18)) : (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 319 : ASSAM_TELEMETRY_RESULTS.reachableCount)}
+          reroutedCount={activeTheaterId === 'nepal' ? 0 : (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 0 : ASSAM_TELEMETRY_RESULTS.reroutedCount)}
+          isolatedCount={activeTheaterId === 'nepal' ? (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 0 : (isSimulatedClosureActive ? 18 : 0)) : (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 0 : ASSAM_TELEMETRY_RESULTS.noRouteCount)}
+          analysedCount={activeTheaterId === 'nepal' ? 18 : ASSAM_TELEMETRY_RESULTS.analysedCount}
+          excludedCount={activeTheaterId === 'nepal' ? 0 : ASSAM_TELEMETRY_RESULTS.excludedCount}
+        />
+      )}
 
       {/* Evidence Catalogue Modal */}
       <EvidenceCatalogueModal
@@ -1957,10 +2005,12 @@ export function App() {
       />
 
       {/* Lifeline OS System Architecture & Interactive Process Flow Modal */}
-      <SystemArchitectureModal
-        isOpen={activeRightPopover === 'architecture'}
-        onClose={() => setActiveRightPopover(null)}
-      />
+      {activeRightPopover === 'architecture' && (
+        <SystemArchitectureModal
+          isOpen={true}
+          onClose={() => setActiveRightPopover(null)}
+        />
+      )}
     </div>
   );
 }

@@ -14,6 +14,8 @@ import {
   Compass,
   RotateCcw,
   Network,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { FleetMode } from '../types';
 import { TheaterData, InterventionType } from '../data/theaters';
@@ -22,6 +24,8 @@ import { auditService } from '../services/auditService';
 
 interface HeaderProps {
   onOpenArchitecture?: () => void;
+  hideAllPanels?: boolean;
+  onToggleHideAllPanels?: () => void;
   currentTheater: TheaterData;
   interventions: Record<string, InterventionType>;
   fleetMode: FleetMode;
@@ -73,6 +77,8 @@ export const Header: React.FC<HeaderProps> = ({
   simulationProgress = '',
   onResetOverview,
   onOpenArchitecture,
+  hideAllPanels = false,
+  onToggleHideAllPanels,
   onOpenReportEditor,
   pendingReportCount = 0,
 }) => {
@@ -339,6 +345,23 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         )}
 
+        {/* Hide All Panels Button */}
+        {onToggleHideAllPanels && (
+          <button
+            type="button"
+            onClick={onToggleHideAllPanels}
+            className={`px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
+              hideAllPanels
+                ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-md shadow-amber-500/20'
+                : 'bg-slate-900 border-slate-700/80 hover:bg-slate-800 text-slate-300 hover:text-white'
+            }`}
+            title="Toggle Clean Map View: Hide or show all UI panels (Shortcut: H)"
+          >
+            {hideAllPanels ? <Eye className="w-3.5 h-3.5 text-amber-400" /> : <EyeOff className="w-3.5 h-3.5 text-slate-400" />}
+            <span className="hidden xl:inline">{hideAllPanels ? 'Show Panels' : 'Hide Panels'}</span>
+          </button>
+        )}
+
         {/* 5. More Menu */}
         <div className="relative">
           <button
@@ -363,6 +386,19 @@ export const Header: React.FC<HeaderProps> = ({
                 <Shield className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Lifeline OS Page ↗</span>
               </a>
+              {onToggleHideAllPanels && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onToggleHideAllPanels();
+                    setIsMoreMenuOpen(false);
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-lg text-left hover:bg-slate-800 hover:text-white flex items-center gap-2 cursor-pointer text-amber-300 font-bold"
+                >
+                  {hideAllPanels ? <Eye className="w-3.5 h-3.5 text-amber-400" /> : <EyeOff className="w-3.5 h-3.5 text-slate-400" />}
+                  <span>{hideAllPanels ? 'Show All Panels (H)' : 'Hide All Panels (H)'}</span>
+                </button>
+              )}
               {onOpenArchitecture && (
                 <button
                   type="button"
