@@ -7,7 +7,7 @@
     "dev": "tsx server.ts",
     "build": "vite build",
     "lint": "tsc --noEmit",
-    "test": "tsx test/runTests.ts",
+    "test": "tsx test/runTests.ts && tsx test/settlementAccess.test.ts",
     "start": "NODE_ENV=production tsx server.ts"
   },
   "dependencies": {

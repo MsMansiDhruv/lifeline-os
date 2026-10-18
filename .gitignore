@@ -21,7 +21,10 @@ dist/
 
 # Sensitive credentials & API keys
 *key*.txt
+**/*key*.txt
 gemini api key.txt
+datasets/gemini api key.txt
+**/gemini api key.txt
 *.pem
 *.id_rsa
 
@@ -39,3 +42,8 @@ Thumbs.db
 *.log
 *.zip
 *.tar.gz
+temp_extracted/
+temp_unpacked/
+inspect_zip.js
+diff_check.js
+git_check.js

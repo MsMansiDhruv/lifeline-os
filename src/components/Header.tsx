@@ -11,6 +11,7 @@ import {
   MoreVertical,
   Compass,
   RotateCcw,
+  Network,
 } from 'lucide-react';
 import { FleetMode } from '../types';
 import { TheaterData, InterventionType } from '../data/theaters';
@@ -18,6 +19,7 @@ import { geocodingService, GeocodingResult } from '../services/geocodingService'
 import { auditService } from '../services/auditService';
 
 interface HeaderProps {
+  onOpenArchitecture?: () => void;
   currentTheater: TheaterData;
   interventions: Record<string, InterventionType>;
   fleetMode: FleetMode;
@@ -66,6 +68,7 @@ export const Header: React.FC<HeaderProps> = ({
   isSimulationRunning = false,
   simulationProgress = '',
   onResetOverview,
+  onOpenArchitecture,
 }) => {
   const [cityQuery, setCityQuery] = useState<string>('');
   const [isSearching, setIsSearching] = useState<boolean>(false);
@@ -268,6 +271,19 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         </div>
 
+        {/* System Architecture & Process Visualization Button */}
+        {onOpenArchitecture && (
+          <button
+            type="button"
+            onClick={onOpenArchitecture}
+            className="px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer bg-gradient-to-r from-cyan-950/70 to-blue-950/70 hover:from-cyan-900/80 hover:to-blue-900/80 text-cyan-300 border border-cyan-500/40 shadow-sm shadow-cyan-500/10"
+            title="Explore Interactive System Architecture, Process Flow & Use Cases"
+          >
+            <Network className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden lg:inline">Architecture & Flow</span>
+          </button>
+        )}
+
         {/* 4. Single Run Button: Run closure simulation */}
         {onRunResponseSimulation && (
           <button
@@ -298,7 +314,20 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
 
           {isMoreMenuOpen && (
-            <div className="absolute right-0 top-full mt-2 w-48 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-1 z-50 text-xs font-mono text-slate-300 space-y-0.5 animate-in fade-in">
+            <div className="absolute right-0 top-full mt-2 w-52 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-1 z-50 text-xs font-mono text-slate-300 space-y-0.5 animate-in fade-in">
+              {onOpenArchitecture && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onOpenArchitecture();
+                    setIsMoreMenuOpen(false);
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-lg text-left hover:bg-slate-800 hover:text-white flex items-center gap-2 cursor-pointer text-cyan-300 font-bold"
+                >
+                  <Network className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Architecture & Flow</span>
+                </button>
+              )}
               {onResetOverview && (
                 <button
                   type="button"

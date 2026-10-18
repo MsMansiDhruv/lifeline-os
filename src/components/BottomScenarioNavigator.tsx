@@ -55,7 +55,7 @@ export const BottomScenarioNavigator: React.FC<BottomScenarioNavigatorProps> = (
   analysedCount = ASSAM_TELEMETRY_RESULTS.analysedCount,
   excludedCount = ASSAM_TELEMETRY_RESULTS.excludedCount,
 }) => {
-  const [isExpanded, setIsExpanded] = useState<boolean>(true);
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const scenario: ScenarioManifest = SCENARIO_MANIFESTS[activeScenarioId] || SCENARIO_MANIFESTS.silchar;
   const isNepal = activeScenarioId === 'nepal';
   const selectedTelemetry = getSelectedTelemetryRow(scenario.corridors[0]?.name);

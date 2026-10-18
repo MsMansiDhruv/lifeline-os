@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.env*
+!.env.example
+datasets/gemini api key.txt
+*key*.txt
+**/*key*.txt
+*.zip
+*.tar.gz
+temp_extracted
+temp_unpacked

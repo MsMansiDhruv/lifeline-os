@@ -49,6 +49,7 @@ import { EvidenceCatalogueModal } from './components/EvidenceCatalogueModal';
 import { FieldEvidenceEditorModal } from './components/FieldEvidenceEditorModal';
 import { CloudArchitectureModal } from './components/CloudArchitectureModal';
 import { WhatWeDontKnowModal } from './components/WhatWeDontKnowModal';
+import { SystemArchitectureModal } from './components/SystemArchitectureModal';
 import { ASSAM_TELEMETRY_RESULTS } from './data/disasterData';
 import {
   ShieldAlert,
@@ -69,6 +70,7 @@ import {
   Cloud,
   Mountain,
   Edit3,
+  Network,
 } from 'lucide-react';
 
 export function App() {
@@ -133,7 +135,7 @@ export function App() {
   const [ecosystemState, setEcosystemState] = useState<EcosystemBusState>(ecosystemBus.getState());
   const [isSosDismissed, setIsSosDismissed] = useState<boolean>(false);
   const [isWhatWeDontKnowOpen, setIsWhatWeDontKnowOpen] = useState<boolean>(false);
-  const [activeRightPopover, setActiveRightPopover] = useState<'layers' | 'evidence' | 'whatwedontknow' | 'cloud' | 'field' | null>(null);
+  const [activeRightPopover, setActiveRightPopover] = useState<'layers' | 'evidence' | 'whatwedontknow' | 'cloud' | 'field' | 'architecture' | null>(null);
   const [cameraToast, setCameraToast] = useState<{ title: string; reason: string } | null>(null);
 
   const showCameraToast = (title: string, reason: string) => {
@@ -142,8 +144,9 @@ export function App() {
   };
 
   // Baseline vs Scenario Access View (Requirement C)
-  const [baselineAccessSliderValue, setBaselineAccessSliderValue] = useState<number>(100);
-  const [isSimulatedClosureActive, setIsSimulatedClosureActive] = useState<boolean>(true);
+  // Start in the BEFORE (baseline) state so the closure's effect is visible when the user runs it.
+  const [baselineAccessSliderValue, setBaselineAccessSliderValue] = useState<number>(0);
+  const [isSimulatedClosureActive, setIsSimulatedClosureActive] = useState<boolean>(false);
 
   const handleToggleSimulatedClosure = () => {
     setIsSimulatedClosureActive((prev) => {
@@ -159,7 +162,7 @@ export function App() {
   };
 
   // Left SEOC Drawer Dynamic Width & Drag State (380px to 640px)
-  const [panelWidth, setPanelWidth] = useState<number>(440);
+  const [panelWidth, setPanelWidth] = useState<number>(typeof window !== 'undefined' && window.innerWidth < 1400 ? 320 : 380);
   const [isDragging, setIsDragging] = useState<boolean>(false);
 
   // Strict Map Camera Commands & Pulsing Target
@@ -279,8 +282,8 @@ export function App() {
     setInterventions({});
     setDetourRoutePoints([]);
     setNormalRoutePoints([]);
-    setBaselineAccessSliderValue(100);
-    setIsSimulatedClosureActive(true);
+    setBaselineAccessSliderValue(0);
+    setIsSimulatedClosureActive(false);
     setActiveRightPopover(null);
 
     const nextTheater = THEATERS[id] || THEATERS.silchar;
@@ -362,6 +365,9 @@ export function App() {
   const handleRunResponseSimulation = () => {
     if (isSimulationRunning) return;
     setIsSimulationRunning(true);
+    // Running the simulation applies the (simulated) closure, so the map pins switch from BEFORE to AFTER.
+    setBaselineAccessSliderValue(100);
+    setIsSimulatedClosureActive(true);
     setSimulationStep(1);
     setActiveChapter('protect');
     setSelectedChokeIdx(0);
@@ -1452,6 +1458,7 @@ export function App() {
         onFilterChange={setStatusFilter}
         onOpenTelemetry={() => setIsWeatherPanelOpen((prev) => !prev)}
         onOpenEcosystemBus={() => setIsEcosystemDrawerOpen(true)}
+        onOpenArchitecture={() => setActiveRightPopover(prev => prev === 'architecture' ? null : 'architecture')}
         activeTheaterId={activeTheaterId}
         onSelectTheater={handleSelectScenario}
         customTheater={customTheater}
@@ -1677,6 +1684,13 @@ export function App() {
           <Cloud className="w-4 h-4" />
         </button>
         <button
+          onClick={() => setActiveRightPopover(prev => prev === 'architecture' ? null : 'architecture')}
+          title="Lifeline OS System Architecture & Process Flow"
+          className={`p-2.5 rounded-lg transition-all ${activeRightPopover === 'architecture' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 ring-1 ring-cyan-400' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`}
+        >
+          <Network className="w-4 h-4 text-cyan-400" />
+        </button>
+        <button
           onClick={() => setActiveRightPopover(prev => prev === 'field' ? null : 'field')}
           title="Field Evidence Editor"
           className={`p-2.5 rounded-lg transition-all ${activeRightPopover === 'field' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`}
@@ -1706,8 +1720,8 @@ export function App() {
         isRerouted={rerouteAmbulances}
         onToggleReroute={() => setRerouteAmbulances(prev => !prev)}
         reachableCount={activeTheaterId === 'nepal' ? undefined : (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 319 : ASSAM_TELEMETRY_RESULTS.reachableCount)}
-        reroutedCount={activeTheaterId === 'nepal' ? undefined : (rerouteAmbulances ? 83 : (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 0 : ASSAM_TELEMETRY_RESULTS.reroutedCount))}
-        isolatedCount={activeTheaterId === 'nepal' ? undefined : (rerouteAmbulances || isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 0 : ASSAM_TELEMETRY_RESULTS.noRouteCount)}
+        reroutedCount={activeTheaterId === 'nepal' ? undefined : (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 0 : ASSAM_TELEMETRY_RESULTS.reroutedCount)}
+        isolatedCount={activeTheaterId === 'nepal' ? undefined : (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 0 : ASSAM_TELEMETRY_RESULTS.noRouteCount)}
         analysedCount={activeTheaterId === 'nepal' ? undefined : ASSAM_TELEMETRY_RESULTS.analysedCount}
         excludedCount={activeTheaterId === 'nepal' ? undefined : ASSAM_TELEMETRY_RESULTS.excludedCount}
       />
@@ -1751,6 +1765,12 @@ export function App() {
           setIsWhatWeDontKnowOpen(false);
           if (activeRightPopover === 'whatwedontknow') setActiveRightPopover(null);
         }}
+      />
+
+      {/* Lifeline OS System Architecture & Interactive Process Flow Modal */}
+      <SystemArchitectureModal
+        isOpen={activeRightPopover === 'architecture'}
+        onClose={() => setActiveRightPopover(null)}
       />
     </div>
   );

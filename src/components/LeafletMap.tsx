@@ -15,7 +15,7 @@ import {
 } from './common/TacticalIcons';
 import { InspectedFeatureData } from './ContextualFeatureInspector';
 import { EvidenceClass, EVIDENCE_CLASS_CONFIG } from '../types/evidence';
-import { getSelectedTelemetryRow } from '../data/disasterData';
+import { getSelectedTelemetryRow, DF_CLEAN } from '../data/disasterData';
 
 export interface MapLine {
   id?: string;
@@ -564,35 +564,36 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
 
     if (!layerVisibility.settlements) return;
 
-    settlementFeatures.forEach((village) => {
-      const nameLower = village.name.toLowerCase();
-      const isInCutSector =
-        baselineAccessSliderValue > 0 &&
-        (nameLower.includes('doodhpatli') ||
-          nameLower.includes('binnākāndi') ||
-          nameLower.includes('binnakandi') ||
-          nameLower.includes('tolengram') ||
-          nameLower.includes('harinagar') ||
-          (village.lat >= 24.84 && village.lat <= 24.91 && village.lon >= 92.83 && village.lon <= 92.93));
+    // Settlement pins come from the precomputed telemetry (df_clean), coloured by its modeled_status.
+    // No name/bounding-box rules: a village is cut off or rerouted only if the model says so.
+    // Only the Assam workspace has telemetry; other scenarios draw no access pins (no access analysis there).
+    type AccessPin = { name: string; lat: number; lon: number; row?: (typeof DF_CLEAN)[number] };
+    const accessPins: AccessPin[] =
+      theaterId === 'silchar'
+        ? DF_CLEAN.map((r) => ({ name: r.village_name, lat: r.lat, lon: r.lon, row: r }))
+        : [];
+    const topImpactIds = new Set(
+      DF_CLEAN.filter((r) => r.modeled_status === 'REROUTED_ALT_FACILITY')
+        .sort((x, y) => (y.additional_min || 0) - (x.additional_min || 0))
+        .slice(0, 5)
+        .map((r) => r.village_id)
+    );
 
-      const isInDetourSector =
-        !isInCutSector &&
-        baselineAccessSliderValue > 0 &&
-        (nameLower.includes('kumbhirgram') ||
-          nameLower.includes('udharbond') ||
-          nameLower.includes('sonai') ||
-          (village.lat >= 24.78 && village.lat <= 24.95 && village.lon >= 92.75 && village.lon <= 92.83));
+    accessPins.forEach((village) => {
+      const nameLower = village.name.toLowerCase();
+      const isInCutSector = baselineAccessSliderValue > 0 && village.row?.modeled_status === 'MODEL_ISOLATED';
+      const isInDetourSector = baselineAccessSliderValue > 0 && village.row?.modeled_status === 'REROUTED_ALT_FACILITY';
 
       // Pin Styling & Rerouting Status
       let color = '#10b981'; // Reachable (green)
       let radius = 3.5;
       let strokeColor = '#065f46';
       let statusLabel = 'Reachable via baseline corridor';
-      let evidenceClass: EvidenceClass = 'OBSERVED';
+      let evidenceClass: EvidenceClass = 'MODELLED';
       let statusText = 'REACHABLE';
 
       const isRescuedByBridge = activeTool === 'bridge' || isBreachTemporarilyReopened;
-      const isRescuedByDetour = rerouteAmbulances;
+      const isRescuedByDetour = false; // an ambulance bypass cannot serve villages with no modelled road route
       const isRescuedByBoat = activeTool === 'boat';
       const isRescuedByDrone = activeTool === 'drone';
       const isRescuedByMMU = activeTool === 'booth';
@@ -642,8 +643,15 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
           evidenceClass = 'SIMULATED';
           statusText = 'NO ROUTE (CUT-OFF)';
         }
+      } else if (isInDetourSector && isRescuedByBridge) {
+        color = '#10b981';
+        radius = 4.5;
+        strokeColor = '#065f46';
+        statusLabel = 'RECONNECTED (ASSUMED: damaged link restored, baseline route again)';
+        evidenceClass = 'SIMULATED';
+        statusText = 'RECONNECTED (ASSUMED)';
       } else if (isInDetourSector) {
-        const telDetour = getSelectedTelemetryRow(village.name);
+        const telDetour = village.row ?? getSelectedTelemetryRow(village.name);
         color = '#f59e0b'; // Detour (+km)
         radius = 4.5;
         strokeColor = '#92400e';
@@ -662,9 +670,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       });
 
       const badgeConf = EVIDENCE_CLASS_CONFIG[evidenceClass];
-      const isTop5Impact = ['binnākāndi', 'binnakandi', 'doodhpatli', 'tolengram', 'harinagar', 'kumbhirgram'].some((t) =>
-        village.name.toLowerCase().includes(t)
-      );
+      const isTop5Impact = baselineAccessSliderValue > 0 && !!village.row && topImpactIds.has(village.row.village_id);
 
       if (isTop5Impact) {
         circle.bindTooltip(
@@ -680,7 +686,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
 
       circle.on('click', () => {
         if (onSelectFeature) {
-          const tel = getSelectedTelemetryRow(village.name);
+          const tel = village.row ?? getSelectedTelemetryRow(village.name);
           onSelectFeature({
             id: `settlement_${village.name}`,
             type: 'village',
@@ -699,10 +705,10 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                 ? 'amber'
                 : 'rose'
               : isInDetourSector
-              ? 'amber'
+              ? (isRescuedByBridge ? 'emerald' : 'amber')
               : 'emerald',
             evidenceClass,
-            dataState: isInCutSector || isInDetourSector ? 'SIMULATED' : 'LIVE',
+            dataState: isInCutSector || isInDetourSector ? 'SIMULATED' : 'STALE',
             metrics: [
               {
                 label: 'Baseline Access',
@@ -772,7 +778,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
 
       circle.addTo(settlementsLayerRef.current!);
     });
-  }, [settlementFeatures, baselineAccessSliderValue, rerouteAmbulances, activeTool, isBreachTemporarilyReopened, layerVisibility.settlements, layerOpacity.settlements, onSelectFeature]);
+  }, [theaterId, settlementFeatures, baselineAccessSliderValue, rerouteAmbulances, activeTool, isBreachTemporarilyReopened, layerVisibility.settlements, layerOpacity.settlements, onSelectFeature]);
 
   // 4. CHOKE POINTS & HOSPITALS (Markers Layer)
   useEffect(() => {
@@ -967,7 +973,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       )}
 
       {/* TOP-RIGHT VIEW MODE SWITCHER: [ Before | Swipe | After ] (Requirement 1: Disabled swipe with tooltip) */}
-      <div className="absolute top-16 right-6 z-[850] flex items-center gap-2 pointer-events-auto">
+      <div className="absolute bottom-20 right-6 z-[850] flex items-center gap-2 pointer-events-auto">
         <div className="flex items-center bg-slate-900/95 border border-slate-700/80 rounded-xl p-1 shadow-2xl backdrop-blur-md">
           <span className="text-[10px] font-mono uppercase font-bold text-slate-400 px-2">View:</span>
           {(['before', 'swipe', 'after'] as const).map((mode) => {
