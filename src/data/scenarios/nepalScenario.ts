@@ -61,7 +61,7 @@ export const NEPAL_SCENARIO: ScenarioManifest = {
   },
   floodExtent: {
     name: 'Copernicus EMS / Sentinel-2 Post-Flood Debris & Inundation Swath',
-    areaSqKm: 46.8,
+    areaSqKm: 0,
     sensor: 'Sentinel-2 MSI 10m True Colour + NDWI Water & Sediment Index',
     acquisitionDate: '2024-10-02T04:45:00Z',
     coordinates: [

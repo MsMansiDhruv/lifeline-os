@@ -329,6 +329,14 @@ export const CloudArchitectureModal: React.FC<CloudArchitectureModalProps> = ({
                   LOCAL_ADAPTER (not connected to Google Cloud)
                 </span>
               </div>
+
+              <div className="p-2 rounded-lg bg-slate-950/80 border border-slate-800 flex flex-col gap-0.5">
+                <span className="text-[10px] text-slate-400">Firebase &amp; Firestore</span>
+                <span className={`font-bold flex items-center gap-1 ${gcpStatus?.services?.firebaseFirestore?.status === 'ACTIVE' ? 'text-emerald-400' : 'text-slate-300'}`}>
+                  <CheckCircle2 className={`w-3 h-3 ${gcpStatus?.services?.firebaseFirestore?.status === 'ACTIVE' ? 'text-emerald-400' : 'text-slate-400'}`} />
+                  {gcpStatus?.services?.firebaseFirestore?.status === 'ACTIVE' ? 'ACTIVE (Google Cloud REST)' : 'LOCAL_ADAPTER'}
+                </span>
+              </div>
             </div>
           </div>
 

@@ -1,26 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Shield,
   Search,
   Loader2,
   MapPin,
-  Globe,
-  Sun,
-  Moon,
-  Wind,
-  Target,
   Play,
-  Layers,
   ChevronDown,
-  Activity,
-  AlertTriangle,
   Map,
   Satellite,
-  Mountain,
-  Cloud,
+  MoreVertical,
+  Compass,
+  RotateCcw,
 } from 'lucide-react';
 import { FleetMode } from '../types';
-import { THEATERS, TheaterData, createCustomTheater, InterventionType } from '../data/theaters';
+import { TheaterData, InterventionType } from '../data/theaters';
 import { geocodingService, GeocodingResult } from '../services/geocodingService';
 import { auditService } from '../services/auditService';
 
@@ -53,203 +46,84 @@ interface HeaderProps {
   onRunResponseSimulation?: () => void;
   isSimulationRunning?: boolean;
   simulationProgress?: string;
-  onOpenWhatWeDontKnow?: () => void;
-  onOpenCloudArchitecture?: () => void;
+  onResetOverview?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   currentTheater,
-  interventions,
-  fleetMode,
-  onFleetChange,
-  onOpenTelemetry,
   activeTheaterId,
   onSelectTheater,
   customTheater,
   onLoadCustomTheater,
   onSearchFocus,
-  onNavigateStep,
   onStartInteractiveTour,
-  onStartAutoDemo,
-  isInteractiveTourActive = false,
-  isAutoDemoActive = false,
   opsMode = 'day',
   onToggleOpsMode,
-  onOpenEcosystemBus,
-  liveWindSpeed = 14.2,
-  isSimulatedHighWind = false,
   viewMode = 'map',
   onToggleViewMode,
   onSelectViewMode,
   onRunResponseSimulation,
   isSimulationRunning = false,
   simulationProgress = '',
-  onOpenWhatWeDontKnow,
-  onOpenCloudArchitecture,
+  onResetOverview,
 }) => {
   const [cityQuery, setCityQuery] = useState<string>('');
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [suggestions, setSuggestions] = useState<GeocodingResult[]>([]);
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
-  const [showIncidentSummary, setShowIncidentSummary] = useState<boolean>(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Compute concise status metrics
-  let fixedCount = 0;
-  let totalSavedVillages = 0;
-  currentTheater.chokePoints.forEach((cp) => {
-    const tool = interventions[cp.id] || 'none';
-    if (tool !== 'none') {
-      fixedCount++;
-      totalSavedVillages += cp.trapped_villages_count;
-    }
-  });
-  const criticalChokesRemaining = Math.max(0, currentTheater.chokePoints.length - fixedCount);
-  const totalVillages = currentTheater.chokePoints.reduce((acc, cp) => acc + (cp.trapped_villages_count || 0), 0);
-  const villagesLeft = Math.max(0, totalVillages - totalSavedVillages);
-
-  // Debounced search with geocodingService
-  useEffect(() => {
-    const trimmed = cityQuery.trim();
-    if (trimmed.length < 2) {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
-
-    const timer = setTimeout(async () => {
-      try {
-        const results = await geocodingService.search(trimmed);
-        setSuggestions(results);
-        setShowSuggestions(results.length > 0);
-      } catch (err) {
-        console.warn('Autocomplete fetch failed:', err);
-      }
-    }, 280);
-
-    return () => clearTimeout(timer);
-  }, [cityQuery]);
-
-  // Click outside listener
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setShowSuggestions(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const compileLocationAndLoad = async (
     lat: number,
     lon: number,
     displayName: string,
-    country?: string,
-    state?: string
+    country: string,
+    state: string
   ) => {
     setIsSearching(true);
-    setShowSuggestions(false);
-
-    // Canonical built-in theater fast-path: preserve 100% verified clinical, OSM, and flood data
-    const queryLower = displayName.toLowerCase();
-    if (
-      queryLower.includes('silchar') ||
-      queryLower.includes('cachar') ||
-      queryLower.includes('barak') ||
-      Math.hypot(lat - 24.8333, lon - 92.7789) < 0.2
-    ) {
-      onSelectTheater('silchar');
-      onSearchFocus?.([24.8333, 92.7789]);
-      setIsSearching(false);
-      onNavigateStep?.('chapter2_predict');
-      return;
-    }
-    if (
-      queryLower.includes('nepal') ||
-      queryLower.includes('gorkha') ||
-      queryLower.includes('kathmandu') ||
-      Math.hypot(lat - 28.0, lon - 84.6) < 0.4
-    ) {
-      onSelectTheater('nepal');
-      onSearchFocus?.([28.0, 84.6]);
-      setIsSearching(false);
-      onNavigateStep?.('chapter2_predict');
-      return;
-    }
-    if (
-      queryLower.includes('wayanad') ||
-      queryLower.includes('meppadi') ||
-      queryLower.includes('kerala') ||
-      Math.hypot(lat - 11.55, lon - 76.13) < 0.4
-    ) {
-      onSelectTheater('wayanad');
-      onSearchFocus?.([11.55, 76.13]);
-      setIsSearching(false);
-      onNavigateStep?.('chapter2_predict');
-      return;
-    }
-
     let overpassHospitals: Array<{ name: string; lat: number; lon: number }> = [];
-    let overpassBridges: Array<{ name: string; lat: number; lon: number }> = [];
-    let overpassRiverPath: Array<[number, number]> = [];
 
     try {
-      const bbox = `${lat - 0.08},${lon - 0.08},${lat + 0.08},${lon + 0.08}`;
-      const overpassQuery = `[out:json][timeout:3];(node["amenity"="hospital"](${bbox});way["amenity"="hospital"](${bbox});way["bridge"="yes"](${bbox});way["waterway"="river"](${bbox}););out center 25;`;
-
-      const overpassRes = await Promise.race([
-        fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`),
-        new Promise<Response>((_, reject) =>
-          setTimeout(() => reject(new Error('Overpass timeout')), 3500)
-        ),
-      ]);
-
-      if (overpassRes.ok) {
-        const overpassData = await overpassRes.json();
-        if (overpassData && overpassData.elements) {
-          overpassData.elements.forEach((el: any) => {
+      const overpassQuery = `
+        [out:json][timeout:10];
+        (
+          node["amenity"="hospital"](around:20000, ${lat}, ${lon});
+          way["amenity"="hospital"](around:20000, ${lat}, ${lon});
+        );
+        out center 10;
+      `;
+      const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`;
+      const resp = await fetch(url);
+      if (resp.ok) {
+        const json = await resp.json();
+        if (json.elements && Array.isArray(json.elements)) {
+          json.elements.forEach((el: any) => {
             const elLat = el.lat || el.center?.lat;
             const elLon = el.lon || el.center?.lon;
-            const name = el.tags?.name;
+            const name = el.tags?.name || 'Regional Medical Facility';
             if (elLat && elLon) {
-              if (el.tags?.amenity === 'hospital' && name) {
-                overpassHospitals.push({ name, lat: elLat, lon: elLon });
-              } else if (el.tags?.bridge === 'yes' && name) {
-                overpassBridges.push({ name, lat: elLat, lon: elLon });
-              } else if (el.tags?.waterway === 'river') {
-                overpassRiverPath.push([elLat, elLon]);
-              }
+              overpassHospitals.push({ name, lat: elLat, lon: elLon });
             }
           });
         }
       }
     } catch {
-      // Deterministic synthetic fallback
+      // Continue with fallback
+    } finally {
+      setIsSearching(false);
+      setShowSuggestions(false);
     }
 
-    const newTheater = createCustomTheater(
-      displayName,
-      lat,
-      lon,
-      country,
-      state,
-      overpassHospitals,
-      overpassBridges,
-      overpassRiverPath.length > 2 ? overpassRiverPath : undefined
-    );
-
-    onLoadCustomTheater(newTheater);
-    onSelectTheater('custom');
-    onSearchFocus?.([lat, lon]);
-    setIsSearching(false);
-    onNavigateStep?.('chapter2_predict');
+    if (onSearchFocus) {
+      onSearchFocus([lat, lon]);
+    }
 
     auditService.recordAction({
       action_type: 'GEOGRAPHIC_SEARCH',
       user_role: 'INCIDENT_COMMANDER',
       user_id: 'Incident Commander',
-      rationale: `Resolved query "${displayName}" (${lat.toFixed(4)}, ${lon.toFixed(4)}) with ${overpassHospitals.length} hospitals and ${overpassBridges.length} bridges found.`,
+      rationale: `Resolved query "${displayName}" (${lat.toFixed(4)}, ${lon.toFixed(4)}).`,
       human_authorized: true,
     });
   };
@@ -260,8 +134,8 @@ export const Header: React.FC<HeaderProps> = ({
       item.coordinates[0],
       item.coordinates[1],
       item.displayName,
-      item.adminHierarchy.country,
-      item.adminHierarchy.state
+      item.adminHierarchy.country || '',
+      item.adminHierarchy.state || ''
     );
   };
 
@@ -287,15 +161,15 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="fixed top-0 left-0 right-0 h-14 min-h-14 max-h-14 z-40 bg-slate-950/95 backdrop-blur-xl border-b border-slate-800/80 px-3 sm:px-4 flex items-center justify-between gap-3 shadow-xl select-none">
-      {/* Left Zone: Product Identity + Current Incident */}
+      {/* 1. Identity & Scenario Selector */}
       <div className="flex items-center gap-2.5 shrink-0">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-slate-900 border border-slate-700/80 flex items-center justify-center text-cyan-400 shadow-md">
             <Shield className="w-4 h-4 text-cyan-400" />
           </div>
           <div className="flex items-center gap-1.5">
-            <h1 className="text-sm font-extrabold text-white tracking-tight">Lifeline OS</h1>
-            <span className="text-slate-500 font-light">/</span>
+            <h1 className="text-sm font-extrabold text-white tracking-tight hidden sm:inline">Lifeline OS</h1>
+            <span className="text-slate-500 font-light hidden sm:inline">/</span>
             <div className="relative flex items-center">
               <select
                 value={activeTheaterId}
@@ -303,9 +177,9 @@ export const Header: React.FC<HeaderProps> = ({
                 className="bg-slate-900/90 hover:bg-slate-800 text-cyan-300 hover:text-white font-bold text-xs cursor-pointer border border-slate-700 hover:border-cyan-500 rounded-lg pl-2.5 pr-6 py-1 focus:outline-none focus:ring-1 focus:ring-cyan-400 transition-all shadow-inner appearance-none"
                 title="Select active disaster incident scenario workspace"
               >
-                <option value="silchar" className="bg-slate-950 text-white font-semibold">🇮🇳 Assam: Silchar / Cachar (Flood & Healthcare Access)</option>
-                <option value="nepal" className="bg-slate-950 text-white font-semibold">🇳🇵 Nepal: Roshi Khola / BP Highway (Terrain & Damage)</option>
-                <option value="wayanad" className="bg-slate-950 text-white font-semibold">🇮🇳 Wayanad: Meppadi (Landslide Debris Flow)</option>
+                <option value="silchar" className="bg-slate-950 text-white font-semibold">🇮🇳 Assam: Silchar / Cachar</option>
+                <option value="nepal" className="bg-slate-950 text-white font-semibold">🇳🇵 Nepal: Roshi Khola / BP Highway</option>
+                <option value="wayanad" className="bg-slate-950 text-white font-semibold">🇮🇳 Wayanad: Meppadi</option>
                 {customTheater && <option value="custom" className="bg-slate-950 text-white font-semibold">{customTheater.name}</option>}
               </select>
               <ChevronDown className="w-3.5 h-3.5 text-cyan-400 absolute right-2 pointer-events-none" />
@@ -314,8 +188,8 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Center Zone: Search Any Place Input */}
-      <div ref={dropdownRef} className="relative flex-1 max-w-md hidden sm:block">
+      {/* 2. Full-Width Center Search Box */}
+      <div ref={dropdownRef} className="relative flex-1 max-w-xl mx-2">
         <form onSubmit={handleSearchSubmit} className="relative w-full">
           <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
@@ -361,9 +235,40 @@ export const Header: React.FC<HeaderProps> = ({
         )}
       </div>
 
-      {/* Right Zone: Simulation Button + 2D/3D Toggle + Mode Pill + Concise Status */}
+      {/* 3, 4, 5. Map Mode + Single Run Button + More Menu */}
       <div className="flex items-center gap-2 shrink-0">
-        {/* Prominent Run Response Simulation Action (Section 1 Brief Requirement) */}
+        {/* 3. Map Mode Switcher (Map / Street / Satellite) */}
+        <div className="flex items-center bg-slate-900/90 border border-slate-700/80 rounded-xl p-0.5 shadow-md">
+          <button
+            type="button"
+            onClick={() => onSelectViewMode ? onSelectViewMode('map') : onToggleViewMode?.()}
+            className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1 cursor-pointer ${
+              viewMode === 'map'
+                ? 'bg-slate-800 text-cyan-300 border border-cyan-500/50 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+            title="Tactical Map View"
+          >
+            <Map className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden md:inline">Map</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onSelectViewMode ? onSelectViewMode('satellite') : onToggleViewMode?.()}
+            className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1 cursor-pointer ${
+              viewMode === 'satellite'
+                ? 'bg-slate-800 text-emerald-300 border border-emerald-500/50 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+            title="Satellite View"
+          >
+            <Satellite className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="hidden md:inline">Satellite</span>
+          </button>
+        </div>
+
+        {/* 4. Single Run Button: Run closure simulation */}
         {onRunResponseSimulation && (
           <button
             type="button"
@@ -374,205 +279,67 @@ export const Header: React.FC<HeaderProps> = ({
                 ? 'bg-amber-950/80 border-amber-600 text-amber-300 animate-pulse'
                 : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border-emerald-400/60 shadow-[0_0_15px_rgba(16,185,129,0.3)]'
             }`}
-            title="Run 10-second response simulation: Disruption -> Consequence -> Decision"
+            title="Run closure simulation: Disruption -> Consequence -> Decision"
           >
             <Play className={`w-3.5 h-3.5 ${isSimulationRunning ? 'animate-spin' : 'fill-white'}`} />
-            <span>{isSimulationRunning ? (simulationProgress || 'Simulating...') : 'Run Simulation'}</span>
+            <span>{isSimulationRunning ? (simulationProgress || 'Simulating...') : 'Run closure simulation'}</span>
           </button>
         )}
 
-        {/* 3-Way Tactical View Switcher: Map, Satellite, 3D Terrain */}
-        <div className="flex items-center bg-slate-900/90 border border-slate-700/80 rounded-xl p-0.5 shadow-md">
-          <button
-            type="button"
-            onClick={() => onSelectViewMode ? onSelectViewMode('map') : onToggleViewMode?.()}
-            className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-              viewMode === 'map'
-                ? 'bg-slate-800 text-cyan-300 border border-cyan-500/50 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-            title="Tactical Dark Map View (High-contrast vector roads & flood overlays)"
-          >
-            <Map className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden sm:inline">Map</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onSelectViewMode ? onSelectViewMode('street') : onToggleViewMode?.()}
-            className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-              viewMode === 'street'
-                ? 'bg-slate-800 text-blue-300 border border-blue-500/50 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-            title="Street View (Standard OpenStreetMap network & labels)"
-          >
-            <Map className="w-3.5 h-3.5 text-blue-400" />
-            <span className="hidden sm:inline">Street</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onSelectViewMode ? onSelectViewMode('satellite') : onToggleViewMode?.()}
-            className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-              viewMode === 'satellite'
-                ? 'bg-slate-800 text-emerald-300 border border-emerald-500/50 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-            title="Satellite View (Esri World Imagery + verified flood overlays)"
-          >
-            <Satellite className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="hidden sm:inline">Satellite</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onSelectViewMode ? onSelectViewMode('3d') : onToggleViewMode?.()}
-            className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-              viewMode === '3d'
-                ? 'bg-cyan-950 text-cyan-300 border border-cyan-500 shadow-[0_0_12px_rgba(6,182,212,0.3)]'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-            title="3D Terrain Replay (NASA SRTM 30m Elevation Topography)"
-          >
-            <Mountain className="w-3.5 h-3.5 text-cyan-400" />
-            <span>3D</span>
-          </button>
-        </div>
-
-        {/* Requirement F: What We Don't Know Button */}
-        {onOpenWhatWeDontKnow && (
-          <button
-            type="button"
-            onClick={onOpenWhatWeDontKnow}
-            className="px-2.5 py-1 rounded-xl text-xs font-mono font-bold bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white flex items-center gap-1.5 cursor-pointer shadow-sm transition-all"
-            title="Inspect epistemological blindspots, unlinked telemetry, and unverified assumptions"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
-            <span className="hidden md:inline">What We Don't Know</span>
-            <span className="md:hidden">Uncertainties</span>
-            <span className="text-[9px] font-mono px-1 rounded bg-zinc-800 text-zinc-400 border border-zinc-700 font-bold">
-              UNKNOWN
-            </span>
-          </button>
-        )}
-
-        {/* Cloud Architecture Modal Button */}
-        {onOpenCloudArchitecture && (
-          <button
-            type="button"
-            onClick={onOpenCloudArchitecture}
-            className="px-2.5 py-1 rounded-xl text-xs font-mono font-bold bg-sky-950/80 hover:bg-sky-900 border border-sky-700/60 text-sky-300 hover:text-white flex items-center gap-1.5 cursor-pointer shadow-sm transition-all"
-            title="Inspect Google Cloud & Gemini MCP Architecture"
-          >
-            <Cloud className="w-3.5 h-3.5 text-sky-400" />
-            <span className="hidden lg:inline">Cloud Topology</span>
-            <span className="text-[9px] font-mono px-1 rounded bg-sky-900 text-sky-300 border border-sky-700 font-bold">
-              GCP
-            </span>
-          </button>
-        )}
-
-        {/* Mode Pill Badge */}
-        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-rose-950/80 text-rose-300 border border-rose-700/60 tracking-wider uppercase flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
-          SIMULATED
-        </span>
-
-        {/* One Concise Evidence / Status Indicator */}
+        {/* 5. More Menu */}
         <div className="relative">
           <button
             type="button"
-            onClick={() => setShowIncidentSummary(!showIncidentSummary)}
-            className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold border transition-colors flex items-center gap-1.5 cursor-pointer ${
-              criticalChokesRemaining > 0
-                ? 'bg-rose-950/70 border-rose-700 text-rose-300 hover:bg-rose-900/80'
-                : 'bg-emerald-950/70 border-emerald-700 text-emerald-300 hover:bg-emerald-900/80'
-            }`}
-            title="Click to view concise incident status summary"
+            onClick={() => setIsMoreMenuOpen((prev) => !prev)}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white bg-slate-900 border border-slate-700/80 hover:bg-slate-800 transition-colors cursor-pointer"
+            title="More Options"
           >
-            <span className={`w-1.5 h-1.5 rounded-full ${criticalChokesRemaining > 0 ? 'bg-rose-400 animate-ping' : 'bg-emerald-400'}`} />
-            <span>
-              {criticalChokesRemaining > 0 ? `${criticalChokesRemaining} Severed` : 'All Reconnected'}
-            </span>
-            <ChevronDown className="w-3 h-3 text-slate-400" />
+            <MoreVertical className="w-4 h-4" />
           </button>
 
-          {/* Expanded Concise Summary Popover */}
-          {showIncidentSummary && (
-            <div className="absolute right-0 top-full mt-2 w-64 bg-slate-900 border border-slate-700 rounded-xl p-3 shadow-2xl z-50 text-xs space-y-2 animate-in fade-in select-none">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
-                <span className="font-bold text-white">Incident Status</span>
-                <span className="text-[10px] font-mono text-slate-400">{currentTheater.name}</span>
-              </div>
-              <div className="space-y-1 text-slate-300 font-mono text-[11px]">
-                <div className="flex justify-between">
-                  <span>Severed Corridors:</span>
-                  <strong className={criticalChokesRemaining > 0 ? 'text-rose-400' : 'text-emerald-400'}>
-                    {criticalChokesRemaining} / {currentTheater.chokePoints.length}
-                  </strong>
-                </div>
-                <div className="flex justify-between">
-                  <span>Trapped Habitations:</span>
-                  <strong className={villagesLeft > 0 ? 'text-amber-400' : 'text-emerald-400'}>
-                    {villagesLeft} Villages
-                  </strong>
-                </div>
-                <div className="flex justify-between">
-                  <span>Fleet Axle Limit:</span>
-                  <strong className="text-white">{fleetMode.includes('16T') ? '16T (Heavy)' : '4x4 (Light)'}</strong>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  onFleetChange(fleetMode.includes('16T') ? 'Light Emergency (Ambulance/4x4)' : 'Heavy Supply (Truck/Bus)');
-                  setShowIncidentSummary(false);
-                }}
-                className="w-full py-1 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 font-mono text-[10px] text-center cursor-pointer border border-slate-700 transition-colors"
-              >
-                Switch to {fleetMode.includes('16T') ? '4x4 Mode' : '16T Mode'}
-              </button>
+          {isMoreMenuOpen && (
+            <div className="absolute right-0 top-full mt-2 w-48 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-1 z-50 text-xs font-mono text-slate-300 space-y-0.5 animate-in fade-in">
+              {onResetOverview && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onResetOverview();
+                    setIsMoreMenuOpen(false);
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-lg text-left hover:bg-slate-800 hover:text-white flex items-center gap-2 cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Reset Overview</span>
+                </button>
+              )}
+              {onStartInteractiveTour && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onStartInteractiveTour();
+                    setIsMoreMenuOpen(false);
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-lg text-left hover:bg-slate-800 hover:text-white flex items-center gap-2 cursor-pointer"
+                >
+                  <Compass className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Interactive Tour</span>
+                </button>
+              )}
+              {onToggleOpsMode && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onToggleOpsMode();
+                    setIsMoreMenuOpen(false);
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-lg text-left hover:bg-slate-800 hover:text-white flex items-center gap-2 cursor-pointer"
+                >
+                  <span>{opsMode === 'day' ? '🌙 Night Ops' : '☀️ Day Ops'}</span>
+                </button>
+              )}
             </div>
           )}
         </div>
-
-        {/* Compact Weather Pill (Opens Full Telemetry on Demand) */}
-        <button
-          type="button"
-          onClick={onOpenTelemetry}
-          className="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-300 text-xs font-mono flex items-center gap-1.5 cursor-pointer transition-colors"
-          title="Open live meteorological & telemetry details"
-        >
-          <Wind className="w-3.5 h-3.5 text-cyan-400" />
-          <span>{isSimulatedHighWind ? '52 km/h' : `${liveWindSpeed.toFixed(0)} km/h`}</span>
-        </button>
-
-        {/* Day / Night Mode */}
-        {onToggleOpsMode && (
-          <button
-            type="button"
-            onClick={onToggleOpsMode}
-            className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white text-xs cursor-pointer transition-colors"
-            title={opsMode === 'night' ? 'Night Ops (Marine boats restricted)' : 'Day Ops (Full visibility)'}
-          >
-            {opsMode === 'night' ? <Moon className="w-3.5 h-3.5 text-indigo-400" /> : <Sun className="w-3.5 h-3.5 text-amber-400" />}
-          </button>
-        )}
-
-        {/* Tour / Demo Shortcut */}
-        {onStartInteractiveTour && (
-          <button
-            type="button"
-            onClick={onStartInteractiveTour}
-            className={`p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border text-xs cursor-pointer transition-colors flex items-center gap-1 ${
-              isInteractiveTourActive ? 'border-emerald-500 text-emerald-400' : 'border-slate-700/80 text-slate-300'
-            }`}
-            title="Start Interactive Guided Tour"
-          >
-            <Target className="w-3.5 h-3.5" />
-          </button>
-        )}
       </div>
     </header>
   );

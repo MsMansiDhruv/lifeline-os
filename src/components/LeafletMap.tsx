@@ -81,9 +81,11 @@ interface LeafletMapProps {
   mapMode?: MapStyleMode;
   onMapModeChange?: (mode: MapStyleMode) => void;
   rerouteAmbulances?: boolean;
+  isBreachTemporarilyReopened?: boolean;
   isSimulationRunning?: boolean;
   baselineAccessSliderValue?: number;
   onSelectFeature?: (feature: InspectedFeatureData) => void;
+  onToggleBreachTemporarilyReopened?: () => void;
 }
 
 export const LeafletMap: React.FC<LeafletMapProps> = ({
@@ -108,8 +110,10 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   mapMode: controlledMapMode,
   onMapModeChange,
   rerouteAmbulances = false,
+  isBreachTemporarilyReopened = false,
   baselineAccessSliderValue = 100,
   onSelectFeature,
+  onToggleBreachTemporarilyReopened,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -128,6 +132,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   const isDraggingSwipeRef = useRef<boolean>(false);
 
   // Pane element references for dynamic CSS clip-path
+  const [isLegendCollapsed, setIsLegendCollapsed] = useState<boolean>(false);
   const beforePaneRef = useRef<HTMLElement | null>(null);
   const afterPaneRef = useRef<HTMLElement | null>(null);
   const afterFloodPaneRef = useRef<HTMLElement | null>(null);
@@ -143,7 +148,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
 
   const [currentCoords, setCurrentCoords] = useState<[number, number]>(center);
   const [currentZoomLevel, setCurrentZoomLevel] = useState<number>(zoom);
-  const [isLegendOpen, setIsLegendOpen] = useState<boolean>(true);
+  const [isLegendOpen, setIsLegendOpen] = useState<boolean>(false);
 
   // Settlement features state loaded from public/villages.geojson
   const [settlementFeatures, setSettlementFeatures] = useState<Array<{ name: string; lat: number; lon: number }>>([]);
@@ -210,13 +215,12 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         pane: targetPane,
       });
     }
-    // High-contrast cartographic dark matter
+    // High-contrast keyless Esri World Dark Gray Base (zero watermarks, completely reliable)
     return L.tileLayer(
-      'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+      'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
       {
-        attribution: '&copy; OpenStreetMap contributors, &copy; CARTO',
-        subdomains: 'abcd',
-        maxZoom: 20,
+        attribution: 'Tiles &copy; Esri &mdash; DeLorme, NAVTEQ',
+        maxZoom: 16,
         pane: targetPane,
       }
     );
@@ -512,6 +516,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     linesLayerRef.current.clearLayers();
 
     lines.forEach((line) => {
+      if (baselineAccessSliderValue === 0 && (line.layerType === 'severed' || line.layerType === 'detour' || line.layerType === 'diversion')) return;
       if (line.layerType === 'severed' && !layerVisibility.severedBreaches) return;
       if (line.layerType === 'detour' && !layerVisibility.detourBypass) return;
       if (line.layerType === 'baseline' && !layerVisibility.roads) return;
@@ -550,7 +555,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       }
       polyline.addTo(linesLayerRef.current!);
     });
-  }, [lines, layerVisibility, layerOpacity]);
+  }, [lines, layerVisibility, layerOpacity, baselineAccessSliderValue]);
 
   // 3. SETTLEMENT ACCESS & REROUTING (Requirement C & User Directive)
   useEffect(() => {
@@ -586,15 +591,48 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       let evidenceClass: EvidenceClass = 'OBSERVED';
       let statusText = 'REACHABLE';
 
+      const isRescuedByBridge = activeTool === 'bridge' || isBreachTemporarilyReopened;
+      const isRescuedByDetour = rerouteAmbulances;
+      const isRescuedByBoat = activeTool === 'boat';
+      const isRescuedByDrone = activeTool === 'drone';
+      const isRescuedByMMU = activeTool === 'booth';
+
       if (isInCutSector) {
-        if (rerouteAmbulances) {
-          // Village is reconnected through active ambulance diversion!
+        if (isRescuedByBridge) {
+          color = '#10b981'; // Rescued Green
+          radius = 5.5;
+          strokeColor = '#065f46';
+          statusLabel = 'RESCUED & CONNECTED: Direct Highway Access Restored (Bailey Bridge / Culvert)';
+          evidenceClass = 'SIMULATED';
+          statusText = 'RESCUED & CONNECTED';
+        } else if (isRescuedByDetour) {
           color = '#0284c7'; // Rerouted Blue
           radius = 5.0;
           strokeColor = '#0369a1';
-          statusLabel = 'REROUTED: Ambulance Diversion to SMCH Apex Active';
+          statusLabel = 'RESCUED: Ambulance Diversion Bypass Active (+47m delay to SMCH)';
           evidenceClass = 'SIMULATED';
-          statusText = 'REROUTED (BYPASS ACTIVE)';
+          statusText = 'RESCUED (BYPASS ACTIVE)';
+        } else if (isRescuedByBoat) {
+          color = '#06b6d4'; // Boat Cyan
+          radius = 5.0;
+          strokeColor = '#0891b2';
+          statusLabel = 'RESCUED: NDRF 40HP Boat Shuttle Active Across Breach';
+          evidenceClass = 'SIMULATED';
+          statusText = 'RESCUED (BOAT SHUTTLE)';
+        } else if (isRescuedByDrone) {
+          color = '#a855f7'; // UAV Purple
+          radius = 5.0;
+          strokeColor = '#7e22ce';
+          statusLabel = 'RESCUED: UAV Medical Drone Airbridge Supplying Biologicals';
+          evidenceClass = 'SIMULATED';
+          statusText = 'RESCUED (UAV AIRBRIDGE)';
+        } else if (isRescuedByMMU) {
+          color = '#eab308'; // MMU Yellow
+          radius = 5.0;
+          strokeColor = '#a16207';
+          statusLabel = 'RESCUED: Forward Hospital Camp (MMU) Active at Roadhead';
+          evidenceClass = 'SIMULATED';
+          statusText = 'RESCUED (MMU CAMP)';
         } else {
           // Severed / Broken state
           color = '#f43f5e'; // No route (cut-off)
@@ -624,10 +662,21 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       });
 
       const badgeConf = EVIDENCE_CLASS_CONFIG[evidenceClass];
-      circle.bindTooltip(
-        `<div class="p-1 font-mono text-[11px]"><span class="px-1.5 py-0.2 rounded border font-bold text-[9px] mr-1 ${badgeConf.badgeBg} ${badgeConf.badgeText} ${badgeConf.badgeBorder}">${badgeConf.label}</span><strong>${village.name}</strong><br/><span class="text-slate-200">${statusLabel}</span></div>`,
-        { sticky: true }
+      const isTop5Impact = ['binnākāndi', 'binnakandi', 'doodhpatli', 'tolengram', 'harinagar', 'kumbhirgram'].some((t) =>
+        village.name.toLowerCase().includes(t)
       );
+
+      if (isTop5Impact) {
+        circle.bindTooltip(
+          `<div class="font-mono text-[11px] font-bold text-white tracking-wide" style="text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 4px #000, 0 0 8px #000; white-space: nowrap;">${village.name}</div>`,
+          { permanent: true, direction: 'top', offset: [0, -4] }
+        );
+      } else {
+        circle.bindTooltip(
+          `<div class="p-1 font-mono text-[11px]"><span class="px-1.5 py-0.2 rounded border font-bold text-[9px] mr-1 ${badgeConf.badgeBg} ${badgeConf.badgeText} ${badgeConf.badgeBorder}">${badgeConf.label}</span><strong>${village.name}</strong><br/><span class="text-slate-200">${statusLabel}</span></div>`,
+          { sticky: true }
+        );
+      }
 
       circle.on('click', () => {
         if (onSelectFeature) {
@@ -639,7 +688,19 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
             subtitle: 'Cachar Basin Settlement',
             coordinates: [village.lat, village.lon],
             statusText,
-            statusColor: isInCutSector ? (rerouteAmbulances ? 'cyan' : 'rose') : isInDetourSector ? 'amber' : 'emerald',
+            statusColor: isInCutSector
+              ? isRescuedByBridge
+                ? 'emerald'
+                : isRescuedByDetour || isRescuedByBoat
+                ? 'cyan'
+                : isRescuedByDrone
+                ? 'purple'
+                : isRescuedByMMU
+                ? 'amber'
+                : 'rose'
+              : isInDetourSector
+              ? 'amber'
+              : 'emerald',
             evidenceClass,
             dataState: isInCutSector || isInDetourSector ? 'SIMULATED' : 'LIVE',
             metrics: [
@@ -657,13 +718,33 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
               {
                 label: 'Scenario Egress Delay',
                 value: isInCutSector
-                  ? rerouteAmbulances
-                    ? `+${Math.round(tel.additional_min || 46.7)} mins (Rerouted)`
-                    : 'NO ROUTE (Severed)'
+                  ? isRescuedByBridge
+                    ? '0 min delay (Direct Highway Restored)'
+                    : isRescuedByDetour
+                    ? `+${Math.round(tel.additional_min || 46.7)} mins (Bypass Active)`
+                    : isRescuedByBoat
+                    ? '15 mins (Amphibious Shuttle)'
+                    : isRescuedByDrone
+                    ? '12 mins (UAV Airbridge)'
+                    : isRescuedByMMU
+                    ? '5 mins (Roadhead MMU)'
+                    : 'NO ROUTE (Severed by Breach)'
                   : isInDetourSector
                   ? `+${Math.round(tel.additional_min || 46.7)} mins (+${(tel.additional_km || 11.7).toFixed(1)} km)`
                   : '0 min delay',
-                color: isInCutSector ? (rerouteAmbulances ? 'text-cyan-400' : 'text-rose-400') : isInDetourSector ? 'text-amber-400' : 'text-emerald-400',
+                color: isInCutSector
+                  ? isRescuedByBridge
+                    ? 'text-emerald-400'
+                    : isRescuedByDetour || isRescuedByBoat
+                    ? 'text-cyan-400'
+                    : isRescuedByDrone
+                    ? 'text-purple-400'
+                    : isRescuedByMMU
+                    ? 'text-amber-400'
+                    : 'text-rose-400'
+                  : isInDetourSector
+                  ? 'text-amber-400'
+                  : 'text-emerald-400',
                 ledger: {
                   source: 'Lifeline OS Route Engine',
                   date: '2022-06-20',
@@ -684,14 +765,14 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                 },
               },
             ],
-            description: `${village.name} is evaluated under the active ${baselineAccessSliderValue}% simulated closure impact profile. ${isInCutSector ? (rerouteAmbulances ? 'Ambulance diversion convoys actively vector patients via Kumbhirgram to SMCH Apex.' : 'Direct highway egress is severed by the 80m JT Road washout.') : isInDetourSector ? 'Access to SMCH Apex requires an elevated bypass detour.' : 'Corridors remain clear of floodwater.'}`,
+            description: `${village.name} is evaluated under the active ${baselineAccessSliderValue}% simulated closure impact profile. ${isInCutSector ? (isRescuedByBridge ? 'Direct highway access is restored via Bailey Bridge / Culvert. Continuous rescued path connected to hospital.' : isRescuedByDetour ? 'Ambulance diversion convoys actively vector patients via Kumbhirgram to SMCH Apex.' : isRescuedByBoat ? 'NDRF 40HP rescue boats shuttle patients across the river washout.' : isRescuedByDrone ? 'Heavy cargo UAV drone airbridge delivers emergency blood and antivenom in 12 mins.' : isRescuedByMMU ? 'Forward MMU hospital camp on dry roadhead intercepts local trauma.' : 'Direct highway egress is severed by the 80m JT Road washout.') : isInDetourSector ? 'Access to SMCH Apex requires an elevated bypass detour.' : 'Corridors remain clear of floodwater.'}`,
           });
         }
       });
 
       circle.addTo(settlementsLayerRef.current!);
     });
-  }, [settlementFeatures, baselineAccessSliderValue, rerouteAmbulances, layerVisibility.settlements, layerOpacity.settlements, onSelectFeature]);
+  }, [settlementFeatures, baselineAccessSliderValue, rerouteAmbulances, activeTool, isBreachTemporarilyReopened, layerVisibility.settlements, layerOpacity.settlements, onSelectFeature]);
 
   // 4. CHOKE POINTS & HOSPITALS (Markers Layer)
   useEffect(() => {
@@ -701,7 +782,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     // 4.1 Choke Points (Bridges)
     const isZoomedOut = currentZoomLevel < 12;
 
-    if (layerVisibility.bridges && chokePoints.length > 0) {
+    if (layerVisibility.bridges && chokePoints.length > 0 && baselineAccessSliderValue > 0) {
       chokePoints.forEach((cp) => {
         const isSelected = cp.id === activeChokeId;
         const showLabel = isSelected || !isZoomedOut;
@@ -794,13 +875,13 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
           html: showHospLabel ? `
             <div class="cursor-pointer transition-transform hover:scale-110" style="position:relative; transform:translate(-50%, -50%);">
               <div style="display:flex; align-items:center; gap:4px; padding:3px 6px; background:rgba(15,23,42,0.95); border:1.5px solid #0284c7; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.7);">
-                <span style="font-size:9px; font-weight:800; font-family:monospace; background:#082f49; color:#7dd3fc; border:1px solid #0284c7; padding:1px 3px; border-radius:4px;">OFFICIAL</span>
+                <span style="font-size:9px; font-weight:800; font-family:monospace; background:#082f49; color:#7dd3fc; border:1px solid #0284c7; padding:1px 3px; border-radius:4px;">REPORTED</span>
                 ${SVG_HOSPITAL_HTML(14, '#38bdf8')}
-                <span style="font-size:11px; font-weight:700; color:#ffffff; font-family:sans-serif; white-space:nowrap;">${m.title}</span>
+                <span style="font-size:11px; font-weight:700; color:#ffffff; font-family:sans-serif; white-space:nowrap; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;">${m.title}</span>
               </div>
             </div>
           ` : `
-            <div class="cursor-pointer transition-transform hover:scale-125" style="position:relative; transform:translate(-50%, -50%);" title="${m.title} (OFFICIAL HOSPITAL)">
+            <div class="cursor-pointer transition-transform hover:scale-125" style="position:relative; transform:translate(-50%, -50%);" title="${m.title} (REPORTED HOSPITAL)">
               <div style="display:flex; align-items:center; justify-content:center; width:22px; height:22px; background:rgba(15,23,42,0.95); border:1.5px solid #0284c7; border-radius:50%; box-shadow:0 2px 8px rgba(0,0,0,0.6);">
                 ${SVG_HOSPITAL_HTML(12, '#38bdf8')}
               </div>
@@ -818,7 +899,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         marker.addTo(markersLayerRef.current!);
       }
     });
-  }, [chokePoints, activeChokeId, markers, layerVisibility.bridges, layerVisibility.hospitals, currentZoomLevel, onSelectFeature]);
+  }, [chokePoints, activeChokeId, markers, layerVisibility.bridges, layerVisibility.hospitals, currentZoomLevel, onSelectFeature, baselineAccessSliderValue]);
 
   // Zoom to Layer Extent helper (Requirement D)
   const zoomToLayer = (layerName: string) => {
@@ -930,8 +1011,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         </div>
       )}
 
-      {/* LAYER CATALOGUE & VISIBILITY CONTROLS (Requirement D & Matching Reference Sidebar) */}
-      <div className="fixed bottom-12 right-6 z-[860] bg-slate-900/95 border-2 border-slate-700/80 rounded-2xl shadow-2xl w-[320px] max-w-[90vw] backdrop-blur-md select-none pointer-events-auto overflow-hidden transition-all">
+      {/* LAYER CATALOGUE & VISIBILITY CONTROLS (Deconflicted to Top Right Toolbar Area) */}
+      <div className="fixed top-18 right-16 z-[450] bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-2xl w-[310px] max-w-[90vw] backdrop-blur-md select-none pointer-events-auto overflow-hidden transition-all">
         {/* Toggle Header Bar */}
         <div
           onClick={() => setIsLegendOpen(!isLegendOpen)}
@@ -1112,7 +1193,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                       onChange={() => toggleLayerItem('settlements')}
                       className="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0"
                     />
-                    <span>334 Settlements (Access)</span>
+                    <span>319 Settlements (Access)</span>
                   </label>
                   <span className="text-[9px] font-mono px-1.5 py-0.2 rounded font-bold bg-rose-950 text-rose-300 border border-rose-700">
                     SIMULATED
@@ -1149,7 +1230,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                   </label>
                   <div className="flex items-center gap-1">
                     <span className="text-[9px] font-mono px-1.5 py-0.2 rounded font-bold bg-sky-950 text-sky-300 border border-sky-700">
-                      OFFICIAL
+                      MODELLED
                     </span>
                     <button
                       type="button"
@@ -1191,7 +1272,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                     <span>Hospitals &amp; Clinics</span>
                   </label>
                   <span className="text-[9px] font-mono px-1.5 py-0.2 rounded font-bold bg-sky-950 text-sky-300 border border-sky-700">
-                    OFFICIAL
+                    REPORTED
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400">
@@ -1213,6 +1294,154 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
             </div>
           </div>
         )}
+      </div>
+
+      {/* Requirement 5: Small Collapsible Map Legend */}
+      <div className="absolute bottom-28 left-4 z-20 pointer-events-auto select-none">
+        <div className="bg-slate-950/90 backdrop-blur-md border border-slate-800 rounded-xl shadow-xl overflow-hidden text-xs font-mono text-slate-200">
+          <button
+            type="button"
+            onClick={() => setIsLegendCollapsed((prev) => !prev)}
+            className="w-full px-2.5 py-1.5 bg-slate-900/90 hover:bg-slate-800 flex items-center justify-between gap-2 font-bold text-[11px] cursor-pointer"
+          >
+            <span className="flex items-center gap-1.5 text-cyan-300">
+              <span className="w-2 h-2 rounded-full bg-cyan-400" />
+              Map Legend
+            </span>
+            {isLegendCollapsed ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />}
+          </button>
+          {!isLegendCollapsed && (
+            <div className="p-2 space-y-2 border-t border-slate-800/80 text-[10px]">
+              {/* Dot colours */}
+              <div className="space-y-1">
+                <div className="text-slate-400 font-semibold uppercase text-[9px]">Settlements:</div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 border border-emerald-300 shrink-0" />
+                  <span>
+                    {activeTool === 'bridge' || isBreachTemporarilyReopened
+                      ? 'Rescued & connected (319)'
+                      : baselineAccessSliderValue === 0
+                      ? 'Reachable baseline (319)'
+                      : 'Reachable (236)'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-blue-500 border border-blue-300 shrink-0" />
+                  <span>
+                    {rerouteAmbulances
+                      ? 'Rescued via bypass (83)'
+                      : baselineAccessSliderValue === 0
+                      ? 'Rerouted (0)'
+                      : 'Rerouted via bypass (41)'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500 border border-rose-300 shrink-0" />
+                  <span>
+                    {activeTool === 'bridge' || isBreachTemporarilyReopened || rerouteAmbulances
+                      ? 'No route (0 severed)'
+                      : baselineAccessSliderValue === 0
+                      ? 'No route (0)'
+                      : 'No route / severed (42)'}
+                  </span>
+                </div>
+              </div>
+              {/* Line styles */}
+              <div className="space-y-1 pt-1.5 border-t border-slate-800">
+                <div className="text-slate-400 font-semibold uppercase text-[9px]">Line Styles:</div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-4 h-0.5 bg-emerald-400 shrink-0" />
+                  <span>
+                    {activeTool === 'bridge' || isBreachTemporarilyReopened
+                      ? 'Rescued highway route'
+                      : 'Baseline route'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-4 border-t-2 border-dashed border-blue-400 shrink-0" />
+                  <span>
+                    {rerouteAmbulances ? 'Rescued detour bypass' : 'Detour bypass'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-4 h-1 bg-rose-500 border-y border-rose-300 shrink-0" />
+                  <span>Severed breach</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Prominent Before / After Prevention Explainer (Requirement: Damage vs Village Protected with Early Forecast & Intervention) */}
+      <div className="absolute top-16 left-1/2 -translate-x-1/2 z-20 pointer-events-auto select-none max-w-2xl w-[92%] sm:w-auto">
+        <div className={`p-2 sm:px-4 sm:py-2 rounded-2xl backdrop-blur-xl border shadow-2xl flex flex-col sm:flex-row items-center gap-2 sm:gap-4 transition-all ${
+          isBreachTemporarilyReopened || activeTool === 'bridge' || baselineAccessSliderValue === 0
+            ? 'bg-slate-950/92 border-emerald-500/70 shadow-[0_0_25px_rgba(16,185,129,0.25)] text-emerald-200'
+            : 'bg-slate-950/92 border-rose-500/70 shadow-[0_0_25px_rgba(244,63,94,0.25)] text-rose-200'
+        }`}>
+          {/* Status Badge & Indicator */}
+          <div className="flex items-center gap-2 shrink-0">
+            {isBreachTemporarilyReopened || activeTool === 'bridge' || baselineAccessSliderValue === 0 ? (
+              <>
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950 text-emerald-300 border border-emerald-700 uppercase tracking-wider">
+                  🟢 PROTECTED &amp; SAVED
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping shadow-[0_0_8px_#f43f5e]" />
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-rose-950 text-rose-300 border border-rose-700 uppercase tracking-wider">
+                  🔴 UNPREPARED DAMAGE
+                </span>
+              </>
+            )}
+          </div>
+
+          {/* Core Explanatory Storyline */}
+          <div className="text-center sm:text-left text-xs font-sans leading-tight">
+            {isBreachTemporarilyReopened || activeTool === 'bridge' || baselineAccessSliderValue === 0 ? (
+              <div>
+                <strong className="text-white font-bold block text-xs sm:text-sm">
+                  42 of 42 Cut Habitations Reconnected • 18m Rapid Trauma Corridor Restored
+                </strong>
+                <span className="text-[11px] text-slate-300">
+                  <span className="text-emerald-400 font-semibold">Early Intervention:</span> 72h satellite flood alert triggered pre-positioning of Bailey Bridge &amp; culvert armoring. Prevented isolation for 14,000 citizens!
+                </span>
+              </div>
+            ) : (
+              <div>
+                <strong className="text-white font-bold block text-xs sm:text-sm">
+                  42 of 319 Settlements Severed • +47m Delay via Kumbhirgram Detour
+                </strong>
+                <span className="text-[11px] text-slate-300">
+                  <span className="text-rose-400 font-semibold">Disaster Consequence:</span> 80m JT Road breach cut off all direct hospital egress. 14,000 citizens trapped without emergency ambulance access.
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Action Toggle Button */}
+          {onToggleBreachTemporarilyReopened && (
+            <button
+              type="button"
+              onClick={onToggleBreachTemporarilyReopened}
+              className={`px-3 py-1.5 rounded-xl text-[11px] font-mono font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 shadow-md ${
+                isBreachTemporarilyReopened || activeTool === 'bridge' || baselineAccessSliderValue === 0
+                  ? 'bg-rose-950/80 hover:bg-rose-900 border border-rose-700 text-rose-200'
+                  : 'bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.3)]'
+              }`}
+              title="Toggle between disaster damage state and saved prevention state"
+            >
+              {isBreachTemporarilyReopened || activeTool === 'bridge' || baselineAccessSliderValue === 0 ? (
+                <span>View Damage State ➔</span>
+              ) : (
+                <span>⚡ Simulate Early Prevention Fix ➔</span>
+              )}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

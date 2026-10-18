@@ -39,6 +39,7 @@ import {
   getOsrmRoute,
   getCorridorRoadNetwork,
   generateDenseRoadCurve,
+  getSettlementRoadFeeder,
   CorridorRoadNetwork,
 } from './services/osrmRouting';
 import { FleetMode } from './types';
@@ -47,8 +48,8 @@ import { BottomScenarioNavigator } from './components/BottomScenarioNavigator';
 import { EvidenceCatalogueModal } from './components/EvidenceCatalogueModal';
 import { FieldEvidenceEditorModal } from './components/FieldEvidenceEditorModal';
 import { CloudArchitectureModal } from './components/CloudArchitectureModal';
-import { BaselineScenarioAccessSlider } from './components/BaselineScenarioAccessSlider';
 import { WhatWeDontKnowModal } from './components/WhatWeDontKnowModal';
+import { ASSAM_TELEMETRY_RESULTS } from './data/disasterData';
 import {
   ShieldAlert,
   Activity,
@@ -61,6 +62,13 @@ import {
   Waves,
   History,
   Play,
+  MapPin,
+  Layers,
+  Database,
+  HelpCircle,
+  Cloud,
+  Mountain,
+  Edit3,
 } from 'lucide-react';
 
 export function App() {
@@ -114,7 +122,7 @@ export function App() {
   const [isSimulationRunning, setIsSimulationRunning] = useState<boolean>(false);
   const [simulationStep, setSimulationStep] = useState<number>(0);
   const [simulationProgress, setSimulationProgress] = useState<string>('');
-  const [showHeroHeadline, setShowHeroHeadline] = useState<boolean>(true);
+  const [showHeroHeadline, setShowHeroHeadline] = useState<boolean>(false);
 
   // Live 6-Service Keyless Ecosystem Bus & Interoperability Modals
   const [isEcosystemDrawerOpen, setIsEcosystemDrawerOpen] = useState<boolean>(false);
@@ -125,6 +133,13 @@ export function App() {
   const [ecosystemState, setEcosystemState] = useState<EcosystemBusState>(ecosystemBus.getState());
   const [isSosDismissed, setIsSosDismissed] = useState<boolean>(false);
   const [isWhatWeDontKnowOpen, setIsWhatWeDontKnowOpen] = useState<boolean>(false);
+  const [activeRightPopover, setActiveRightPopover] = useState<'layers' | 'evidence' | 'whatwedontknow' | 'cloud' | 'field' | null>(null);
+  const [cameraToast, setCameraToast] = useState<{ title: string; reason: string } | null>(null);
+
+  const showCameraToast = (title: string, reason: string) => {
+    setCameraToast({ title, reason });
+    setTimeout(() => setCameraToast(null), 3000);
+  };
 
   // Baseline vs Scenario Access View (Requirement C)
   const [baselineAccessSliderValue, setBaselineAccessSliderValue] = useState<number>(100);
@@ -252,14 +267,42 @@ export function App() {
     return currentTheater.zoom;
   }, [currentTheater.zoom]);
 
+  // Scenario Switcher with Strict State Isolation (Requirement 1)
+  const handleSelectScenario = (id: string) => {
+    setActiveTheaterId(id);
+    setSelectedChokeIdx(0);
+    setInspectedFeature(null);
+    setRerouteAmbulances(false);
+    setActivateSurgeBeds(false);
+    setIsBreachTemporarilyReopened(false);
+    setIsLiveDispatched(false);
+    setInterventions({});
+    setDetourRoutePoints([]);
+    setNormalRoutePoints([]);
+    setBaselineAccessSliderValue(100);
+    setIsSimulatedClosureActive(true);
+    setActiveRightPopover(null);
+
+    const nextTheater = THEATERS[id] || THEATERS.silchar;
+    setCameraCommand({
+      id: `cmd_scenario_${id}_${Date.now()}`,
+      type: 'overview',
+      center: nextTheater.center,
+      zoom: nextTheater.zoom || 12,
+      duration: 0.8,
+    });
+    showCameraToast(nextTheater.name, 'Switched scenario workspace');
+  };
+
   // Overview Camera Handler (Zoom 12)
   const handleResetOverview = () => {
+    showCameraToast(currentTheater.name, 'Reset regional overview');
     setCameraCommand({
       id: `cmd_overview_${Date.now()}`,
       type: 'overview',
       center: currentTheater.center,
       zoom: 12,
-      duration: 1.1,
+      duration: 0.8,
     });
   };
 
@@ -286,6 +329,7 @@ export function App() {
     const maxLon = Math.max(...lons);
 
     setPulsingTarget([cp.lat, cp.lon]);
+    showCameraToast(cp.road_name.split(' (')[0], 'Strategic disruption corridor');
     setCameraCommand({
       id: `cmd_corridor_${cp.id}_${Date.now()}`,
       type: 'bounds',
@@ -295,20 +339,21 @@ export function App() {
       ],
       paddingLeft: panelWidth + 50,
       zoom: 14,
-      duration: 1.1,
+      duration: 0.8,
     });
   };
 
   // Zoom in on Specific Hospital or Coordinate
   const triggerPointFocus = (coords: { lat: number; lon: number; name?: string }) => {
     setPulsingTarget([coords.lat, coords.lon]);
+    showCameraToast(coords.name || 'Map Point', 'Inspecting map location');
     setCameraCommand({
       id: `cmd_point_${Date.now()}`,
       type: 'point',
       center: [coords.lat, coords.lon],
       zoom: 15,
       paddingLeft: panelWidth + 50,
-      duration: 0.9,
+      duration: 0.8,
     });
   };
 
@@ -688,38 +733,82 @@ export function App() {
         Math.hypot(village.lat - selectedChoke.lat, village.lon - selectedChoke.lon) * 111
       ).toFixed(1);
 
+      const isVillageRescued =
+        isBreachTemporarilyReopened ||
+        activeSelectedTool === 'bridge' ||
+        rerouteAmbulances ||
+        activeSelectedTool === 'boat' ||
+        activeSelectedTool === 'drone' ||
+        activeSelectedTool === 'booth';
+
+      const bannerText = isVillageRescued
+        ? isBreachTemporarilyReopened || activeSelectedTool === 'bridge'
+          ? `✓ RESCUED: ${village.name} (Direct Highway Connected)`
+          : rerouteAmbulances
+          ? `🚑 RESCUED: ${village.name} (Bypass Detour Active)`
+          : activeSelectedTool === 'boat'
+          ? `⛵ RESCUED: ${village.name} (Boat Shuttle Active)`
+          : activeSelectedTool === 'drone'
+          ? `🚁 RESCUED: ${village.name} (Drone Airbridge Active)`
+          : `🏥 RESCUED: ${village.name} (Forward MMU Camp Active)`
+        : `⛔ DISCONNECTED: ${village.name} (${popStr} Pop • 0 Road Corridors)`;
+
       list.push({
         lat: village.lat,
         lon: village.lon,
         title: village.name,
-        type: 'isolated',
-        customBanner: `DISCONNECTED: ${village.name} (${popStr} Pop)`,
+        type: isVillageRescued ? 'rerouted' : 'isolated',
+        customBanner: bannerText,
         stepCategory: 'start',
         onClick: () => {
           setInspectedFeature({
             id: village.id || `v_${vIdx}`,
             type: 'village',
             title: village.name,
-            subtitle: `Disconnected Rural Habitation • ${distFromBreachKm} km to Breach`,
+            subtitle: isVillageRescued
+              ? `Reconnected Habitation • Rescued Road Access Active`
+              : `Disconnected Rural Habitation • ${distFromBreachKm} km to Breach`,
             coordinates: [village.lat, village.lon],
-            statusText: 'COMMUNITY DISCONNECTED',
-            statusColor: 'amber',
+            statusText: isVillageRescued ? 'RESCUED & CONNECTED' : 'COMMUNITY DISCONNECTED',
+            statusColor: isVillageRescued ? 'emerald' : 'rose',
             evidenceClass: 'MODELLED',
             dataState: 'LIVE',
             metrics: [
-              { label: 'Est. Population', value: `${popStr} Citizens`, color: 'text-amber-400' },
+              { label: 'Est. Population', value: `${popStr} Citizens`, color: isVillageRescued ? 'text-emerald-400' : 'text-amber-400' },
               {
                 label: 'Isolation Status',
-                value: activeSelectedTool === 'bridge' ? 'Bridge Access Restored' : 'Road Cut Off • Disconnected',
-                color: activeSelectedTool === 'bridge' ? 'text-emerald-400' : 'text-rose-400',
+                value: isVillageRescued
+                  ? isBreachTemporarilyReopened || activeSelectedTool === 'bridge'
+                    ? 'Rescued: Bridge Highway Restored'
+                    : rerouteAmbulances
+                    ? 'Rescued: Detour Bypass Active'
+                    : activeSelectedTool === 'boat'
+                    ? 'Rescued: River Boat Shuttle'
+                    : activeSelectedTool === 'drone'
+                    ? 'Rescued: UAV Medical Airbridge'
+                    : 'Rescued: Forward MMU Camp'
+                  : 'Road Cut Off • Disconnected',
+                color: isVillageRescued ? 'text-emerald-400' : 'text-rose-400',
               },
               {
                 label: 'Trauma Access',
-                value: activeSelectedTool === 'bridge' ? '18 mins (Direct Highway)' : '65 mins (Detour Bypass)',
+                value: isVillageRescued
+                  ? isBreachTemporarilyReopened || activeSelectedTool === 'bridge'
+                    ? '18 mins (Direct Highway Restored)'
+                    : rerouteAmbulances
+                    ? '65 mins (+47m Detour Bypass)'
+                    : activeSelectedTool === 'boat'
+                    ? '15 mins (Amphibious Shuttle)'
+                    : activeSelectedTool === 'drone'
+                    ? '12 mins (UAV Cargo)'
+                    : '5 mins (Roadhead MMU)'
+                  : 'NO ROUTE (Severed by Breach)',
               },
               { label: 'Distance to Breach', value: `${distFromBreachKm} km` },
             ],
-            description: `Nearby rural population disconnected by the ${selectedChoke.road_name} flood breach. Direct road access to referral trauma care is severed.`,
+            description: isVillageRescued
+              ? `${village.name} has been rescued and reconnected! Emergency transit is established across the corridor.`
+              : `Nearby rural population disconnected by the ${selectedChoke.road_name} flood breach. Direct road access to referral trauma care is severed.`,
             actionButton: {
               label: 'Inspect in Protect',
               onClick: () => setActiveChapter('protect'),
@@ -845,8 +934,40 @@ export function App() {
     const list: MapLine[] = [];
     if (!selectedChoke) return list;
 
+    const allNearbyVillages =
+      selectedChoke.villages && selectedChoke.villages.length > 0
+        ? selectedChoke.villages
+        : [
+            {
+              id: 'v_orig',
+              name: `${selectedChoke.road_name.split(' ')[0]} Habitation`,
+              lat: selectedChoke.lat + 0.014,
+              lon: selectedChoke.lon + 0.012,
+              population: Math.round(selectedChoke.trapped_villages_count * 116.66 * 4.8),
+            },
+          ];
+
+    const targetHospCoords: [number, number] = destHospital
+      ? [destHospital.lat, destHospital.lon]
+      : [selectedChoke.lat - 0.04, selectedChoke.lon - 0.03];
+
+    const junctionPoint: [number, number] =
+      activeCorridorNet.northApproach[0] || [selectedChoke.lat + 0.005, selectedChoke.lon + 0.003];
+
     // 0. If temporary culvert / breach closure is simulated reopened:
     if (isBreachTemporarilyReopened) {
+      allNearbyVillages.forEach((v) => {
+        const feeder = getSettlementRoadFeeder(v.id, [v.lat, v.lon], junctionPoint);
+        list.push({
+          id: `rescued_path_culvert_${v.id}`,
+          points: [...feeder, ...activeCorridorNet.fullRestored],
+          color: '#10b981',
+          weight: 5,
+          label: `✓ RESCUED PATH: ${v.name} -> Temporary Culvert Restored -> ${destHospital?.name || 'Hospital'} (${selectedChoke.baseline_km} km • 18m)`,
+          layerType: 'baseline',
+        });
+      });
+
       list.push({
         id: 'corridor_full_restored_highway',
         points: activeCorridorNet.fullRestored,
@@ -858,87 +979,24 @@ export function App() {
       return list;
     }
 
-    // 1. When NO Bridge Built (tool === 'none'): Visibly SEVERED broken pathway!
-    if (activeSelectedTool === 'none') {
-      const showBaseline = detourRouteMode === 'both' || detourRouteMode === 'baseline';
-      const showDetour = detourRouteMode === 'both' || detourRouteMode === 'detour';
-
-      if (showBaseline) {
-        // 1.1 North Approach (from isolated village down to breach head)
-        list.push({
-          id: 'corridor_north_approach',
-          points: activeCorridorNet.northApproach,
-          color: '#f59e0b',
-          weight: 5,
-          label: `Approach Road: Habitations to Breach (${selectedChoke.trapped_villages_count} Villages)`,
-          layerType: 'baseline',
-        });
-
-        // 1.1b Feeder Connector Roads linking all nearby disconnected habitations to the approach highway
-        const allNearbyVillages =
-          selectedChoke.villages && selectedChoke.villages.length > 0
-            ? selectedChoke.villages
-            : [];
-
-        allNearbyVillages.slice(1).forEach((v, idx) => {
-          list.push({
-            id: `corridor_feeder_village_${v.id || idx}`,
-            points: [
-              [v.lat, v.lon],
-              activeCorridorNet.northApproach[0] || [selectedChoke.lat + 0.005, selectedChoke.lon + 0.003],
-            ],
-            color: '#f59e0b',
-            dashArray: '5, 5',
-            weight: 3,
-            label: `Feeder Link: ${v.name} -> Approach Highway`,
-            layerType: 'baseline',
-          });
-        });
-
-        // 1.2 Severed Breach Gap (pulsing red hazard gap over submerged deck)
-        list.push({
-          id: 'corridor_breach_gap_hazard',
-          points: activeCorridorNet.breachGap,
-          color: '#ef4444',
-          dashArray: '6, 6',
-          weight: 7,
-          label: `⛔ ROAD SEVERED • ${selectedChoke.exposed_meters}m WASHOUT GAP (Bridge Deck Submerged)`,
-          layerType: 'severed',
-        });
-
-        // 1.3 South Approach (from water abutment into hospital district)
-        list.push({
-          id: 'corridor_south_approach',
-          points: activeCorridorNet.southApproach,
-          color: '#64748b',
-          weight: 4,
-          label: 'Disconnected South Highway (Cut Off by Flood)',
-          layerType: 'baseline',
-        });
-      }
-
-      if (showDetour) {
-        // 1.4 Active Emergency Flood Detour Bypass
-        list.push({
-          id: 'emergency_detour_route',
-          points: activeCorridorNet.detour,
-          color: '#f59e0b',
-          dashArray: '10, 8',
-          weight: 5,
-          label: `⚠️ FLOOD BASIN DETOUR: ${selectedChoke.detour_km} km to Backup Hospital (+${(
-            selectedChoke.detour_km - selectedChoke.baseline_km
-          ).toFixed(1)} km Bypass • ${selectedChoke.detour_travel_mins || 65} mins)`,
-          layerType: 'detour',
-        });
-      }
-    }
-
-    // 2. When Bailey Bridge is Built: Brown Highway & Truss Span
+    // 1. When Bailey Bridge is Built: Brown Highway & Truss Span (ALL VILLAGES RESCUED & CONNECTED)
     if (activeSelectedTool === 'bridge') {
+      allNearbyVillages.forEach((v) => {
+        const feeder = getSettlementRoadFeeder(v.id, [v.lat, v.lon], junctionPoint);
+        list.push({
+          id: `rescued_path_bridge_${v.id}`,
+          points: [...feeder, ...activeCorridorNet.fullRestored],
+          color: '#10b981',
+          weight: 5,
+          label: `✓ RESCUED PATH: ${v.name} -> Bailey Bridge Restored Highway -> ${destHospital?.name || 'Hospital'} (${selectedChoke.baseline_km} km • 14 mins)`,
+          layerType: 'baseline',
+        });
+      });
+
       list.push({
         id: 'corridor_full_restored_highway',
         points: activeCorridorNet.fullRestored,
-        color: '#b45309',
+        color: '#059669',
         weight: 6,
         label: `BAILEY BRIDGE ACTIVE: Full Direct Highway Access Restored (${selectedChoke.baseline_km} km • 14 mins)`,
         layerType: 'baseline',
@@ -948,15 +1006,82 @@ export function App() {
       list.push({
         id: 'corridor_steel_truss_span',
         points: activeCorridorNet.breachGap,
-        color: '#92400e',
+        color: '#047857',
         weight: 8,
         label: `Class-40 Steel Modular Span (${selectedChoke.exposed_meters}m Gap Bridged • 16T IRC:6 Ready)`,
         layerType: 'baseline',
       });
+      return list;
+    }
+
+    // 2. When Ambulance Rerouting (Detour Bypass) is Active: ALL VILLAGES RESCUED VIA DETOUR
+    if (rerouteAmbulances) {
+      allNearbyVillages.forEach((v) => {
+        const feeder = getSettlementRoadFeeder(v.id, [v.lat, v.lon], junctionPoint);
+        list.push({
+          id: `rescued_path_detour_${v.id}`,
+          points: [...feeder, ...activeCorridorNet.detour],
+          color: '#0284c7',
+          dashArray: '8, 6',
+          weight: 5,
+          label: `🚑 RESCUED DETOUR: ${v.name} -> Kumbhirgram Bypass -> SMCH Apex Hospital (${selectedChoke.detour_km} km • 65 mins)`,
+          layerType: 'detour',
+        });
+      });
+
+      list.push({
+        id: 'emergency_detour_route',
+        points: activeCorridorNet.detour,
+        color: '#0284c7',
+        dashArray: '10, 8',
+        weight: 6,
+        label: `🚑 ACTIVE AMBULANCE DIVERSION DETOUR: ${selectedChoke.detour_km} km Bypass to SMCH Apex (+${(
+          selectedChoke.detour_km - selectedChoke.baseline_km
+        ).toFixed(1)} km Bypass • ${selectedChoke.detour_travel_mins || 65} mins)`,
+        layerType: 'detour',
+      });
+
+      // Specific fleet diversions
+      const surgePlan = calculateAmbulanceSurgeAllocation(selectedChoke, currentTheater.hospitals);
+      surgePlan.assignments.forEach((assignment, aIdx) => {
+        list.push({
+          id: `ambulance_diversion_${assignment.ambulanceId}`,
+          points: assignment.routePoints,
+          color: aIdx === 0 ? '#0284c7' : '#0ea5e9',
+          dashArray: '6, 6',
+          weight: 4,
+          label: `🚑 ${assignment.ambulanceId} DIVERSION: ${assignment.patientsCarried} Patients to ${assignment.destHospitalName} (${assignment.estimatedTransitMins}m via bypass)`,
+          layerType: 'diversion',
+        });
+      });
+
+      // Breach gap remains severed
+      list.push({
+        id: 'corridor_breach_gap_hazard',
+        points: activeCorridorNet.breachGap,
+        color: '#ef4444',
+        dashArray: '6, 6',
+        weight: 6,
+        label: `⛔ RIVER GAP SEVERED • ${selectedChoke.exposed_meters}m Water Barrier (Ambulances Rerouted via Bypass)`,
+        layerType: 'severed',
+      });
+      return list;
     }
 
     // 3. When Hospital Camp (MMU) is Stationed: Yellow Camp Roadhead
     if (activeSelectedTool === 'booth') {
+      allNearbyVillages.forEach((v) => {
+        const feeder = getSettlementRoadFeeder(v.id, [v.lat, v.lon], junctionPoint);
+        list.push({
+          id: `rescued_path_mmu_${v.id}`,
+          points: [...feeder, ...activeCorridorNet.northApproach],
+          color: '#eab308',
+          weight: 4,
+          label: `🏥 RESCUED ACCESS: ${v.name} -> Forward Hospital Camp MMU`,
+          layerType: 'catchment',
+        });
+      });
+
       list.push({
         id: 'corridor_mmu_north_approach',
         points: activeCorridorNet.northApproach,
@@ -987,10 +1112,23 @@ export function App() {
         label: `Detour Bypass for Surgical Referrals (${selectedChoke.detour_km} km)`,
         layerType: 'detour',
       });
+      return list;
     }
 
     // 4. When UAV Medical Drone is Deployed: Purple Airbridge
     if (activeSelectedTool === 'drone') {
+      allNearbyVillages.forEach((v) => {
+        list.push({
+          id: `rescued_path_drone_${v.id}`,
+          points: [targetHospCoords, [v.lat, v.lon]],
+          color: '#a855f7',
+          dashArray: '10, 8',
+          weight: 4,
+          label: `🚁 RESCUED VIA AIRBRIDGE: UAV Medical Delivery to ${v.name} (12 mins)`,
+          layerType: 'drone',
+        });
+      });
+
       list.push({
         id: 'drone_flight_airbridge',
         points: activeCorridorNet.droneAirbridge,
@@ -1011,10 +1149,23 @@ export function App() {
         label: `GROUND ROAD SEVERED • ${selectedChoke.exposed_meters}m Gap`,
         layerType: 'severed',
       });
+      return list;
     }
 
     // 5. When NDRF Rescue Boat is Deployed: Blue Water Crossing
     if (activeSelectedTool === 'boat') {
+      allNearbyVillages.forEach((v) => {
+        const feeder = getSettlementRoadFeeder(v.id, [v.lat, v.lon], junctionPoint);
+        list.push({
+          id: `rescued_path_boat_feeder_${v.id}`,
+          points: [...feeder, ...activeCorridorNet.northApproach],
+          color: '#0284c7',
+          weight: 4,
+          label: `⛵ RESCUED ACCESS: ${v.name} -> Northern Boat Slipway`,
+          layerType: 'boat',
+        });
+      });
+
       list.push({
         id: 'rescue_boat_ferry_line',
         points: activeCorridorNet.ferryShuttle,
@@ -1042,56 +1193,127 @@ export function App() {
         label: 'Approach from Southern Disembarkation Abutment',
         layerType: 'baseline',
       });
+
+      if (activeCorridorNet.southApproach.length > 0) {
+        list.push({
+          id: 'corridor_boat_hospital_transfer',
+          points: [activeCorridorNet.southApproach[activeCorridorNet.southApproach.length - 1], targetHospCoords],
+          color: '#0284c7',
+          weight: 4,
+          label: `Ambulance Transfer: Boat Slipway -> ${destHospital?.name || 'Hospital'} (12 mins)`,
+          layerType: 'boat',
+        });
+      }
+
+      // Breach gap remains severed
+      list.push({
+        id: 'corridor_breach_gap_hazard',
+        points: activeCorridorNet.breachGap,
+        color: '#ef4444',
+        dashArray: '6, 6',
+        weight: 5,
+        label: `RIVER GAP SEVERED • ${selectedChoke.exposed_meters}m Flood Barrier`,
+        layerType: 'severed',
+      });
+      return list;
     }
 
-    // 6. Ambulance Diversion Route (when toggled in Chapter 3: PROTECT)
-    if (rerouteAmbulances) {
-      const surgePlan = calculateAmbulanceSurgeAllocation(selectedChoke, currentTheater.hospitals);
-      surgePlan.assignments.forEach((assignment, aIdx) => {
+    // 6. When NO Fix Applied (activeSelectedTool === 'none'): Visibly SEVERED broken pathways on actual roads!
+    const showBaseline = detourRouteMode === 'both' || detourRouteMode === 'baseline';
+    const showDetour = detourRouteMode === 'both' || detourRouteMode === 'detour';
+
+    if (showBaseline) {
+      // Feeder connector roads on actual roads for each disconnected habitation
+      allNearbyVillages.forEach((v) => {
+        const feeder = getSettlementRoadFeeder(v.id, [v.lat, v.lon], junctionPoint);
         list.push({
-          id: `ambulance_diversion_${assignment.ambulanceId}`,
-          points: assignment.routePoints,
-          color: aIdx === 0 ? '#0284c7' : '#0ea5e9',
-          dashArray: '6, 6',
+          id: `corridor_feeder_village_${v.id}`,
+          points: feeder,
+          color: '#f59e0b',
           weight: 4,
-          label: `🚑 ${assignment.ambulanceId} DIVERSION: ${assignment.patientsCarried} Patients to ${assignment.destHospitalName} (${assignment.estimatedTransitMins}m via bypass)`,
-          layerType: 'diversion',
+          label: `Actual Road Feeder: ${v.name} -> Highway Approach (Disconnected)`,
+          layerType: 'baseline',
         });
+      });
+
+      // North Approach highway
+      list.push({
+        id: 'corridor_north_approach',
+        points: activeCorridorNet.northApproach,
+        color: '#f59e0b',
+        weight: 5,
+        label: `Approach Highway: Habitations to Breach (${selectedChoke.trapped_villages_count} Disconnected Settlements)`,
+        layerType: 'baseline',
+      });
+
+      // Severed Breach Gap (pulsing red hazard gap over submerged deck)
+      list.push({
+        id: 'corridor_breach_gap_hazard',
+        points: activeCorridorNet.breachGap,
+        color: '#ef4444',
+        dashArray: '6, 6',
+        weight: 7,
+        label: `⛔ ROAD SEVERED • ${selectedChoke.exposed_meters}m WASHOUT GAP (Bridge Deck Submerged)`,
+        layerType: 'severed',
+      });
+
+      // South Approach (from water abutment into hospital district)
+      list.push({
+        id: 'corridor_south_approach',
+        points: activeCorridorNet.southApproach,
+        color: '#64748b',
+        weight: 4,
+        label: 'Disconnected South Highway (Cut Off by Flood)',
+        layerType: 'baseline',
+      });
+    }
+
+    if (showDetour) {
+      list.push({
+        id: 'emergency_detour_route',
+        points: activeCorridorNet.detour,
+        color: '#f59e0b',
+        dashArray: '10, 8',
+        weight: 5,
+        label: `⚠️ FLOOD BASIN DETOUR: ${selectedChoke.detour_km} km to Backup Hospital (+${(
+          selectedChoke.detour_km - selectedChoke.baseline_km
+        ).toFixed(1)} km Bypass • ${selectedChoke.detour_travel_mins || 65} mins)`,
+        layerType: 'detour',
       });
     }
 
     return list;
-  }, [selectedChoke, activeSelectedTool, activeCorridorNet, rerouteAmbulances, detourRouteMode, isBreachTemporarilyReopened, currentTheater]);
+  }, [selectedChoke, activeSelectedTool, activeCorridorNet, rerouteAmbulances, detourRouteMode, isBreachTemporarilyReopened, currentTheater, destHospital]);
 
   // 5 Operational Command Chapters definition
   const coreSteps = [
     {
       id: 'chapter1_prevent',
-      label: '01. PREVENT',
+      label: 'PREVENT',
       desc: 'Cut-Edges & Road Severance',
       icon: ShieldAlert,
     },
     {
       id: 'chapter2_predict',
-      label: '02. PREDICT',
+      label: 'PREDICT',
       desc: 'Evidence & Data Coverage',
       icon: Waves,
     },
     {
       id: 'chapter3_protect',
-      label: '03. PROTECT',
+      label: 'PROTECT',
       desc: 'Hospital Surge & START Triage',
       icon: Activity,
     },
     {
       id: 'chapter4_respond',
-      label: '04. RESPOND',
+      label: 'RESPOND',
       desc: 'Constrained Allocation & Dispatch',
       icon: Sliders,
     },
     {
       id: 'chapter5_learn',
-      label: '05. LEARN',
+      label: 'LEARN',
       desc: 'Audit Trail & Benchmarks',
       icon: History,
     },
@@ -1147,6 +1369,8 @@ export function App() {
             mapMode={viewMode === 'satellite' ? 'satellite' : viewMode === 'street' ? 'street' : 'vector'}
             onMapModeChange={(mode) => setViewMode(mode === 'satellite' ? 'satellite' : mode === 'street' ? 'street' : 'map')}
             rerouteAmbulances={rerouteAmbulances}
+            isBreachTemporarilyReopened={isBreachTemporarilyReopened}
+            onToggleBreachTemporarilyReopened={() => setIsBreachTemporarilyReopened((prev) => !prev)}
             isSimulationRunning={isSimulationRunning}
             baselineAccessSliderValue={baselineAccessSliderValue}
             onSelectFeature={(feat) => setInspectedFeature(feat)}
@@ -1154,37 +1378,16 @@ export function App() {
         )}
       </div>
 
-      {/* Requirement C: Baseline vs Scenario Access View Slider & Live Counter */}
-      <div
-        className="fixed top-16 z-30 transition-all duration-300 pointer-events-auto hidden sm:block"
-        style={{
-          left: `calc(${isDrawerCollapsed ? 60 : panelWidth}px + 20px)`,
-        }}
-      >
-        <BaselineScenarioAccessSlider
-          sliderValue={baselineAccessSliderValue}
-          onChangeSliderValue={handleChangeAccessSlider}
-          isSimulatedClosureActive={isSimulatedClosureActive}
-          onToggleSimulatedClosure={handleToggleSimulatedClosure}
-          isRerouted={rerouteAmbulances}
-          onToggleReroute={() => setRerouteAmbulances((prev) => !prev)}
-          reachableCount={baselineAccessSliderValue === 0 ? 334 : 269}
-          reroutedCount={baselineAccessSliderValue === 0 ? 0 : rerouteAmbulances ? 65 : 38}
-          isolatedCount={baselineAccessSliderValue === 0 ? 0 : rerouteAmbulances ? 0 : 27}
-          totalCount={334}
-        />
-      </div>
-
-      {/* FIRST 10 SECONDS HERO BANNER (Section 1 Brief Requirement) */}
+      {/* INTRO HERO BANNER (Dismissible, once dismissed never sits over map) */}
       {showHeroHeadline && (
         <div
           className="fixed top-16 z-30 transition-all duration-300 pointer-events-auto"
           style={{
             left: `calc(${isDrawerCollapsed ? 60 : panelWidth}px + 20px)`,
-            right: '24px',
+            right: '64px',
           }}
         >
-          <div className="max-w-4xl mx-auto p-3.5 rounded-2xl bg-slate-900/95 border border-cyan-500/50 shadow-[0_0_30px_rgba(6,182,212,0.25)] backdrop-blur-2xl flex flex-col md:flex-row md:items-center justify-between gap-3 text-white">
+          <div className="max-w-3xl mx-auto p-3 rounded-2xl bg-slate-900/95 border border-cyan-500/50 shadow-2xl backdrop-blur-2xl flex flex-col md:flex-row md:items-center justify-between gap-3 text-white">
             <div className="space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-700 uppercase tracking-wider">
@@ -1197,10 +1400,10 @@ export function App() {
                   HISTORICAL REPLAY, simulated closure on OSM graph
                 </span>
               </div>
-              <h1 className="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2">
-                <span>See how one flood disruption affects emergency access.</span>
+              <h1 className="text-sm sm:text-base font-black tracking-tight text-white">
+                See how one flood disruption affects emergency access.
               </h1>
-              <p className="text-xs text-slate-300 font-sans max-w-2xl leading-relaxed">
+              <p className="text-[11px] text-slate-300 font-sans max-w-xl leading-relaxed">
                 When floods disrupt roads, Lifeline OS helps responders identify which healthcare services may lose access, compare feasible alternatives, and test a response before acting.
               </p>
             </div>
@@ -1210,21 +1413,21 @@ export function App() {
                 type="button"
                 onClick={handleRunResponseSimulation}
                 disabled={isSimulationRunning}
-                className={`px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer shadow-xl ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xl ${
                   isSimulationRunning
                     ? 'bg-amber-950/90 border-2 border-amber-500 text-amber-200 animate-pulse'
                     : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)] border border-emerald-400'
                 }`}
-                title="Run 10-second response simulation: Disruption -> Consequence -> Decision"
+                title="Run closure simulation: Disruption -> Consequence -> Decision"
               >
-                <Play className={`w-4 h-4 ${isSimulationRunning ? 'animate-spin' : 'fill-white'}`} />
-                <span>{isSimulationRunning ? (simulationProgress || 'Simulating...') : 'Run response simulation'}</span>
+                <Play className={`w-3.5 h-3.5 ${isSimulationRunning ? 'animate-spin' : 'fill-white'}`} />
+                <span>{isSimulationRunning ? (simulationProgress || 'Simulating...') : 'Run closure simulation'}</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setShowHeroHeadline(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 cursor-pointer text-xs transition-colors"
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 cursor-pointer text-xs transition-colors"
                 title="Dismiss headline"
               >
                 ✕
@@ -1250,19 +1453,11 @@ export function App() {
         onOpenTelemetry={() => setIsWeatherPanelOpen((prev) => !prev)}
         onOpenEcosystemBus={() => setIsEcosystemDrawerOpen(true)}
         activeTheaterId={activeTheaterId}
-        onSelectTheater={(id) => {
-          setActiveTheaterId(id);
-          setInterventions({});
-          setSelectedChokeIdx(0);
-          setIsLiveDispatched(false);
-        }}
+        onSelectTheater={handleSelectScenario}
         customTheater={customTheater}
         onLoadCustomTheater={(th) => {
           setCustomTheater(th);
-          setActiveTheaterId('custom');
-          setInterventions({});
-          setSelectedChokeIdx(0);
-          setIsLiveDispatched(false);
+          handleSelectScenario('custom');
         }}
         onSearchFocus={(coords) =>
           triggerPointFocus({ lat: coords[0], lon: coords[1], name: 'Search Location' })
@@ -1289,8 +1484,7 @@ export function App() {
         onRunResponseSimulation={handleRunResponseSimulation}
         isSimulationRunning={isSimulationRunning}
         simulationProgress={simulationProgress}
-        onOpenCloudArchitecture={() => setIsCloudModalOpen(true)}
-        onOpenWhatWeDontKnow={() => setIsWhatWeDontKnowOpen(true)}
+        onResetOverview={handleResetOverview}
       />
 
       {/* 3. EDITORIAL 5-CHAPTER INCIDENT COMMAND PANEL DOCKED ON LEFT */}
@@ -1449,58 +1643,114 @@ export function App() {
         activeInterventions={interventions}
       />
 
+      {/* Toast notification for camera movement (Requirement 4) */}
+      {cameraToast && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[3000] bg-slate-900/95 border border-cyan-500/50 shadow-2xl rounded-lg px-4 py-2 flex items-center gap-2 text-xs text-cyan-200 animate-in fade-in slide-in-from-top-2 duration-200">
+          <MapPin className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+          <span>
+            <strong className="text-white">{cameraToast.title}</strong>: {cameraToast.reason}
+          </span>
+        </div>
+      )}
+
+      {/* Right Icon Toolbar (Requirement 3: Right icon toolbar opening ONE popover at a time) */}
+      <div className="fixed right-4 top-20 z-[2000] flex flex-col gap-2 bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-xl p-1.5 shadow-xl">
+        <button
+          onClick={() => setActiveRightPopover(prev => prev === 'evidence' ? null : 'evidence')}
+          title="Evidence Ledger & Catalog"
+          className={`p-2.5 rounded-lg transition-all ${activeRightPopover === 'evidence' ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`}
+        >
+          <Database className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => setActiveRightPopover(prev => prev === 'whatwedontknow' ? null : 'whatwedontknow')}
+          title="What We Don't Know (Epistemic Uncertainty)"
+          className={`p-2.5 rounded-lg transition-all ${activeRightPopover === 'whatwedontknow' ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`}
+        >
+          <HelpCircle className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => setActiveRightPopover(prev => prev === 'cloud' ? null : 'cloud')}
+          title="Google Cloud & Verification"
+          className={`p-2.5 rounded-lg transition-all ${activeRightPopover === 'cloud' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`}
+        >
+          <Cloud className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => setActiveRightPopover(prev => prev === 'field' ? null : 'field')}
+          title="Field Evidence Editor"
+          className={`p-2.5 rounded-lg transition-all ${activeRightPopover === 'field' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`}
+        >
+          <Edit3 className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => setViewMode(prev => prev === '3d' ? 'map' : '3d')}
+          title="Toggle 3D Terrain View"
+          className={`p-2.5 rounded-lg transition-all ${viewMode === '3d' ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`}
+        >
+          <Mountain className="w-4 h-4" />
+        </button>
+      </div>
+
       {/* Bottom Floating Scenario Navigator & Investigation Workspace Dock */}
       <BottomScenarioNavigator
         activeScenarioId={(activeTheaterId === 'nepal' ? 'nepal' : 'silchar')}
-        onSelectScenario={(id) => {
-          setActiveTheaterId(id);
-          setSelectedChokeIdx(0);
-          const targetCoords = id === 'nepal' ? [27.525, 85.69] : [24.8333, 92.7789];
-          setCameraCommand({
-            id: `cmd_scenario_${id}_${Date.now()}`,
-            type: 'point',
-            center: targetCoords as [number, number],
-            zoom: 12,
-            duration: 1.2,
-          });
-        }}
+        onSelectScenario={handleSelectScenario}
         onRunSimulation={handleRunResponseSimulation}
         isSimulationRunning={isSimulationRunning}
         simulationProgress={simulationProgress}
-        onOpenEvidenceCatalogue={() => setIsEvidenceModalOpen(true)}
-        onOpenFieldEditor={() => setIsFieldEditorModalOpen(true)}
-        onOpenCloudArchitecture={() => setIsCloudModalOpen(true)}
-        viewMode={viewMode}
-        onSelectViewMode={(mode) => setViewMode(mode)}
+        sliderValue={baselineAccessSliderValue}
+        onChangeSliderValue={handleChangeAccessSlider}
+        isSimulatedClosureActive={isSimulatedClosureActive}
+        onToggleSimulatedClosure={handleToggleSimulatedClosure}
+        isRerouted={rerouteAmbulances}
+        onToggleReroute={() => setRerouteAmbulances(prev => !prev)}
+        reachableCount={activeTheaterId === 'nepal' ? undefined : (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 319 : ASSAM_TELEMETRY_RESULTS.reachableCount)}
+        reroutedCount={activeTheaterId === 'nepal' ? undefined : (rerouteAmbulances ? 83 : (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 0 : ASSAM_TELEMETRY_RESULTS.reroutedCount))}
+        isolatedCount={activeTheaterId === 'nepal' ? undefined : (rerouteAmbulances || isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 0 : ASSAM_TELEMETRY_RESULTS.noRouteCount)}
+        analysedCount={activeTheaterId === 'nepal' ? undefined : ASSAM_TELEMETRY_RESULTS.analysedCount}
+        excludedCount={activeTheaterId === 'nepal' ? undefined : ASSAM_TELEMETRY_RESULTS.excludedCount}
       />
 
       {/* Evidence Catalogue Modal */}
       <EvidenceCatalogueModal
-        isOpen={isEvidenceModalOpen}
-        onClose={() => setIsEvidenceModalOpen(false)}
+        isOpen={activeRightPopover === 'evidence' || isEvidenceModalOpen}
+        onClose={() => {
+          setIsEvidenceModalOpen(false);
+          if (activeRightPopover === 'evidence') setActiveRightPopover(null);
+        }}
         theaterId={activeTheaterId}
         theaterName={currentTheater.name}
       />
 
       {/* Field Evidence Editor Modal */}
       <FieldEvidenceEditorModal
-        isOpen={isFieldEditorModalOpen}
-        onClose={() => setIsFieldEditorModalOpen(false)}
+        isOpen={activeRightPopover === 'field' || isFieldEditorModalOpen}
+        onClose={() => {
+          setIsFieldEditorModalOpen(false);
+          if (activeRightPopover === 'field') setActiveRightPopover(null);
+        }}
         theaterId={activeTheaterId}
         theaterName={currentTheater.name}
       />
 
       {/* Google Cloud Platform & Gemini MCP Architecture Modal */}
       <CloudArchitectureModal
-        isOpen={isCloudModalOpen}
-        onClose={() => setIsCloudModalOpen(false)}
+        isOpen={activeRightPopover === 'cloud' || isCloudModalOpen}
+        onClose={() => {
+          setIsCloudModalOpen(false);
+          if (activeRightPopover === 'cloud') setActiveRightPopover(null);
+        }}
         activeTheaterName={currentTheater.name}
       />
 
       {/* Requirement F: What We Don't Know Epistemic Uncertainty Modal */}
       <WhatWeDontKnowModal
-        isOpen={isWhatWeDontKnowOpen}
-        onClose={() => setIsWhatWeDontKnowOpen(false)}
+        isOpen={activeRightPopover === 'whatwedontknow' || isWhatWeDontKnowOpen}
+        onClose={() => {
+          setIsWhatWeDontKnowOpen(false);
+          if (activeRightPopover === 'whatwedontknow') setActiveRightPopover(null);
+        }}
       />
     </div>
   );

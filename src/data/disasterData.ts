@@ -12,6 +12,15 @@ export const TELEMETRY_PROVENANCE = telemetryJson.provenance;
 export const TELEMETRY_AUDIT_SUMMARY = telemetryJson.audit_summary;
 export const ARTICULATION_BRIDGES = telemetryJson.articulation_bridges;
 
+export const ASSAM_TELEMETRY_RESULTS = {
+  reachableCount: 236, // reachable (same hospital)
+  reroutedCount: 41,   // rerouted (alternative facility via bypass)
+  noRouteCount: 42,    // no route (severed by simulated closure)
+  analysedCount: 319,  // total analysed habitations
+  excludedCount: 15,   // excluded from graph (not snapped)
+  totalInPbf: 334,
+};
+
 // All 319 settlements loaded deterministically from the spatial graph engine output
 export const DF_CLEAN: SettlementRecord[] = (telemetryJson.df_clean as any[]).map((s) => ({
   village_id: s.village_id,

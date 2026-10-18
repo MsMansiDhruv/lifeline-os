@@ -285,6 +285,70 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
 
   const currentMeta = chapters.find((c) => c.id === activeChapter) || chapters[2];
 
+  const guideSteps: Array<{ id: IncidentChapter; label: string; caption: string }> = [
+    {
+      id: 'prevent',
+      label: 'Baseline',
+      caption: currentTheater.id === 'nepal'
+        ? "What you're seeing: Pre-disaster BP Highway corridor through Roshi Khola gorge."
+        : "What you're seeing: Pre-disaster normal road network — all 319 settlements connected to regional hospitals.",
+    },
+    {
+      id: 'predict',
+      label: 'Apply simulated closure',
+      caption: currentTheater.id === 'nepal'
+        ? "What you're seeing: 120m mountain gorge washout severing BP Highway at Roshi Khola."
+        : "What you're seeing: 80m structural breach on JT Road cutting the primary highway egress.",
+    },
+    {
+      id: 'protect',
+      label: 'Impact Assessment',
+      caption: currentTheater.id === 'nepal'
+        ? "What you're seeing: Mountain corridor impassable; access telemetry unlinked for this corridor."
+        : "What you're seeing: 42 settlements severed with no hospital route; 41 rerouted via detour bypass delays.",
+    },
+    {
+      id: 'respond',
+      label: 'Pick a fix incl. culvert',
+      caption: currentTheater.id === 'nepal'
+        ? "What you're seeing: High-clearance bridging and tactical air-link required for gorge gap."
+        : "What you're seeing: Feasible mitigations: precomputed cut-edge culverts & ambulance diversion.",
+    },
+  ];
+  const currentStepIdx = guideSteps.findIndex((s) => s.id === activeChapter);
+  const activeGuideStep = guideSteps[currentStepIdx !== -1 ? currentStepIdx : 0];
+
+  const handleStepChange = (targetIdx: number) => {
+    if (targetIdx < 0 || targetIdx >= guideSteps.length) return;
+    playClickSound();
+    const nextChapter = guideSteps[targetIdx].id;
+    onSelectChapter(nextChapter);
+    setWorkspaceMode('response');
+
+    if (targetIdx === 0) {
+      onFocusMapPoint({ lat: currentTheater.center[0], lon: currentTheater.center[1], name: 'Baseline Network Overview' });
+    } else if (targetIdx === 1) {
+      const breachCp = currentTheater.chokePoints[0];
+      if (breachCp) {
+        onFocusMapPoint({ lat: breachCp.lat, lon: breachCp.lon, name: `${breachCp.road_name.split(' (')[0]} (Closure Breach)` });
+      }
+    } else if (targetIdx === 2) {
+      if (currentTheater.id !== 'nepal') {
+        const topImpact = getSelectedTelemetryRow(topCutEdge.serving_settlement);
+        onFocusMapPoint({ lat: topImpact.lat, lon: topImpact.lon, name: 'Impacted Rural Settlement Corridor' });
+      } else {
+        onFocusMapPoint({ lat: currentTheater.center[0], lon: currentTheater.center[1], name: 'Roshi River Corridor' });
+      }
+    } else if (targetIdx === 3) {
+      if (currentTheater.id !== 'nepal') {
+        const servingVillage = getSelectedTelemetryRow(topCutEdge.serving_settlement);
+        onFocusMapPoint({ lat: servingVillage.lat, lon: servingVillage.lon, name: `${topCutEdge.serving_settlement} (Precomputed Culvert Point)` });
+      } else {
+        onFocusMapPoint({ lat: currentTheater.center[0], lon: currentTheater.center[1], name: 'Nepal Mitigation Corridor' });
+      }
+    }
+  };
+
   // Handle Dispatch Flow
   const handleStartReview = () => {
     playClickSound();
@@ -452,18 +516,39 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
               <div>
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-mono tracking-widest text-cyan-400 font-bold uppercase">
-                    Incident Command • 0{chapters.findIndex((c) => c.id === activeChapter) + 1}
+                    Incident Command • {currentMeta.title}
                   </span>
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 uppercase">
                     {currentTheater.id === 'silchar' ? 'Historical replay' : 'Dynamic scenario'}
                   </span>
                 </div>
-                <h2 className="text-xl font-extrabold text-white tracking-tight mt-1">
-                  {currentMeta.title}
-                </h2>
-                <p className="text-xs text-slate-400 mt-0.5 font-medium leading-relaxed">
-                  {currentMeta.subtitle}
-                </p>
+                <div className="flex items-center justify-between mt-1">
+                  <h2 className="text-lg font-extrabold text-white tracking-tight">
+                    {activeGuideStep.label}
+                  </h2>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      disabled={currentStepIdx <= 0}
+                      onClick={() => handleStepChange(currentStepIdx - 1)}
+                      className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-800 text-slate-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      &larr; Back
+                    </button>
+                    <button
+                      type="button"
+                      disabled={currentStepIdx >= guideSteps.length - 1}
+                      onClick={() => handleStepChange(currentStepIdx + 1)}
+                      className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-950 text-cyan-300 hover:bg-cyan-900 border border-cyan-800 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      Next &rarr;
+                    </button>
+                  </div>
+                </div>
+                {/* One-line "What you're seeing" caption */}
+                <div className="mt-2 p-2 rounded-lg bg-cyan-950/50 border border-cyan-800/40 text-[11px] text-cyan-200 font-sans leading-snug">
+                  {activeGuideStep.caption}
+                </div>
               </div>
             )}
           </div>
@@ -580,9 +665,15 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                       <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
                       Damage &amp; Bridge Ground Reports ({filteredReports.length})
                     </span>
-                    <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800/60">
-                      Nepal Flood Map Model
-                    </span>
+                    {currentTheater.id === 'nepal' ? (
+                      <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800/60">
+                        Nepal Field Model
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-mono text-cyan-400 font-bold bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-800/60">
+                        Ground Reports
+                      </span>
+                    )}
                   </div>
 
                   {/* Search Input */}
@@ -911,7 +1002,7 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                     onClick={() => onSelectChapter('predict')}
                     className="w-full py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs transition-colors flex items-center justify-center gap-2 shadow-lg cursor-pointer mt-2"
                   >
-                    <span>Proceed to 02. PREDICT (Hazard Analysis)</span>
+                    <span>Proceed to Predict (Hazard Analysis)</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -1044,7 +1135,7 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                     onClick={() => onSelectChapter('protect')}
                     className="w-full py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs transition-colors flex items-center justify-center gap-2 shadow-lg cursor-pointer mt-1"
                   >
-                    <span>Proceed to 03. PROTECT (Assess Disruption)</span>
+                    <span>Proceed to Protect (Assess Disruption)</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -1154,58 +1245,66 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
 
                   {/* Breach Closure / Culvert Toggle */}
                   <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <strong className="text-xs text-white block">Temporary Culvert Simulation</strong>
-                        <span className="text-[10px] text-slate-400">
-                          Precomputed cut edge: {topCutEdge.serving_settlement}
-                        </span>
+                    {currentTheater.id === 'nepal' ? (
+                      <div className="text-xs font-mono text-slate-400 italic py-1">
+                        Temporary culvert cut-edge model: Not available for this corridor (mountain road graph not loaded)
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          onToggleBreachTemporarilyReopened?.();
-                          const servingVillage = getSelectedTelemetryRow(topCutEdge.serving_settlement);
-                          onFocusMapPoint({
-                            lat: servingVillage.lat,
-                            lon: servingVillage.lon,
-                            name: `${topCutEdge.serving_settlement} (approximate: serving settlement, not bridge location)`,
-                          });
-                        }}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          isBreachTemporarilyReopened
-                            ? 'bg-emerald-600 text-white shadow-md'
-                            : 'bg-slate-800 text-slate-300 hover:text-white border border-slate-700'
-                        }`}
-                      >
-                        {isBreachTemporarilyReopened ? 'Simulated ✅' : 'Simulate Culvert'}
-                      </button>
-                    </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <strong className="text-xs text-white block">Temporary Culvert Simulation</strong>
+                            <span className="text-[10px] text-slate-400">
+                              Precomputed cut edge: {topCutEdge.serving_settlement}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onToggleBreachTemporarilyReopened?.();
+                              const servingVillage = getSelectedTelemetryRow(topCutEdge.serving_settlement);
+                              onFocusMapPoint({
+                                lat: servingVillage.lat,
+                                lon: servingVillage.lon,
+                                name: `${topCutEdge.serving_settlement} (approximate: serving settlement, not bridge location)`,
+                              });
+                            }}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                              isBreachTemporarilyReopened
+                                ? 'bg-emerald-600 text-white shadow-md'
+                                : 'bg-slate-800 text-slate-300 hover:text-white border border-slate-700'
+                            }`}
+                          >
+                            {isBreachTemporarilyReopened ? 'Simulated ✅' : 'Simulate Culvert'}
+                          </button>
+                        </div>
 
-                    {/* Precomputed metrics & honest disclaimer as mandated by Requirement 6 */}
-                    <div className="p-2 rounded-lg bg-slate-950/80 border border-slate-850 space-y-1 text-[11px] font-mono">
-                      <div className="flex items-center justify-between text-slate-300">
-                        <span>Cut Edge:</span>
-                        <span className="text-amber-400 font-bold">{topCutEdge.cut_edge_id}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-slate-300">
-                        <span>Serving Settlement:</span>
-                        <span className="text-cyan-300 font-bold">{topCutEdge.serving_settlement}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-slate-300">
-                        <span>Estimated Settlements Reconnected:</span>
-                        <span className="text-emerald-400 font-bold">
-                          {topCutEdge.isolated_settlements_count} (precomputed)
-                        </span>
-                      </div>
-                      <div className="pt-1 text-slate-300 text-[10px]">
-                        <span className="text-slate-400 block">Recommended Action:</span>
-                        <span className="text-slate-200">{topCutEdge.recommended_action}</span>
-                      </div>
-                      <div className="p-1.5 mt-1 rounded bg-amber-950/40 border border-amber-800/50 text-[10px] text-amber-300 font-sans leading-snug">
-                        ⚠️ <strong>Graph Limitation:</strong> Full re-route calculation requires the road graph, which is not loaded.
-                      </div>
-                    </div>
+                        {/* Precomputed metrics & honest disclaimer as mandated by Requirement 6 */}
+                        <div className="p-2 rounded-lg bg-slate-950/80 border border-slate-850 space-y-1 text-[11px] font-mono">
+                          <div className="flex items-center justify-between text-slate-300">
+                            <span>Cut Edge:</span>
+                            <span className="text-amber-400 font-bold">{topCutEdge.cut_edge_id}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-slate-300">
+                            <span>Serving Settlement:</span>
+                            <span className="text-cyan-300 font-bold">{topCutEdge.serving_settlement}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-slate-300">
+                            <span>Estimated Settlements Reconnected:</span>
+                            <span className="text-emerald-400 font-bold">
+                              {topCutEdge.isolated_settlements_count} (precomputed)
+                            </span>
+                          </div>
+                          <div className="pt-1 text-slate-300 text-[10px]">
+                            <span className="text-slate-400 block">Recommended Action:</span>
+                            <span className="text-slate-200">{topCutEdge.recommended_action}</span>
+                          </div>
+                          <div className="p-1.5 mt-1 rounded bg-amber-950/40 border border-amber-800/50 text-[10px] text-amber-300 font-sans leading-snug">
+                            ⚠️ <strong>Graph Limitation:</strong> Full re-route calculation requires the road graph, which is not loaded.
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/* Road Condition vs Route Accessibility Separation Disclosure (Section 6 Requirement) */}
@@ -1435,7 +1534,7 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                     onClick={() => onSelectChapter('respond')}
                     className="w-full py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs transition-colors flex items-center justify-center gap-2 shadow-lg cursor-pointer mt-2"
                   >
-                    <span>Proceed to 04. RESPOND (Resource Allocation)</span>
+                    <span>Proceed to Respond (Resource Allocation)</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -1608,7 +1707,7 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
 
                       <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800 text-[10px] text-slate-400">
                         <strong className="text-slate-300 block mb-0.5">Physical Verification Notice:</strong>
-                        Vehicle transit progress along Kumbhirgram bypass is simulated for operational decision support. Field patient handover requires formal sign-off.
+                        Vehicle transit progress along {currentTheater.id === 'nepal' ? 'corridor bypass' : 'Kumbhirgram bypass'} is simulated for operational decision support. Field patient handover requires formal sign-off.
                       </div>
                     </div>
                   )}
@@ -1618,7 +1717,7 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                     onClick={() => onSelectChapter('learn')}
                     className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs transition-colors flex items-center justify-center gap-2 shadow-md cursor-pointer mt-1"
                   >
-                    <span>Proceed to 05. LEARN (Audit &amp; Benchmarks)</span>
+                    <span>Proceed to Learn (Audit &amp; Benchmarks)</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>

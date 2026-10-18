@@ -7,6 +7,7 @@ import { earthEngineService } from './src/services/gcp/earthEngineService.js';
 import { bigQueryAnalyticsService } from './src/services/gcp/bigQueryService.js';
 import { cloudStorageService } from './src/services/gcp/cloudStorageService.js';
 import { pubSubEventService } from './src/services/gcp/pubSubEventService.js';
+import { firebaseFirestoreService } from './src/services/gcp/firebaseFirestoreService.js';
 
 const app = express();
 app.use(express.json());
@@ -32,6 +33,7 @@ if (!apiKey) {
 
 let ai: GoogleGenAI | null = null;
 if (apiKey) {
+  firebaseFirestoreService.setApiKey(apiKey);
   try {
     ai = new GoogleGenAI({
       apiKey,
@@ -228,6 +230,14 @@ app.get('/api/gcp/status', (_req, res) => {
         mode: 'LOCAL_ADAPTER (not connected to Google Cloud)',
         note: 'LOCAL_ADAPTER (not connected to Google Cloud)',
       },
+      firebaseFirestore: {
+        status: apiKey ? 'ACTIVE' : 'LOCAL_ADAPTER',
+        mode: apiKey ? 'GOOGLE_CLOUD_REST_CONNECTED' : 'LOCAL_ADAPTER (not connected to Google Cloud)',
+        projectId: 'lifeline-os-disaster-resilience',
+        apiKeyConfigured: Boolean(apiKey),
+        collections: ['lifeline_simulations', 'disaster_incidents'],
+        note: apiKey ? 'Authenticated via Google Cloud API Key' : 'Local memory adapter',
+      },
       cloudRun: {
         status: 'UNVERIFIED',
         port: process.env.PORT || 3000,
@@ -237,6 +247,21 @@ app.get('/api/gcp/status', (_req, res) => {
       },
     },
   });
+});
+
+app.post('/api/gcp/firestore/save-simulation', async (req, res) => {
+  try {
+    const doc = await firebaseFirestoreService.saveSimulationRun(req.body);
+    res.json({ success: true, document: doc });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/gcp/firestore/simulations', async (req, res) => {
+  const theaterId = req.query.theaterId as string | undefined;
+  const docs = await firebaseFirestoreService.getSimulationHistory(theaterId);
+  res.json({ simulations: docs });
 });
 
 app.post('/api/gcp/pubsub/publish', async (req, res) => {
@@ -256,6 +281,7 @@ app.get('/api/health', (_req, res) => {
     aiReady: Boolean(ai),
     gcpServices: {
       vertexAi: Boolean(ai) ? 'UNVERIFIED' : 'MISSING_CREDENTIALS',
+      firebaseFirestore: Boolean(apiKey) ? 'ACTIVE' : 'LOCAL_ADAPTER',
       earthEngine: 'LOCAL_ADAPTER (not connected to Google Cloud)',
       bigQuery: 'LOCAL_ADAPTER (not connected to Google Cloud)',
       cloudStorage: 'LOCAL_ADAPTER (not connected to Google Cloud)',

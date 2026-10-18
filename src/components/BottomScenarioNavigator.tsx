@@ -1,25 +1,22 @@
 import React, { useState } from 'react';
 import {
-  Compass,
-  Layers,
   ChevronUp,
   ChevronDown,
   Play,
-  Eye,
   Sliders,
   Database,
-  Edit3,
-  Sparkles,
-  Mountain,
-  MapPin,
   Calendar,
   AlertTriangle,
-  Info,
+  ArrowLeftRight,
+  CheckCircle2,
+  Navigation,
+  AlertOctagon,
 } from 'lucide-react';
 import { SCENARIO_MANIFESTS, ScenarioId, ScenarioManifest } from '../data/scenarios';
 import { evidenceCatalogueService } from '../services/evidenceCatalogueService';
 import { incidentReportService } from '../services/incidentReportService';
-import { getSelectedTelemetryRow } from '../data/disasterData';
+import { getSelectedTelemetryRow, ASSAM_TELEMETRY_RESULTS } from '../data/disasterData';
+import { EVIDENCE_CLASS_CONFIG } from '../types/evidence';
 
 interface BottomScenarioNavigatorProps {
   activeScenarioId: ScenarioId;
@@ -27,13 +24,17 @@ interface BottomScenarioNavigatorProps {
   onRunSimulation?: () => void;
   isSimulationRunning?: boolean;
   simulationProgress?: string;
-  onOpenEvidenceCatalogue: () => void;
-  onOpenFieldEditor: () => void;
-  viewMode: 'map' | 'satellite' | 'street' | '3d';
-  onSelectViewMode: (mode: 'map' | 'satellite' | 'street' | '3d') => void;
-  swipeMode?: 'off' | 'swipe' | 'before' | 'after';
-  onToggleSwipeMode?: () => void;
-  onOpenCloudArchitecture?: () => void;
+  sliderValue?: number;
+  onChangeSliderValue?: (val: number) => void;
+  isSimulatedClosureActive?: boolean;
+  onToggleSimulatedClosure?: () => void;
+  isRerouted?: boolean;
+  onToggleReroute?: () => void;
+  reachableCount?: number;
+  reroutedCount?: number;
+  isolatedCount?: number;
+  analysedCount?: number;
+  excludedCount?: number;
 }
 
 export const BottomScenarioNavigator: React.FC<BottomScenarioNavigatorProps> = ({
@@ -42,24 +43,31 @@ export const BottomScenarioNavigator: React.FC<BottomScenarioNavigatorProps> = (
   onRunSimulation,
   isSimulationRunning = false,
   simulationProgress = '',
-  onOpenEvidenceCatalogue,
-  onOpenFieldEditor,
-  viewMode,
-  onSelectViewMode,
-  swipeMode = 'off',
-  onToggleSwipeMode,
+  sliderValue = 100,
+  onChangeSliderValue,
+  isSimulatedClosureActive = true,
+  onToggleSimulatedClosure,
+  isRerouted = false,
+  onToggleReroute,
+  reachableCount = ASSAM_TELEMETRY_RESULTS.reachableCount,
+  reroutedCount = ASSAM_TELEMETRY_RESULTS.reroutedCount,
+  isolatedCount = ASSAM_TELEMETRY_RESULTS.noRouteCount,
+  analysedCount = ASSAM_TELEMETRY_RESULTS.analysedCount,
+  excludedCount = ASSAM_TELEMETRY_RESULTS.excludedCount,
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
   const scenario: ScenarioManifest = SCENARIO_MANIFESTS[activeScenarioId] || SCENARIO_MANIFESTS.silchar;
+  const isNepal = activeScenarioId === 'nepal';
   const selectedTelemetry = getSelectedTelemetryRow(scenario.corridors[0]?.name);
 
   const datasetCounts = evidenceCatalogueService.getDatasetCountByState(activeScenarioId);
   const damageReports = incidentReportService.getReportsByTheater(activeScenarioId);
+  const simBadge = EVIDENCE_CLASS_CONFIG.SIMULATED;
 
   return (
     <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-30 pointer-events-auto max-w-4xl w-[96vw] sm:w-[92vw] transition-all duration-300">
-      <div className="bg-slate-950/90 backdrop-blur-xl border border-slate-800/90 rounded-2xl shadow-2xl p-2.5 sm:p-3 text-white">
-        {/* Top Control Bar: Scenario Workspaces Switcher + Quick Actions */}
+      <div className="bg-slate-950/95 backdrop-blur-xl border border-slate-800/90 rounded-2xl shadow-2xl p-2.5 sm:p-3 text-white">
+        {/* Top Control Bar: Scenario Workspaces Switcher + Single Run Button + Collapse */}
         <div className="flex flex-wrap items-center justify-between gap-2">
           {/* Two Scenarios Tabs */}
           <div className="flex items-center gap-1.5 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
@@ -67,7 +75,7 @@ export const BottomScenarioNavigator: React.FC<BottomScenarioNavigatorProps> = (
               type="button"
               onClick={() => onSelectScenario('silchar')}
               className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                activeScenarioId === 'silchar'
+                !isNepal
                   ? 'bg-cyan-950/80 text-cyan-300 border border-cyan-500/50 shadow-sm'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
               }`}
@@ -83,7 +91,7 @@ export const BottomScenarioNavigator: React.FC<BottomScenarioNavigatorProps> = (
               type="button"
               onClick={() => onSelectScenario('nepal')}
               className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                activeScenarioId === 'nepal'
+                isNepal
                   ? 'bg-amber-950/80 text-amber-300 border border-amber-500/50 shadow-sm'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
               }`}
@@ -96,9 +104,40 @@ export const BottomScenarioNavigator: React.FC<BottomScenarioNavigatorProps> = (
             </button>
           </div>
 
-          {/* Center Tactical Actions */}
-          <div className="flex items-center gap-1.5">
-            {/* Run Simulation */}
+          {/* Unified Result & Transition Controls */}
+          <div className="flex items-center gap-2">
+            {!isNepal && onToggleSimulatedClosure && (
+              <button
+                type="button"
+                onClick={onToggleSimulatedClosure}
+                className={`px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${
+                  isSimulatedClosureActive
+                    ? 'bg-rose-950/70 border-rose-600 text-rose-300'
+                    : 'bg-emerald-950/70 border-emerald-600 text-emerald-300'
+                }`}
+                title="Toggle between Baseline Normal Access and Simulated Closure Impact"
+              >
+                <ArrowLeftRight className="w-3.5 h-3.5" />
+                <span>{isSimulatedClosureActive ? 'After (Closure Active)' : 'Before (Baseline Normal)'}</span>
+              </button>
+            )}
+
+            {!isNepal && onToggleReroute && (
+              <button
+                type="button"
+                onClick={onToggleReroute}
+                className={`px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold border transition-all cursor-pointer flex items-center gap-1 ${
+                  isRerouted
+                    ? 'bg-blue-950 border-blue-500 text-blue-300 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+                    : 'bg-slate-900 border-slate-700 text-slate-300 hover:text-white'
+                }`}
+                title="Toggle detour routing via elevated bypass"
+              >
+                <span>🚑 {isRerouted ? 'Bypass Engaged' : 'Reroute Habitations'}</span>
+              </button>
+            )}
+
+            {/* Single Simulation Entry Point: Run closure simulation */}
             {onRunSimulation && (
               <button
                 type="button"
@@ -109,67 +148,12 @@ export const BottomScenarioNavigator: React.FC<BottomScenarioNavigatorProps> = (
                     ? 'bg-amber-950/80 border-amber-500 text-amber-300 animate-pulse'
                     : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border-emerald-400/50 shadow-[0_0_15px_rgba(16,185,129,0.25)]'
                 }`}
-                title="Run response simulation"
+                title="Run closure simulation: Disruption -> Consequence -> Decision"
               >
                 <Play className={`w-3.5 h-3.5 ${isSimulationRunning ? 'animate-spin' : 'fill-white'}`} />
-                <span>
-                  {isSimulationRunning
-                    ? simulationProgress || 'Simulating...'
-                    : activeScenarioId === 'silchar'
-                    ? 'Run Surge Simulation'
-                    : 'Run Roshi Simulation'}
-                </span>
+                <span>{isSimulationRunning ? (simulationProgress || 'Simulating...') : 'Run closure simulation'}</span>
               </button>
             )}
-
-            {/* Before/After Swipe Toggle (Requirement E: Disabled if no compatible post-event imagery loaded) */}
-            <button
-              type="button"
-              disabled
-              className="px-2.5 py-1.5 rounded-xl text-xs font-mono font-medium border border-slate-800 bg-slate-900/60 text-slate-500 cursor-not-allowed opacity-60 flex items-center gap-1.5"
-              title="no compatible post-event imagery loaded"
-            >
-              <Sliders className="w-3.5 h-3.5 text-slate-500" />
-              <span className="hidden sm:inline">Swipe</span>
-              <span className="text-[9px] font-mono text-amber-500/80 hidden md:inline">(Disabled)</span>
-            </button>
-
-            {/* 3D Terrain Switcher */}
-            <button
-              type="button"
-              onClick={() => onSelectViewMode(viewMode === '3d' ? 'map' : '3d')}
-              className={`px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${
-                viewMode === '3d'
-                  ? 'bg-teal-900/60 border-teal-400 text-teal-200 shadow-[0_0_12px_rgba(20,184,166,0.3)]'
-                  : 'bg-slate-900 border-slate-700/80 text-slate-300 hover:text-white'
-              }`}
-              title="Toggle 3D Elevation Terrain Model"
-            >
-              <Mountain className="w-3.5 h-3.5 text-teal-400" />
-              <span className="hidden sm:inline">3D</span>
-            </button>
-
-            {/* Evidence Catalogue Modal Button */}
-            <button
-              type="button"
-              onClick={onOpenEvidenceCatalogue}
-              className="px-2.5 py-1.5 rounded-xl text-xs font-mono font-medium bg-slate-900 border border-slate-700/80 text-slate-300 hover:text-white hover:border-slate-500 transition-all flex items-center gap-1.5 cursor-pointer"
-              title="Open Unified Evidence Registry (19 Datasets)"
-            >
-              <Database className="w-3.5 h-3.5 text-cyan-400" />
-              <span className="hidden md:inline">Evidence</span>
-            </button>
-
-            {/* Field Editor Modal Button */}
-            <button
-              type="button"
-              onClick={onOpenFieldEditor}
-              className="px-2.5 py-1.5 rounded-xl text-xs font-mono font-medium bg-slate-900 border border-slate-700/80 text-slate-300 hover:text-white hover:border-slate-500 transition-all flex items-center gap-1.5 cursor-pointer"
-              title="Record Field Observation & Damage Report"
-            >
-              <Edit3 className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="hidden md:inline">Field Edit</span>
-            </button>
 
             {/* Collapse / Expand Toggle */}
             <button
@@ -185,70 +169,132 @@ export const BottomScenarioNavigator: React.FC<BottomScenarioNavigatorProps> = (
 
         {/* Expandable Detail Section */}
         {isExpanded && (
-          <div className="mt-2.5 pt-2 border-t border-slate-800/80 grid grid-cols-1 md:grid-cols-3 gap-2.5 text-xs">
-            {/* Column 1: Core Scenario Question & Context */}
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-800/40">
-                  {scenario.country} • {scenario.region}
-                </span>
-                <span className="text-[10px] text-slate-400 font-mono flex items-center gap-1">
-                  <Calendar className="w-3 h-3 text-slate-500" /> {scenario.eventDate}
-                </span>
+          <div className="mt-2.5 pt-2 border-t border-slate-800/80 space-y-2 text-xs">
+            {/* Merged Access Slider (Assam Only) */}
+            {!isNepal && onChangeSliderValue && (
+              <div className="p-2 rounded-xl bg-slate-900/60 border border-slate-800/80">
+                <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 mb-1">
+                  <span className={sliderValue === 0 ? 'text-emerald-400 font-bold' : ''}>
+                    Before: 0% Disruption (Baseline)
+                  </span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded border border-rose-800 bg-rose-950/70 text-rose-300 font-bold">
+                    SIMULATED CLOSURE, not a confirmed event ({sliderValue}% Impact)
+                  </span>
+                  <span className={sliderValue === 100 ? 'text-rose-400 font-bold' : ''}>
+                    After: 100% Closure
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  value={sliderValue}
+                  onChange={(e) => onChangeSliderValue(parseInt(e.target.value, 10))}
+                  className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-rose-500 hover:accent-rose-400 transition-all"
+                />
               </div>
-              <p className="text-slate-200 text-xs font-medium leading-relaxed line-clamp-2">
-                {scenario.headline}
-              </p>
-              <p className="text-[11px] text-slate-400 italic line-clamp-1">
-                "{scenario.coreQuestion}"
-              </p>
-            </div>
+            )}
 
-            {/* Column 2: Key Infrastructure & Failure Evidence */}
-            <div className="flex flex-col gap-1 justify-center bg-slate-900/60 rounded-xl p-2 border border-slate-800/60 font-mono">
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="text-slate-400 flex items-center gap-1">
-                  <AlertTriangle className="w-3 h-3 text-amber-400" /> Primary Breach:
-                </span>
-                <span className="text-amber-300 font-bold truncate max-w-[150px]">
-                  {scenario.corridors[0]?.name.split('(')[0]}
-                </span>
+            {/* 3 Metrics Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+              {/* Column 1: Context & Core Problem */}
+              <div className="flex flex-col gap-1 justify-center">
+                <div className="flex items-center gap-2">
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-800/40">
+                    {scenario.country} • {scenario.region}
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono flex items-center gap-1">
+                    <Calendar className="w-3 h-3 text-slate-500" /> {scenario.eventDate}
+                  </span>
+                </div>
+                <p className="text-slate-200 text-xs font-medium leading-snug line-clamp-2">
+                  {scenario.headline}
+                </p>
+                <p className="text-[10px] text-slate-400 italic line-clamp-1">
+                  "{scenario.coreQuestion}"
+                </p>
               </div>
-              <div className="flex items-center justify-between text-[10px] text-slate-300">
-                <span>Failure Mode:</span>
-                <span className="text-slate-200 truncate max-w-[170px]">
-                  {scenario.corridors[0]?.failureType}
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-[10px]">
-                <span className="text-slate-400">Detour Surcharge:</span>
-                <span className="text-rose-400 font-bold">
-                  +{selectedTelemetry.additional_min ? Math.round(selectedTelemetry.additional_min) : 47}m delay ({(selectedTelemetry.scenario_km || 16.8).toFixed(1)} km)
-                </span>
-              </div>
-            </div>
 
-            {/* Column 3: Data Provenance & Verified Numbers */}
-            <div className="flex flex-col gap-1 justify-center bg-slate-900/60 rounded-xl p-2 border border-slate-800/60 font-mono">
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="text-slate-400 flex items-center gap-1">
-                  <Database className="w-3 h-3 text-teal-400" /> Flood Inundation:
-                </span>
-                <span className="text-teal-300 font-bold">
-                  {scenario.floodExtent.areaSqKm} km² (Sentinel-1)
-                </span>
+              {/* Column 2: Corridor & Surcharge */}
+              <div className="flex flex-col gap-1 justify-center bg-slate-900/60 rounded-xl p-2 border border-slate-800/60 font-mono">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-slate-400 flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3 text-amber-400" /> Primary Disruption:
+                  </span>
+                  <span className="text-amber-300 font-bold truncate max-w-[150px]">
+                    {scenario.corridors[0]?.name.split('(')[0]}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-[10px] text-slate-300">
+                  <span>Failure Mode:</span>
+                  <span className="text-slate-200 truncate max-w-[170px]">
+                    {scenario.corridors[0]?.failureType}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-slate-400">Detour Surcharge:</span>
+                  {isNepal ? (
+                    <span className="text-rose-400 font-bold italic">
+                      Mountain corridor severed (no road bypass)
+                    </span>
+                  ) : (
+                    <span className="text-rose-400 font-bold">
+                      +{selectedTelemetry.additional_min ? Math.round(selectedTelemetry.additional_min) : 0}m delay ({(selectedTelemetry.scenario_km || 0).toFixed(1)} km)
+                    </span>
+                  )}
+                </div>
               </div>
-              <div className="flex items-center justify-between text-[10px]">
-                <span className="text-slate-400">No hospital route:</span>
-                <span className="text-amber-400 font-bold">
-                  42 of 319 settlements (simulated closure)
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-[10px]">
-                <span className="text-slate-400">Evidence State:</span>
-                <span className="text-emerald-400 font-bold">
-                  {datasetCounts.OBSERVED} Observed • {datasetCounts.OFFICIAL} Official • {damageReports.length} Reports
-                </span>
+
+              {/* Column 3: Result Set / Access Numbers (Strictly Scenario-Isolated) */}
+              <div className="flex flex-col gap-1 justify-center bg-slate-900/60 rounded-xl p-2 border border-slate-800/60 font-mono">
+                {isNepal ? (
+                  <>
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-slate-400 flex items-center gap-1">
+                        <Database className="w-3 h-3 text-teal-400" /> Flood &amp; Debris:
+                      </span>
+                      <span className="text-teal-300 font-bold">
+                        Sentinel-2 Debris Swath
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-slate-400">Access Telemetry:</span>
+                      <span className="text-amber-400 font-bold italic">
+                        Not available for this corridor
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-slate-400">Evidence State:</span>
+                      <span className="text-emerald-400 font-bold">
+                        {datasetCounts.OBSERVED} Observed • {damageReports.length} Field Reports
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-slate-400 flex items-center gap-1">
+                        <Database className="w-3 h-3 text-teal-400" /> Result Set:
+                      </span>
+                      <span className="text-emerald-300 font-bold">
+                        {sliderValue === 0 ? analysedCount : reachableCount} Reachable (Same Facility)
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-slate-400">Impact Breakdown:</span>
+                      <span className="text-amber-400 font-bold">
+                        {sliderValue === 0 ? 0 : reroutedCount} rerouted / {sliderValue === 0 ? 0 : isolatedCount} no route
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-slate-400">Topology Snapping:</span>
+                      <span className="text-slate-300 font-bold">
+                        {analysedCount} analysed; {excludedCount} excluded (not snapped)
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>

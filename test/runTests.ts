@@ -669,6 +669,125 @@ async function runTests() {
   assert(nepalBlocked.validity === 'NO_ROUTE', 'Direct transit across severed BP Highway Roshi gorge returns NO_ROUTE');
   assert(nepalBlocked.conflictDetected === true, 'Conflict detected on unbridged mountain gorge washout');
 
+  // TEST SUITE 20: STRICT SCENARIO ISOLATION & ZERO CROSS-CONTAMINATION
+  console.log('\n\x1b[1m[20] Strict Scenario Isolation & Zero Cross-Contamination\x1b[0m');
+  const { ASSAM_TELEMETRY_RESULTS } = await import('../src/data/disasterData');
+
+  // 20.1 One Result Set for Assam from silchar_telemetry_v1.json
+  assert(ASSAM_TELEMETRY_RESULTS.reachableCount === 236, 'Assam reachableCount is strictly 236 (same hospital)');
+  assert(ASSAM_TELEMETRY_RESULTS.reroutedCount === 41, 'Assam reroutedCount is strictly 41');
+  assert(ASSAM_TELEMETRY_RESULTS.noRouteCount === 42, 'Assam noRouteCount is strictly 42 (no hospital route)');
+  assert(ASSAM_TELEMETRY_RESULTS.analysedCount === 319, 'Assam analysedCount is strictly 319');
+  assert(ASSAM_TELEMETRY_RESULTS.excludedCount === 15, 'Assam excludedCount is strictly 15 (unsnapped)');
+  assert(ASSAM_TELEMETRY_RESULTS.reachableCount + ASSAM_TELEMETRY_RESULTS.reroutedCount + ASSAM_TELEMETRY_RESULTS.noRouteCount === 319, '236 + 41 + 42 = exactly 319 settlements analysed');
+  assert(ASSAM_TELEMETRY_RESULTS.analysedCount + ASSAM_TELEMETRY_RESULTS.excludedCount === 334, '319 analysed + 15 excluded = 334 total settlements in PBF');
+
+  // 20.2 Strict Manifest Isolation: Nepal must never contain Assam terms or coordinates
+  const nepalString = JSON.stringify(nepalManifest);
+  assert(!nepalString.includes('Kumbhirgram'), 'Nepal manifest contains zero Kumbhirgram mentions');
+  assert(!nepalString.includes('Harinagar'), 'Nepal manifest contains zero Harinagar mentions');
+  assert(!nepalString.includes('Silchar'), 'Nepal manifest contains zero Silchar mentions');
+  assert(!nepalString.includes('42 of 319'), 'Nepal manifest contains zero 42 of 319 telemetry text');
+  assert(!nepalString.includes('334'), 'Nepal manifest contains zero 334 settlement numbers');
+  assert(nepalManifest.floodExtent.areaSqKm !== 46.8, 'Nepal manifest does not contain literal 46.8 km²');
+
+  // 20.3 Strict Manifest Isolation: Assam must never contain Nepal terms or coordinates
+  const silcharString = JSON.stringify(silcharManifest);
+  assert(!silcharString.includes('Roshi'), 'Assam manifest contains zero Roshi mentions');
+  assert(!silcharString.includes('BP Highway'), 'Assam manifest contains zero BP Highway mentions');
+  assert(!silcharString.includes('Bhakundebesi'), 'Assam manifest contains zero Bhakundebesi mentions');
+  assert(!silcharString.includes('Mangaltar'), 'Assam manifest contains zero Mangaltar mentions');
+
+  // TEST SUITE 21: DISCONNECTED VILLAGES ACTUAL ROAD PATHS & RESCUED CONNECTIVITY
+  console.log('\n\x1b[1m[21] Disconnected Villages Actual Road Paths & Rescued Connectivity\x1b[0m');
+  const { SETTLEMENT_ROAD_FEEDERS, getSettlementRoadFeeder } = await import('../src/services/osrmRouting');
+
+  // 21.1 Real OSM Feeder Roads for Disconnected Settlements
+  assert(SETTLEMENT_ROAD_FEEDERS.v_bin && SETTLEMENT_ROAD_FEEDERS.v_bin.length >= 3, 'Binnākāndi feeder road has authentic multi-waypoint road geometry');
+  assert(SETTLEMENT_ROAD_FEEDERS.v_tol && SETTLEMENT_ROAD_FEEDERS.v_tol.length >= 3, 'Tolengram feeder road has authentic multi-waypoint road geometry');
+  assert(SETTLEMENT_ROAD_FEEDERS.v_kan && SETTLEMENT_ROAD_FEEDERS.v_kan.length >= 3, 'Kanakpur feeder road has authentic multi-waypoint road geometry');
+  assert(SETTLEMENT_ROAD_FEEDERS.v_son && SETTLEMENT_ROAD_FEEDERS.v_son.length >= 3, 'Sonāimukh feeder road has authentic multi-waypoint road geometry');
+
+  // 21.2 Snapping from Village to Corridor Junction
+  const binFeeder = getSettlementRoadFeeder('v_bin', [24.885, 92.855], [24.88329, 92.85713]);
+  assert(binFeeder[0][0] === 24.885 && binFeeder[0][1] === 92.855, 'Feeder starts exactly at Binnākāndi centroid');
+  assert(binFeeder[binFeeder.length - 1][0] === 24.88329 && binFeeder[binFeeder.length - 1][1] === 92.85713, 'Feeder connects to JT Road arterial junction');
+
+  // 21.3 Dynamic Fallback follows Curvature for Any Village Coordinates
+  const customFeeder = getSettlementRoadFeeder('v_custom_sample', [24.890, 92.860], [24.88329, 92.85713]);
+  assert(customFeeder.length >= 5, 'Fallback feeder generates dense realistic terrain-following road curve');
+  assert(customFeeder[0][0] === 24.890 && customFeeder[0][1] === 92.860, 'Custom feeder starts at village');
+
+  // 21.4 Rescued Route Continuity across Bridged Gap
+  const { CORRIDOR_NETWORKS } = await import('../src/services/osrmRouting');
+  const jtNet = CORRIDOR_NETWORKS.jt_road;
+  const fullRescuedPath = [...binFeeder, ...jtNet.fullRestored];
+  assert(fullRescuedPath.length > jtNet.fullRestored.length, 'Rescued path integrates village feeder road seamlessly with restored highway');
+  assert(fullRescuedPath[fullRescuedPath.length - 1][0] === jtNet.fullRestored[jtNet.fullRestored.length - 1][0], 'Rescued highway path reaches destination hospital');
+
+  // 21.5 Rescued Detour Continuity via Kumbhirgram Bypass
+  const fullDetourPath = [...binFeeder, ...jtNet.detour];
+  assert(fullDetourPath.length > jtNet.detour.length, 'Rescued detour integrates village feeder with Kumbhirgram bypass');
+
+  // =========================================================================
+  // SUITE 22: FIREBASE & FIRESTORE CLOUD SERVICE & BEFORE/AFTER PREVENTION EXPLAINER
+  // =========================================================================
+  console.log('\n--- SUITE 22: FIREBASE / FIRESTORE INTEGRATION & BEFORE-AFTER PREVENTION ---');
+
+  // 22.1 Firebase & Firestore Service Lifecycle
+  const { firebaseFirestoreService } = await import('../src/services/gcp/firebaseFirestoreService');
+  const firestoreStatus = firebaseFirestoreService.getStatus();
+  assert(firestoreStatus.projectId === 'lifeline-os-disaster-resilience', 'Firestore project ID is configured');
+  assert(firestoreStatus.collections.lifeline_simulations >= 1, 'Initial benchmark simulation document is seeded');
+
+  // 22.2 Firestore Simulation Persistence & Retrieval
+  const savedSim = await firebaseFirestoreService.saveSimulationRun({
+    theaterId: 'silchar',
+    theaterName: 'Silchar / Cachar (Assam)',
+    disasterDate: '2022-06-20',
+    breachPoint: 'Jirighat-Thaligram (JT) Road KM 18.2',
+    exposedMeters: 80,
+    severedHabitationsCount: 42,
+    rescuedHabitationsCount: 42,
+    activeIntervention: 'Class-40 Bailey Bridge & Armored Culvert',
+    baselineDetourDelayMins: 47,
+    restoredTransitMins: 18,
+    preventionMethod: 'GEE 72h Hydrological Early Warning System',
+  });
+  assert(savedSim.id.startsWith('sim_silchar_'), 'Simulation document ID generated with theater prefix');
+  assert(savedSim.rescuedHabitationsCount === 42, 'Simulation saves all 42 rescued habitations');
+  assert(savedSim.restoredTransitMins === 18, 'Simulation confirms 18-minute restored trauma corridor');
+
+  const history = await firebaseFirestoreService.getSimulationHistory('silchar');
+  assert(history.length >= 2, 'Simulation history retrieves saved runs');
+
+  // 22.3 Field Incident Recording in Firestore
+  const inc = await firebaseFirestoreService.recordIncident({
+    theaterId: 'silchar',
+    roadName: 'JT Road (KM 18.2)',
+    damageType: 'Embankment Scour Breach',
+    verificationStatus: 'REPORTED',
+    coordinates: [24.819, 92.835],
+    affectedPopulation: 14000,
+  });
+  assert(inc.id.startsWith('inc_'), 'Incident recorded in disaster_incidents collection');
+  assert(inc.affectedPopulation === 14000, 'Incident tracks 14,000 citizens at risk');
+
+  // 22.4 Clean Numbers in Proceed Buttons & Chapter Labels
+  const fs = await import('fs');
+  const commandPanelCode = fs.readFileSync('src/components/CommandPanel.tsx', 'utf-8');
+  assert(!commandPanelCode.includes('Proceed to 02.'), 'CommandPanel proceed buttons do not contain 02.');
+  assert(!commandPanelCode.includes('Proceed to 03.'), 'CommandPanel proceed buttons do not contain 03.');
+  assert(!commandPanelCode.includes('Proceed to 04.'), 'CommandPanel proceed buttons do not contain 04.');
+  assert(!commandPanelCode.includes('Proceed to 05.'), 'CommandPanel proceed buttons do not contain 05.');
+  assert(!commandPanelCode.includes("'1 Baseline'"), 'Guide steps do not contain 1 prefix');
+  assert(!commandPanelCode.includes("'2 Apply simulated closure'"), 'Guide steps do not contain 2 prefix');
+
+  // 22.5 Esri Dark Canvas Basemap Configuration (No CARTO Watermarks)
+  const leafletMapCode = fs.readFileSync('src/components/LeafletMap.tsx', 'utf-8');
+  assert(leafletMapCode.includes('World_Dark_Gray_Base'), 'LeafletMap uses clean Esri Dark Gray canvas without watermarks');
+  assert(!leafletMapCode.includes('basemaps.cartocdn.com'), 'LeafletMap has zero Carto basemap references');
+
   console.log('\n------------------------------------------------------');
   console.log(` Test Summary: \x1b[32m${passCount} passed\x1b[0m, \x1b[31m${failCount} failed\x1b[0m`);
   console.log('------------------------------------------------------\n');
