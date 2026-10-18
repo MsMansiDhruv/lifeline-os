@@ -6,6 +6,7 @@ import {
   TheaterChokePoint,
   getChokePhysicsCoords,
 } from '../../data/theaters';
+import { getSelectedTelemetryRow } from '../../data/disasterData';
 import {
   Construction,
   Activity,
@@ -165,7 +166,7 @@ export const Step3SimulateFixes: React.FC<Step3SimulateFixesProps> = ({
           <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
             <span className="text-[10px] text-slate-400 block">Golden Hour Access</span>
             <div className="flex items-center justify-center gap-1.5 mt-0.5">
-              <span className="text-slate-500 line-through text-[11px]">65m</span>
+              <span className="text-slate-500 line-through text-[11px]">{Math.round(getSelectedTelemetryRow(selectedChoke?.road_name).scenario_min || 65.7)}m</span>
               <span className="text-slate-400 text-[10px]">➔</span>
               <strong className={liveGoldenHour <= 60 ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
                 {liveGoldenHour}m {liveGoldenHour <= 60 ? 'Restored' : 'Delayed'}

@@ -272,7 +272,7 @@ export const Step2WhoIsAtRisk: React.FC<Step2WhoIsAtRiskProps> = ({
                   </span>
                 </div>
                 <span className="text-[10px] text-slate-400 block mt-0.5 truncate">
-                  {hospSurge <= 110 ? '✅ Stabilized' : hosp.type === 'starved' ? '⛔ Access Cut' : '🚨 Critical Overload'}
+                  {hospSurge <= 110 ? '✅ Within Capacity' : hosp.type === 'starved' ? '⛔ Access Cut' : '🚨 Critical Overload'}
                 </span>
               </button>
             );

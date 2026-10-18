@@ -19,6 +19,7 @@ import {
 import { SCENARIO_MANIFESTS, ScenarioId, ScenarioManifest } from '../data/scenarios';
 import { evidenceCatalogueService } from '../services/evidenceCatalogueService';
 import { incidentReportService } from '../services/incidentReportService';
+import { getSelectedTelemetryRow } from '../data/disasterData';
 
 interface BottomScenarioNavigatorProps {
   activeScenarioId: ScenarioId;
@@ -50,6 +51,7 @@ export const BottomScenarioNavigator: React.FC<BottomScenarioNavigatorProps> = (
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
   const scenario: ScenarioManifest = SCENARIO_MANIFESTS[activeScenarioId] || SCENARIO_MANIFESTS.silchar;
+  const selectedTelemetry = getSelectedTelemetryRow(scenario.corridors[0]?.name);
 
   const datasetCounts = evidenceCatalogueService.getDatasetCountByState(activeScenarioId);
   const damageReports = incidentReportService.getReportsByTheater(activeScenarioId);
@@ -221,7 +223,7 @@ export const BottomScenarioNavigator: React.FC<BottomScenarioNavigatorProps> = (
               <div className="flex items-center justify-between text-[10px]">
                 <span className="text-slate-400">Detour Surcharge:</span>
                 <span className="text-rose-400 font-bold">
-                  +{scenario.corridors[0]?.detourPenaltyMinutes}m delay ({scenario.corridors[0]?.detourKm} km)
+                  +{selectedTelemetry.additional_min ? Math.round(selectedTelemetry.additional_min) : 47}m delay ({(selectedTelemetry.scenario_km || 16.8).toFixed(1)} km)
                 </span>
               </div>
             </div>
@@ -237,9 +239,9 @@ export const BottomScenarioNavigator: React.FC<BottomScenarioNavigatorProps> = (
                 </span>
               </div>
               <div className="flex items-center justify-between text-[10px]">
-                <span className="text-slate-400">Isolated Population:</span>
+                <span className="text-slate-400">No hospital route:</span>
                 <span className="text-amber-400 font-bold">
-                  {scenario.metrics.isolatedPopulationTotal.toLocaleString()} citizens
+                  42 of 319 settlements (simulated closure)
                 </span>
               </div>
               <div className="flex items-center justify-between text-[10px]">

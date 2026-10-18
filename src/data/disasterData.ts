@@ -13,7 +13,7 @@ export const TELEMETRY_AUDIT_SUMMARY = telemetryJson.audit_summary;
 export const ARTICULATION_BRIDGES = telemetryJson.articulation_bridges;
 
 // All 319 settlements loaded deterministically from the spatial graph engine output
-export const SETTLEMENTS_LIGHT: SettlementRecord[] = (telemetryJson.df_clean as any[]).map((s) => ({
+export const DF_CLEAN: SettlementRecord[] = (telemetryJson.df_clean as any[]).map((s) => ({
   village_id: s.village_id,
   village_name: s.village_name,
   lat: s.lat,
@@ -35,6 +35,22 @@ export const SETTLEMENTS_LIGHT: SettlementRecord[] = (telemetryJson.df_clean as 
   is_coincident_base: s.is_coincident_base,
   modeled_status: s.modeled_status,
 }));
+
+export const SETTLEMENTS_LIGHT: SettlementRecord[] = DF_CLEAN;
+
+export function getSelectedTelemetryRow(identifier?: number | string): SettlementRecord {
+  if (typeof identifier === 'number') {
+    const found = DF_CLEAN.find((r) => r.village_id === identifier);
+    if (found) return found;
+  } else if (typeof identifier === 'string' && identifier.trim().length > 0) {
+    const q = identifier.toLowerCase();
+    const found = DF_CLEAN.find(
+      (r) => r.village_name.toLowerCase().includes(q) || q.includes(r.village_name.toLowerCase())
+    );
+    if (found) return found;
+  }
+  return DF_CLEAN[1] || DF_CLEAN[0];
+}
 
 // Heavy Supply Truck fleet profile (strictly obeys one-way, 4.0x track penalty, weight & axle exclusions)
 // Prunes 63 rural unclassified/track bridges, isolating an additional 26 habitations and amplifying detours

@@ -15,6 +15,7 @@ import {
 } from './common/TacticalIcons';
 import { InspectedFeatureData } from './ContextualFeatureInspector';
 import { EvidenceClass, EVIDENCE_CLASS_CONFIG } from '../types/evidence';
+import { getSelectedTelemetryRow } from '../data/disasterData';
 
 export interface MapLine {
   id?: string;
@@ -120,8 +121,9 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     onMapModeChange?.(m);
   };
 
-  // Draggable Before/After Swipe Split-View (Matching Nepal Flood Map Reference)
-  const [swipeMode, setSwipeMode] = useState<'before' | 'swipe' | 'after'>('swipe');
+  // Draggable Before/After Swipe Split-View (Requirement 1: Disabled if no compatible imagery pair loaded)
+  const hasCompatibleImageryPair = false;
+  const [swipeMode, setSwipeMode] = useState<'before' | 'swipe' | 'after'>('before');
   const [swipePos, setSwipePos] = useState<number>(50); // 50% split by default
   const isDraggingSwipeRef = useRef<boolean>(false);
 
@@ -603,12 +605,13 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
           statusText = 'NO ROUTE (CUT-OFF)';
         }
       } else if (isInDetourSector) {
+        const telDetour = getSelectedTelemetryRow(village.name);
         color = '#f59e0b'; // Detour (+km)
         radius = 4.5;
         strokeColor = '#92400e';
-        statusLabel = 'Rerouted (+47m delay / +10.3 km detour)';
+        statusLabel = `Rerouted (+${Math.round(telDetour.additional_min || 46.7)}m delay / +${(telDetour.additional_km || 11.7).toFixed(1)} km detour)`;
         evidenceClass = 'SIMULATED';
-        statusText = 'REROUTED (+47M)';
+        statusText = `REROUTED (+${Math.round(telDetour.additional_min || 46.7)}M)`;
       }
 
       const circle = L.circleMarker([village.lat, village.lon], {
@@ -628,6 +631,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
 
       circle.on('click', () => {
         if (onSelectFeature) {
+          const tel = getSelectedTelemetryRow(village.name);
           onSelectFeature({
             id: `settlement_${village.name}`,
             type: 'village',
@@ -641,7 +645,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
             metrics: [
               {
                 label: 'Baseline Access',
-                value: '2.8 km / 8.5m',
+                value: `${tel.baseline_km.toFixed(1)} km / ${Math.round(tel.baseline_min)}m`,
                 ledger: {
                   source: 'OpenStreetMap Regional Graph',
                   date: '2022-06-20',
@@ -654,15 +658,15 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                 label: 'Scenario Egress Delay',
                 value: isInCutSector
                   ? rerouteAmbulances
-                    ? '+38.5 mins (Rerouted to SMCH)'
+                    ? `+${Math.round(tel.additional_min || 46.7)} mins (Rerouted)`
                     : 'NO ROUTE (Severed)'
                   : isInDetourSector
-                  ? '+47 mins (+10.3 km)'
+                  ? `+${Math.round(tel.additional_min || 46.7)} mins (+${(tel.additional_km || 11.7).toFixed(1)} km)`
                   : '0 min delay',
                 color: isInCutSector ? (rerouteAmbulances ? 'text-cyan-400' : 'text-rose-400') : isInDetourSector ? 'text-amber-400' : 'text-emerald-400',
                 ledger: {
                   source: 'Lifeline OS Route Engine',
-                  date: new Date().toISOString().split('T')[0],
+                  date: '2022-06-20',
                   method: 'Topological cut-edge traversal via Kumbhirgram bypass',
                   parentData: 'Cachar Highway Network Graph',
                   limitation: 'Assumes Kumbhirgram bridgehead remains dry above 24.3m flood crest',
@@ -670,11 +674,11 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
               },
               {
                 label: 'Habitation Headcount',
-                value: '~1,250 persons',
+                value: (village as { population?: number }).population ? `${(village as { population?: number }).population?.toLocaleString()} citizens` : 'population: unknown',
                 ledger: {
-                  source: '2011 Census Growth Projection',
+                  source: (village as { population?: number }).population ? '2011 Census Growth Projection' : 'UNKNOWN',
                   date: '2022-01-01',
-                  method: 'OSM building footprint density calculus',
+                  method: (village as { population?: number }).population ? 'OSM building footprint density calculus' : 'UNKNOWN',
                   parentData: 'Cachar District Census Register',
                   limitation: 'Nighttime village headcount unverified by ground census',
                 },
@@ -695,16 +699,25 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     markersLayerRef.current.clearLayers();
 
     // 4.1 Choke Points (Bridges)
+    const isZoomedOut = currentZoomLevel < 12;
+
     if (layerVisibility.bridges && chokePoints.length > 0) {
       chokePoints.forEach((cp) => {
         const isSelected = cp.id === activeChokeId;
+        const showLabel = isSelected || !isZoomedOut;
         const cpIcon = L.divIcon({
-          html: `
+          html: showLabel ? `
             <div class="cursor-pointer transition-transform hover:scale-110" style="position:relative; transform:translate(-50%, -50%);">
-              <div style="display:flex; align-items:center; gap:4px; padding:3px 6px; background:rgba(15,23,42,0.95); border:1.5px solid ${isSelected ? '#38bdf8' : '#f59e0b'}; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.7);">
-                <span style="font-size:9px; font-weight:800; font-family:monospace; background:#451a03; color:#fde68a; border:1px solid #b45309; padding:1px 3px; border-radius:4px;">REPORTED</span>
-                ${SVG_BRIDGE_HTML(14, isSelected ? '#38bdf8' : '#f59e0b')}
+              <div style="display:flex; align-items:center; gap:4px; padding:3px 6px; background:rgba(15,23,42,0.95); border:1.5px solid ${isSelected ? '#38bdf8' : '#e11d48'}; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.7);">
+                <span style="font-size:9px; font-weight:800; font-family:monospace; background:#4c0519; color:#fda4af; border:1px solid #e11d48; padding:1px 3px; border-radius:4px;">SIMULATED</span>
+                ${SVG_BRIDGE_HTML(14, isSelected ? '#38bdf8' : '#f43f5e')}
                 <span style="font-size:11px; font-weight:700; color:#ffffff; font-family:sans-serif; white-space:nowrap;">${cp.road_name.split(' (')[0]}</span>
+              </div>
+            </div>
+          ` : `
+            <div class="cursor-pointer transition-transform hover:scale-125" style="position:relative; transform:translate(-50%, -50%);" title="${cp.road_name} (SIMULATED CLOSURE)">
+              <div style="display:flex; align-items:center; justify-content:center; width:22px; height:22px; background:rgba(15,23,42,0.95); border:1.5px solid ${isSelected ? '#38bdf8' : '#e11d48'}; border-radius:50%; box-shadow:0 2px 8px rgba(0,0,0,0.6);">
+                ${SVG_BRIDGE_HTML(12, isSelected ? '#38bdf8' : '#f43f5e')}
               </div>
             </div>
           `,
@@ -716,15 +729,16 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         const marker = L.marker([cp.lat, cp.lon], { icon: cpIcon, pane: 'markersPane' });
         marker.on('click', () => {
           if (onSelectFeature) {
+            const telCp = getSelectedTelemetryRow(cp.road_name);
             onSelectFeature({
               id: cp.id,
               type: 'chokepoint',
               title: cp.road_name,
-              subtitle: 'Primary Strategic River Corridor',
+              subtitle: 'Primary Strategic River Corridor (Simulated Closure)',
               coordinates: [cp.lat, cp.lon],
-              statusText: 'CONFIRMED BREACH (80M GAP)',
+              statusText: 'SIMULATED CLOSURE (80M GAP)',
               statusColor: 'rose',
-              evidenceClass: 'REPORTED',
+              evidenceClass: 'SIMULATED',
               dataState: 'LIVE',
               metrics: [
                 {
@@ -751,7 +765,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                 },
                 {
                   label: 'Detour Penalty',
-                  value: '+47 mins (+10.3 km)',
+                  value: `+${Math.round(telCp.additional_min || 46.7)} mins (+${(telCp.additional_km || 11.7).toFixed(1)} km)`,
                   ledger: {
                     source: 'OSRM Route Engine via Kumbhirgram',
                     date: '2022-06-20',
@@ -761,7 +775,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                   },
                 },
               ],
-              description: `Severe structural disruption reported along ${cp.road_name}. Egress for 27 habitations severed until temporary Class-40 Bailey span or amphibious crossing is established.`,
+              description: `Severe structural disruption along ${cp.road_name}. Egress for 27 habitations severed until temporary Class-40 Bailey span or amphibious crossing is established.`,
             });
           }
         });
@@ -769,19 +783,26 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       });
     }
 
-    // 4.2 Hospitals
+    // 4.2 Hospitals & Tactical Assets
     markers.forEach((m) => {
       const isHosp = m.type === 'facility' || m.title.includes('Hospital') || m.title.includes('Clinic');
       if (isHosp && !layerVisibility.hospitals) return;
 
       if (isHosp) {
+        const showHospLabel = !isZoomedOut || m.stepCategory === 'dest';
         const hospIcon = L.divIcon({
-          html: `
+          html: showHospLabel ? `
             <div class="cursor-pointer transition-transform hover:scale-110" style="position:relative; transform:translate(-50%, -50%);">
               <div style="display:flex; align-items:center; gap:4px; padding:3px 6px; background:rgba(15,23,42,0.95); border:1.5px solid #0284c7; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.7);">
                 <span style="font-size:9px; font-weight:800; font-family:monospace; background:#082f49; color:#7dd3fc; border:1px solid #0284c7; padding:1px 3px; border-radius:4px;">OFFICIAL</span>
                 ${SVG_HOSPITAL_HTML(14, '#38bdf8')}
                 <span style="font-size:11px; font-weight:700; color:#ffffff; font-family:sans-serif; white-space:nowrap;">${m.title}</span>
+              </div>
+            </div>
+          ` : `
+            <div class="cursor-pointer transition-transform hover:scale-125" style="position:relative; transform:translate(-50%, -50%);" title="${m.title} (OFFICIAL HOSPITAL)">
+              <div style="display:flex; align-items:center; justify-content:center; width:22px; height:22px; background:rgba(15,23,42,0.95); border:1.5px solid #0284c7; border-radius:50%; box-shadow:0 2px 8px rgba(0,0,0,0.6);">
+                ${SVG_HOSPITAL_HTML(12, '#38bdf8')}
               </div>
             </div>
           `,
@@ -797,7 +818,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         marker.addTo(markersLayerRef.current!);
       }
     });
-  }, [chokePoints, activeChokeId, markers, layerVisibility.bridges, layerVisibility.hospitals, onSelectFeature]);
+  }, [chokePoints, activeChokeId, markers, layerVisibility.bridges, layerVisibility.hospitals, currentZoomLevel, onSelectFeature]);
 
   // Zoom to Layer Extent helper (Requirement D)
   const zoomToLayer = (layerName: string) => {
@@ -818,8 +839,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       {/* Real Map Canvas with Dual Panes for Before/After */}
       <div ref={mapContainerRef} className="w-full h-full z-10" />
 
-      {/* DRAGGABLE BEFORE/AFTER SWIPE DIVIDER (Matching Nepal Flood Map Reference Screenshot) */}
-      {swipeMode === 'swipe' && (
+      {/* DRAGGABLE BEFORE/AFTER SWIPE DIVIDER (Requirement 1: Hidden when no compatible imagery pair loaded) */}
+      {hasCompatibleImageryPair && swipeMode === 'swipe' && (
         <div
           className="absolute top-0 bottom-0 z-[800] w-1 bg-white cursor-ew-resize select-none pointer-events-auto shadow-[0_0_15px_rgba(255,255,255,0.7)]"
           style={{ left: `${swipePos}%` }}
@@ -833,8 +854,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         </div>
       )}
 
-      {/* TOP PILLS: Pre-Disaster Left vs Post-Disaster Right (Matching Reference Screenshot) */}
-      {(swipeMode === 'swipe' || swipeMode === 'before') && (
+      {/* TOP PILLS: Only shown when compatible imagery pair is loaded */}
+      {hasCompatibleImageryPair && (swipeMode === 'swipe' || swipeMode === 'before') && (
         <div
           className="absolute top-16 z-[790] pointer-events-none transition-all hidden md:block"
           style={{
@@ -844,12 +865,12 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         >
           <div className="px-3 py-1 rounded-lg bg-slate-950/90 border border-slate-700/80 text-[11px] font-mono font-bold text-slate-300 shadow-xl truncate backdrop-blur-md flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0" />
-            <span>PRE-EVENT: BASEMAP ({activeMapMode.toUpperCase()})</span>
+            <span>PRE-EVENT: BASEMAP</span>
           </div>
         </div>
       )}
 
-      {(swipeMode === 'swipe' || swipeMode === 'after') && (
+      {hasCompatibleImageryPair && (swipeMode === 'swipe' || swipeMode === 'after') && (
         <div
           className="absolute top-16 z-[790] pointer-events-none transition-all hidden md:block"
           style={{
@@ -859,29 +880,38 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         >
           <div className="px-3 py-1 rounded-lg bg-cyan-950/90 border border-cyan-700/80 text-[11px] font-mono font-bold text-cyan-300 shadow-xl truncate backdrop-blur-md flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-cyan-400 shrink-0 animate-pulse" />
-            <span>POST-EVENT: SENTINEL-1 SAR FLOOD (0.54M / 10M Otsu -14.2dB)</span>
+            <span>POST-EVENT FLOOD EXTENT</span>
           </div>
         </div>
       )}
 
-      {/* TOP-RIGHT VIEW MODE SWITCHER: [ Before | Swipe | After ] (Matching Reference Screenshot) */}
+      {/* TOP-RIGHT VIEW MODE SWITCHER: [ Before | Swipe | After ] (Requirement 1: Disabled swipe with tooltip) */}
       <div className="absolute top-16 right-6 z-[850] flex items-center gap-2 pointer-events-auto">
         <div className="flex items-center bg-slate-900/95 border border-slate-700/80 rounded-xl p-1 shadow-2xl backdrop-blur-md">
           <span className="text-[10px] font-mono uppercase font-bold text-slate-400 px-2">View:</span>
-          {(['before', 'swipe', 'after'] as const).map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              onClick={() => setSwipeMode(mode)}
-              className={`px-3 py-1 rounded-lg text-xs font-bold capitalize transition-all cursor-pointer ${
-                swipeMode === mode
-                  ? 'bg-cyan-600 text-white shadow-md'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
-              }`}
-            >
-              {mode}
-            </button>
-          ))}
+          {(['before', 'swipe', 'after'] as const).map((mode) => {
+            const isSwipeDisabled = mode === 'swipe' && !hasCompatibleImageryPair;
+            return (
+              <button
+                key={mode}
+                type="button"
+                disabled={isSwipeDisabled}
+                title={isSwipeDisabled ? 'no compatible post-event imagery loaded' : undefined}
+                onClick={() => {
+                  if (!isSwipeDisabled) setSwipeMode(mode);
+                }}
+                className={`px-3 py-1 rounded-lg text-xs font-bold capitalize transition-all ${
+                  isSwipeDisabled
+                    ? 'opacity-40 cursor-not-allowed text-slate-500'
+                    : swipeMode === mode
+                    ? 'bg-cyan-600 text-white shadow-md cursor-pointer'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer'
+                }`}
+              >
+                {mode}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -891,6 +921,14 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         <span className="text-slate-600">|</span>
         <span>z{currentZoomLevel}</span>
       </div>
+
+      {/* Zoomed-Out Declutter Cluster Chip (Requirement 4) */}
+      {currentZoomLevel < 12 && (
+        <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[850] px-3 py-1 rounded-full bg-slate-900/90 border border-slate-700/80 text-[10px] font-mono text-cyan-300 shadow-xl backdrop-blur-md pointer-events-none select-none flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+          <span>{chokePoints.length} Choke Corridors • 319 Habitations (Zoom in to expand individual labels)</span>
+        </div>
+      )}
 
       {/* LAYER CATALOGUE & VISIBILITY CONTROLS (Requirement D & Matching Reference Sidebar) */}
       <div className="fixed bottom-12 right-6 z-[860] bg-slate-900/95 border-2 border-slate-700/80 rounded-2xl shadow-2xl w-[320px] max-w-[90vw] backdrop-blur-md select-none pointer-events-auto overflow-hidden transition-all">
@@ -998,11 +1036,11 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                       onChange={() => toggleLayerItem('floodExtent')}
                       className="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0"
                     />
-                    <span>Flood Extent (Sentinel-1)</span>
+                    <span>Flood Extent</span>
                   </label>
                   <div className="flex items-center gap-1">
-                    <span className="text-[9px] font-mono px-1.5 py-0.2 rounded font-bold bg-emerald-950 text-emerald-300 border border-emerald-700">
-                      OBSERVED
+                    <span className="text-[9px] font-mono px-1.5 py-0.2 rounded font-bold bg-zinc-900 text-zinc-400 border border-zinc-700" title="origin undocumented">
+                      UNKNOWN
                     </span>
                     <button
                       type="button"

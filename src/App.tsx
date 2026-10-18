@@ -26,6 +26,7 @@ import { auditService } from './services/auditService';
 import {
   SETTLEMENTS_LIGHT,
   SETTLEMENTS_HEAVY,
+  getSelectedTelemetryRow,
 } from './data/disasterData';
 import {
   THEATERS,
@@ -739,9 +740,9 @@ export function App() {
         if (hosp.id === 'valley') {
           const jtTool = interventions['jt_road'] || 'none';
           if (jtTool === 'bridge' || jtTool === 'booth' || isBreachTemporarilyReopened) {
-            surgeText = '74% Stabilized (260/350 Beds)';
+            surgeText = '74% Balanced (260/350 Beds)';
           } else if (rerouteAmbulances) {
-            surgeText = '74% Stabilized (260/350 Beds)';
+            surgeText = '74% Balanced (260/350 Beds)';
           } else {
             surgeText = '100% Saturated (350/350 Beds)';
           }
@@ -803,9 +804,10 @@ export function App() {
       }
 
       const isDirectRestored = activeSelectedTool === 'bridge' || isBreachTemporarilyReopened;
+      const telRow = getSelectedTelemetryRow(selectedChoke?.road_name);
       const destBanner = isDirectRestored
-        ? `${hospShort} Hospital (${surgeText.split(' ')[0]}) • 14.2 km / 18m Direct Highway Restored`
-        : `${hospShort} Hospital (${surgeText.split(' ')[0]}) • 24.5 km / 65m Detour (+47m Delay)`;
+        ? `${hospShort} Hospital (${surgeText.split(' ')[0]}) • ${telRow.baseline_km.toFixed(1)} km / ${Math.round(telRow.baseline_min)}m Direct Highway Restored`
+        : `${hospShort} Hospital (${surgeText.split(' ')[0]}) • ${(telRow.scenario_km || 16.8).toFixed(1)} km / ${Math.round(telRow.scenario_min || 65.7)}m Detour (+${Math.round(telRow.additional_min || 46.7)}m Delay)`;
 
       list.push({
         lat: hosp.lat,
@@ -1191,11 +1193,8 @@ export function App() {
                 <span className="text-[10px] font-mono text-slate-300">
                   📅 June 20, 2022
                 </span>
-                <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/80 px-2 py-0.2 rounded border border-emerald-800">
-                  ● OBSERVED REPLAY
-                </span>
-                <span className="text-[10px] font-mono text-slate-400">
-                  🛰️ Sentinel-1 SAR + NASA SRTM 30m
+                <span className="text-[10px] font-mono text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800 font-bold">
+                  HISTORICAL REPLAY, simulated closure on OSM graph
                 </span>
               </div>
               <h1 className="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2">

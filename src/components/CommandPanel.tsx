@@ -55,6 +55,7 @@ import { roadConditionService } from '../services/roadConditionService';
 import { EvidenceCatalogueModal } from './EvidenceCatalogueModal';
 import { FieldEvidenceEditorModal } from './FieldEvidenceEditorModal';
 import { DamageReportStatus } from '../types/evidence';
+import { getSelectedTelemetryRow, ARTICULATION_BRIDGES } from '../data/disasterData';
 
 export type IncidentChapter = 'prevent' | 'predict' | 'protect' | 'respond' | 'learn';
 
@@ -181,6 +182,16 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
 
   const selectedChoke = currentTheater.chokePoints[selectedChokeIdx] || currentTheater.chokePoints[0];
   const activeTool = interventions[selectedChoke.id] || 'none';
+  const selectedTelemetry = getSelectedTelemetryRow(selectedChoke?.road_name);
+  const topCutEdge = useMemo(() => {
+    const sorted = [...ARTICULATION_BRIDGES].sort((a, b) => b.isolated_settlements_count - a.isolated_settlements_count);
+    return sorted[0] || {
+      cut_edge_id: 'BRIDGE_1',
+      serving_settlement: 'Harinagar East',
+      isolated_settlements_count: 18,
+      recommended_action: 'Priority A: Reinforce Bridge Abutments & Elevate Embankment (+2.5m)',
+    };
+  }, []);
 
   // Quick Zoom Target Waypoints per Theater
   const quickZoomTargets = useMemo(() => {
@@ -1142,36 +1153,58 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                   </div>
 
                   {/* Breach Closure / Culvert Toggle */}
-                  <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
-                    <div>
-                      <strong className="text-xs text-white block">Temporary Culvert Simulation</strong>
-                      <span className="text-[10px] text-slate-400">
-                        {isBreachTemporarilyReopened ? 'Direct baseline access temporarily re-opened' : 'Road breach severed by floodwaters'}
-                      </span>
+                  <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <strong className="text-xs text-white block">Temporary Culvert Simulation</strong>
+                        <span className="text-[10px] text-slate-400">
+                          Precomputed cut edge: {topCutEdge.serving_settlement}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onToggleBreachTemporarilyReopened?.();
+                          const servingVillage = getSelectedTelemetryRow(topCutEdge.serving_settlement);
+                          onFocusMapPoint({
+                            lat: servingVillage.lat,
+                            lon: servingVillage.lon,
+                            name: `${topCutEdge.serving_settlement} (approximate: serving settlement, not bridge location)`,
+                          });
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          isBreachTemporarilyReopened
+                            ? 'bg-emerald-600 text-white shadow-md'
+                            : 'bg-slate-800 text-slate-300 hover:text-white border border-slate-700'
+                        }`}
+                      >
+                        {isBreachTemporarilyReopened ? 'Simulated ✅' : 'Simulate Culvert'}
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={onToggleBreachTemporarilyReopened}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        isBreachTemporarilyReopened
-                          ? 'bg-emerald-600 text-white shadow-md'
-                          : 'bg-slate-800 text-slate-300 hover:text-white border border-slate-700'
-                      }`}
-                    >
-                      {isBreachTemporarilyReopened ? 'Re-Opened ✅' : 'Simulate Culvert'}
-                    </button>
-                  </div>
 
-                  {/* Culvert Effect Explanation (Section 5 Requirement) */}
-                  <div className="p-2.5 rounded-lg bg-slate-900/90 border border-slate-800 text-[11px] font-sans space-y-1">
-                    <div className="flex items-center gap-1.5 font-bold text-slate-300 font-mono text-[10px] uppercase">
-                      <Info className="w-3 h-3 text-cyan-400" />
-                      <span>Culvert Breach Intervention Impact</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-1 text-[10px] font-mono text-slate-400">
-                      <div>What Changes: <span className="text-slate-200">Deploys rapid 80m bridging across breach</span></div>
-                      <div>Data Source: <span className="text-slate-200">Assam PWD Emergency Bridging Rating</span></div>
-                      <div>Evidence Class: <span className="text-cyan-300">SIMULATED INTERVENTION</span></div>
+                    {/* Precomputed metrics & honest disclaimer as mandated by Requirement 6 */}
+                    <div className="p-2 rounded-lg bg-slate-950/80 border border-slate-850 space-y-1 text-[11px] font-mono">
+                      <div className="flex items-center justify-between text-slate-300">
+                        <span>Cut Edge:</span>
+                        <span className="text-amber-400 font-bold">{topCutEdge.cut_edge_id}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-slate-300">
+                        <span>Serving Settlement:</span>
+                        <span className="text-cyan-300 font-bold">{topCutEdge.serving_settlement}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-slate-300">
+                        <span>Estimated Settlements Reconnected:</span>
+                        <span className="text-emerald-400 font-bold">
+                          {topCutEdge.isolated_settlements_count} (precomputed)
+                        </span>
+                      </div>
+                      <div className="pt-1 text-slate-300 text-[10px]">
+                        <span className="text-slate-400 block">Recommended Action:</span>
+                        <span className="text-slate-200">{topCutEdge.recommended_action}</span>
+                      </div>
+                      <div className="p-1.5 mt-1 rounded bg-amber-950/40 border border-amber-800/50 text-[10px] text-amber-300 font-sans leading-snug">
+                        ⚠️ <strong>Graph Limitation:</strong> Full re-route calculation requires the road graph, which is not loaded.
+                      </div>
                     </div>
                   </div>
 
@@ -1184,10 +1217,10 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                       routeType: isBreachTemporarilyReopened ? 'restored' : (detourRouteMode === 'baseline' ? 'baseline' : 'detour'),
                       activeClosures: isBreachTemporarilyReopened ? [] : [selectedChoke.id],
                       activeInterventions: interventions,
-                      directKm: selectedChoke.baseline_km || 14.2,
-                      detourKm: selectedChoke.detour_km || 24.5,
-                      directMins: selectedChoke.baseline_travel_mins || 18,
-                      detourMins: selectedChoke.detour_travel_mins || 65,
+                      directKm: selectedTelemetry.baseline_km,
+                      detourKm: selectedTelemetry.scenario_km || 16.8,
+                      directMins: Math.round(selectedTelemetry.baseline_min),
+                      detourMins: Math.round(selectedTelemetry.scenario_min || 65.7),
                     });
 
                     return (
@@ -1270,7 +1303,7 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                           : 'bg-cyan-600 hover:bg-cyan-500 text-white shadow'
                       }`}
                     >
-                      {rerouteAmbulances ? 'Active (Stabilized) ✅' : 'Engage Surge Balancing'}
+                      {rerouteAmbulances ? 'Active (Surge Balanced) ✅' : 'Engage Surge Balancing'}
                     </button>
                   </div>
 
@@ -1295,7 +1328,7 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                       <div className="flex items-center justify-between">
                         <span className="font-semibold text-white">Valley Hospital (Primary Referral)</span>
                         <span className={`font-mono text-[11px] font-bold ${rerouteAmbulances ? 'text-emerald-400' : 'text-rose-400'}`}>
-                          {rerouteAmbulances ? '74% (260/350 Beds • Stabilized)' : '100% Saturated (350/350 Beds • 0 Avail)'}
+                          {rerouteAmbulances ? '74% (260/350 Beds • Surge Balanced)' : '100% Saturated (350/350 Beds • 0 Avail)'}
                         </span>
                       </div>
                       <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
@@ -1305,7 +1338,7 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                       </div>
                       <div className="text-[10px] text-slate-400 flex items-center justify-between">
                         <span>Baseline: 350 occupied</span>
-                        <span>{rerouteAmbulances ? '34 Patients safely diverted' : 'Overload risk!'}</span>
+                        <span>{rerouteAmbulances ? 'Ambulance diversion bypass active' : 'Overload risk!'}</span>
                       </div>
                     </div>
 
@@ -1615,11 +1648,13 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                     <div className="space-y-1 text-xs font-mono">
                       <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-between">
                         <div>
-                          <strong className="text-white block">Jirighat-Thaligram (JT) Road</strong>
-                          <span className="text-[10px] text-slate-400">Direct 14.2 km (18m) vs Detour 24.5 km (65m)</span>
+                          <strong className="text-white block">{selectedChoke.road_name}</strong>
+                          <span className="text-[10px] text-slate-400">
+                            Direct {selectedTelemetry.baseline_km.toFixed(1)} km ({Math.round(selectedTelemetry.baseline_min)}m) vs Detour {(selectedTelemetry.scenario_km || 16.8).toFixed(1)} km ({Math.round(selectedTelemetry.scenario_min || 65.7)}m)
+                          </span>
                         </div>
                         <span className="text-emerald-400 font-bold">
-                          {activeTool === 'bridge' ? 'RESTORED (14m)' : '+47m Delay'}
+                          {activeTool === 'bridge' ? 'RESTORED' : `+${Math.round(selectedTelemetry.additional_min || 46.7)}m Delay`}
                         </span>
                       </div>
                     </div>

@@ -22,6 +22,7 @@ import { TheaterData, TheaterChokePoint, TheaterHospital } from '../data/theater
 import realOsmRoutesData from '../data/realOsmRoutes.json';
 import { getCorridorRoadNetwork } from '../services/osrmRouting';
 import { playClickSound } from '../services/audioService';
+import { getSelectedTelemetryRow } from '../data/disasterData';
 
 interface Terrain3DViewerProps {
   currentTheater: TheaterData;
@@ -688,9 +689,10 @@ export const Terrain3DViewer: React.FC<Terrain3DViewerProps> = ({
       ambGroup.add(light);
 
       // Floating vehicle identification badge
+      const tel3d = getSelectedTelemetryRow(selectedChoke?.road_name);
       const convoyBadge = createTextBadgeSprite(
         isDirectPath ? 'Village Convoy (Direct)' : 'Village Convoy (Detour)',
-        isDirectPath ? 'Crossing Bailey Bridge (18m)' : 'Detour Bypass (+47m Delay)',
+        isDirectPath ? `Crossing Bailey Bridge (${Math.round(tel3d.baseline_min)}m)` : `Detour Bypass (+${Math.round(tel3d.additional_min || 46.7)}m Delay)`,
         isDirectPath ? '#064e3b' : '#78350f',
         isDirectPath ? '#10b981' : '#f59e0b'
       );
@@ -746,7 +748,7 @@ export const Terrain3DViewer: React.FC<Terrain3DViewerProps> = ({
 
         // 4. Floating 3D Text Badge Sprite (Readable directly in 3D scene)
         const surgeStatus = isValley
-          ? (rerouteAmbulances ? '74% Stabilized' : '100% Saturated')
+          ? (rerouteAmbulances ? '74% Balanced' : '100% Saturated')
           : isSmch
           ? 'Apex (65 Open Beds)'
           : `${hosp.availableBeds || 24} Open Beds`;
