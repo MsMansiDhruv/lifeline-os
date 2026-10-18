@@ -47,3 +47,14 @@ temp_unpacked/
 inspect_zip.js
 diff_check.js
 git_check.js
+
+# Local video & raw slide renders
+remotion-video/
+pitch_deck_slides/
+extracted_template_assets/
+docs/videos/node_modules/
+*.mp4
+*.webm
+*.wav
+test_deck.pptx
+pdf_inspection_output.txt

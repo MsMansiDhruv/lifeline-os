@@ -1,68 +1,51 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   X,
-  Play,
-  Pause,
-  RotateCcw,
   ZoomIn,
   ZoomOut,
   Maximize2,
   Minimize2,
+  RotateCcw,
+  Download,
+  ExternalLink,
   Search,
   Filter,
   CheckCircle2,
-  AlertTriangle,
-  Layers,
-  Compass,
-  Cpu,
-  Radio,
-  Eye,
-  ShieldCheck,
-  FileText,
-  Sparkles,
-  Server,
-  Database,
-  Network,
-  ArrowRight,
-  Download,
-  Info,
-  Lock,
   Activity,
-  FileCode,
-  Sliders,
-  User,
-  Users,
-  LifeBuoy,
-  LineChart,
-  CloudRain,
-  Building2,
-  HelpCircle,
-  AlertOctagon,
-  Anchor,
-  Send,
-  Cloud,
-  Globe,
-  Key,
-  HardDrive,
-  GitFork,
-  Check,
-  Copy,
+  Layers,
+  Database,
+  Cpu,
+  ShieldCheck,
+  ArrowRight,
   ChevronRight,
   ChevronLeft,
-  ChevronDown
+  Check,
+  Copy,
+  Info,
+  Server,
+  FileCode,
+  FileText,
+  Sliders,
+  Sparkles,
+  GitMerge,
+  Play,
+  Pause,
+  AlertTriangle,
+  Lock,
+  Globe,
+  Radio,
+  BookOpen
 } from 'lucide-react';
 
 import {
-  ViewMode,
   ArchitectureNode,
-  ArchitectureEdge,
-  IntegrationStatus,
   ARCHITECTURE_NODES,
-  ARCHITECTURE_EDGES,
   STAGE_NARRATIVES,
   ARCHITECTURE_VALIDATION_TESTS,
   ArchitectureValidationTest
 } from '../data/systemArchitectureModel';
+
+export type ArchitectureTab = 'swimlane' | 'system_architecture' | 'dictionary' | 'mcp' | 'tests';
 
 interface SystemArchitectureModalProps {
   isOpen: boolean;
@@ -73,87 +56,60 @@ export const SystemArchitectureModal: React.FC<SystemArchitectureModalProps> = (
   isOpen,
   onClose
 }) => {
-  // Navigation & View States
-  const [activeView, setActiveView] = useState<ViewMode>('process');
-  const [isPresentationMode, setIsPresentationMode] = useState<boolean>(false);
-  const [currentStageIdx, setCurrentStageIdx] = useState<number>(0);
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
-  const [isReducedMotion, setIsReducedMotion] = useState<boolean>(false);
+  // Navigation Tabs
+  const [activeTab, setActiveTab] = useState<ArchitectureTab>('swimlane');
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
-  // Inspector & Selection States
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
-  const [isInspectorOpen, setIsInspectorOpen] = useState<boolean>(false);
-  const [isTestsModalOpen, setIsTestsModalOpen] = useState<boolean>(false);
+  // Diagram View State (for Swimlane and System Architecture)
+  const [swimlaneAssetType, setSwimlaneAssetType] = useState<'png' | 'gif'>('png');
+  const [systemArchAssetType, setSystemArchAssetType] = useState<'png' | 'gif'>('png');
+  const [zoom, setZoom] = useState<number>(1.0);
+  const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [viewFitMode, setViewFitMode] = useState<'fit-width' | 'fit-all' | 'custom'>('fit-width');
 
-  // Filtering & Search
+  // Stage Selection for Swimlane Narrative Drawer
+  const [selectedStageIdx, setSelectedStageIdx] = useState<number>(0);
+  const [isStagePlaying, setIsStagePlaying] = useState<boolean>(false);
+
+  // Zone Selection for Architecture Drawer
+  const [selectedZoneIdx, setSelectedZoneIdx] = useState<number>(0);
+
+  // Component Dictionary Filter & Search
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedLayer, setSelectedLayer] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
-  const [selectedActor, setSelectedActor] = useState<string>('all');
-  const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
+  const [selectedStageFilter, setSelectedStageFilter] = useState<string>('all');
+  const [expandedNodeId, setExpandedNodeId] = useState<string | null>(null);
 
-  // Canvas Pan & Zoom
-  const [zoom, setZoom] = useState<number>(0.85);
-  const [pan, setPan] = useState<{ x: number; y: number }>({ x: 50, y: 50 });
-  const [isDragging, setIsDragging] = useState<boolean>(false);
-  const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
-  const [copiedJson, setCopiedJson] = useState<boolean>(false);
+  // Tests Search & Filter
+  const [testSearchQuery, setTestSearchQuery] = useState<string>('');
+  const [copiedSchema, setCopiedSchema] = useState<boolean>(false);
 
-  const svgRef = useRef<SVGSVGElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  // Auto-advance Presentation Mode timer
+  // Auto-advance Stage timer if playback is active
   useEffect(() => {
-    let timer: any;
-    if (isPlaying && isPresentationMode) {
-      const duration = 5000 / playbackSpeed;
+    let timer: NodeJS.Timeout;
+    if (isStagePlaying && activeTab === 'swimlane') {
       timer = setTimeout(() => {
-        setCurrentStageIdx((prev) => {
-          if (prev < STAGE_NARRATIVES.length - 1) {
-            return prev + 1;
-          } else {
-            setIsPlaying(false);
-            return prev;
-          }
-        });
-      }, duration);
+        setSelectedStageIdx((prev) => (prev < STAGE_NARRATIVES.length - 1 ? prev + 1 : 0));
+      }, 4500);
     }
     return () => clearTimeout(timer);
-  }, [isPlaying, isPresentationMode, currentStageIdx, playbackSpeed]);
+  }, [isStagePlaying, activeTab, selectedStageIdx]);
 
-  // Adjust camera focus when stage changes in presentation mode
+  // Reset zoom & pan when switching tabs or view fit mode
   useEffect(() => {
-    if (isPresentationMode && activeView === 'process') {
-      const activeStage = STAGE_NARRATIVES[currentStageIdx];
-      const targetNode = ARCHITECTURE_NODES.find((n) => n.id === activeStage.focusNodeId);
-      if (targetNode?.positions.process) {
-        const targetX = targetNode.positions.process.x;
-        const targetY = targetNode.positions.process.y;
-        // Center the target node in viewport
-        setPan({
-          x: Math.max(-2800, Math.min(200, 450 - targetX * zoom)),
-          y: Math.max(-600, Math.min(200, 220 - targetY * zoom))
-        });
-      }
+    if (viewFitMode === 'fit-width') {
+      setZoom(1.0);
+      setPan({ x: 0, y: 0 });
+    } else if (viewFitMode === 'fit-all') {
+      setZoom(0.55);
+      setPan({ x: 0, y: 0 });
     }
-  }, [currentStageIdx, isPresentationMode, activeView, zoom]);
-
-  // Reset viewport when switching views
-  useEffect(() => {
-    if (activeView === 'process') {
-      setZoom(0.72);
-      setPan({ x: 30, y: 60 });
-    } else if (activeView === 'usecases') {
-      setZoom(0.9);
-      setPan({ x: 80, y: 30 });
-    } else if (activeView === 'architecture') {
-      setZoom(0.78);
-      setPan({ x: 40, y: 20 });
-    }
-  }, [activeView]);
+  }, [viewFitMode, activeTab]);
 
   // Close on Escape key
   useEffect(() => {
@@ -166,52 +122,12 @@ export const SystemArchitectureModal: React.FC<SystemArchitectureModalProps> = (
 
   if (!isOpen) return null;
 
-  // Filtered Nodes & Edges
-  const visibleNodes = ARCHITECTURE_NODES.filter((node) => {
-    if (!node.views.includes(activeView)) return false;
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const match =
-        node.name.toLowerCase().includes(q) ||
-        node.shortName.toLowerCase().includes(q) ||
-        node.purpose.toLowerCase().includes(q);
-      if (!match) return false;
-    }
-    if (selectedLayer !== 'all' && node.layer !== selectedLayer) return false;
-    if (selectedStatus !== 'all' && node.status !== selectedStatus) return false;
-    if (selectedActor !== 'all' && node.id !== selectedActor && node.type === 'actor') return false;
-    return true;
-  });
-
-  const visibleNodeIds = new Set(visibleNodes.map((n) => n.id));
-
-  const visibleEdges = ARCHITECTURE_EDGES.filter((edge) => {
-    if (!edge.views.includes(activeView)) return false;
-    return visibleNodeIds.has(edge.source) && visibleNodeIds.has(edge.target);
-  });
-
-  // Calculate dependency graph for selected node
-  const activeDependencies = (() => {
-    if (!selectedNodeId) return { upstream: new Set<string>(), downstream: new Set<string>() };
-    const upstream = new Set<string>();
-    const downstream = new Set<string>();
-
-    visibleEdges.forEach((e) => {
-      if (e.target === selectedNodeId) upstream.add(e.source);
-      if (e.source === selectedNodeId) downstream.add(e.target);
-    });
-
-    return { upstream, downstream };
-  })();
-
-  // Selected Node Object
-  const selectedNode = ARCHITECTURE_NODES.find((n) => n.id === selectedNodeId);
-
-  // Pan handlers
+  // Pan handlers for image viewer
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.button !== 0) return; // Only primary button
+    if (e.button !== 0) return;
     setIsDragging(true);
     setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+    setViewFitMode('custom');
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -228,1571 +144,1274 @@ export const SystemArchitectureModal: React.FC<SystemArchitectureModalProps> = (
 
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
-    const zoomFactor = e.deltaY < 0 ? 1.08 : 0.92;
-    setZoom((prev) => Math.max(0.3, Math.min(2.5, prev * zoomFactor)));
+    setViewFitMode('custom');
+    const factor = e.deltaY < 0 ? 1.12 : 0.88;
+    setZoom((prev) => Math.max(0.2, Math.min(3.5, prev * factor)));
   };
 
-  // Node selection handler
-  const handleNodeClick = (node: ArchitectureNode) => {
-    setSelectedNodeId(node.id);
-    setIsInspectorOpen(true);
-  };
-
-  // Export functions
-  const handleExportSvg = () => {
-    if (!svgRef.current) return;
-    const svgData = new XMLSerializer().serializeToString(svgRef.current);
-    const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `lifeline_os_${activeView}_architecture.svg`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const handleExportPng = () => {
-    if (!svgRef.current) return;
-    const svgData = new XMLSerializer().serializeToString(svgRef.current);
-    const canvas = document.createElement('canvas');
-    canvas.width = 3800;
-    canvas.height = 2000;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const img = new Image();
-    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(svgBlob);
-
-    img.onload = () => {
-      ctx.fillStyle = '#080B10';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      URL.revokeObjectURL(url);
-      const a = document.createElement('a');
-      a.href = canvas.toDataURL('image/png');
-      a.download = `lifeline_os_${activeView}_architecture.png`;
-      a.click();
-    };
-    img.src = url;
-  };
-
-  const handleExportJson = () => {
-    const spec = {
-      title: 'Lifeline OS System Architecture Specification',
-      view: activeView,
-      timestamp: new Date().toISOString(),
-      nodes: visibleNodes,
-      edges: visibleEdges
-    };
-    const jsonString = JSON.stringify(spec, null, 2);
-    const blob = new Blob([jsonString], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `lifeline_os_${activeView}_spec.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  // Helper to render icons dynamically
-  const renderIcon = (iconName?: string, className = 'w-4 h-4') => {
-    switch (iconName) {
-      case 'Satellite': return <CloudRain className={className} />;
-      case 'Waves': return <Activity className={className} />;
-      case 'Map': return <Compass className={className} />;
-      case 'Users': return <Users className={className} />;
-      case 'Building2': return <Building2 className={className} />;
-      case 'FileText': return <FileText className={className} />;
-      case 'Eye': return <Eye className={className} />;
-      case 'ShieldCheck': return <ShieldCheck className={className} />;
-      case 'HelpCircle': return <HelpCircle className={className} />;
-      case 'AlertTriangle': return <AlertTriangle className={className} />;
-      case 'Layers': return <Layers className={className} />;
-      case 'Compass': return <Compass className={className} />;
-      case 'GitFork': return <GitFork className={className} />;
-      case 'Anchor': return <Anchor className={className} />;
-      case 'Cpu': return <Cpu className={className} />;
-      case 'PackageCheck': return <CheckCircle2 className={className} />;
-      case 'AlertOctagon': return <AlertOctagon className={className} />;
-      case 'Radio': return <Radio className={className} />;
-      case 'Lock': return <Lock className={className} />;
-      case 'FileX': return <AlertTriangle className={className} />;
-      case 'Send': return <Send className={className} />;
-      case 'RotateCcw': return <RotateCcw className={className} />;
-      case 'Sparkles': return <Sparkles className={className} />;
-      case 'Server': return <Server className={className} />;
-      case 'Cloud': return <Cloud className={className} />;
-      case 'Globe': return <Globe className={className} />;
-      case 'Key': return <Key className={className} />;
-      case 'HardDrive': return <HardDrive className={className} />;
-      case 'User': return <User className={className} />;
-      case 'Shield': return <ShieldCheck className={className} />;
-      case 'LifeBuoy': return <LifeBuoy className={className} />;
-      case 'LineChart': return <LineChart className={className} />;
-      default: return <Activity className={className} />;
+  // Filtered Component Dictionary Nodes
+  const filteredNodes = ARCHITECTURE_NODES.filter((node) => {
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const match =
+        node.name.toLowerCase().includes(q) ||
+        node.shortName.toLowerCase().includes(q) ||
+        node.id.toLowerCase().includes(q) ||
+        node.purpose.toLowerCase().includes(q) ||
+        node.inputs.some((i) => i.toLowerCase().includes(q)) ||
+        node.outputs.some((o) => o.toLowerCase().includes(q)) ||
+        node.limitations.some((l) => l.toLowerCase().includes(q));
+      if (!match) return false;
     }
+    if (selectedLayer !== 'all' && node.layer !== selectedLayer) return false;
+    if (selectedStatus !== 'all' && node.status !== selectedStatus) return false;
+    if (selectedStageFilter !== 'all' && node.stageNumber?.toString() !== selectedStageFilter) return false;
+    return true;
+  });
+
+  // Filtered Acceptance Tests
+  const filteredTests = ARCHITECTURE_VALIDATION_TESTS.filter((t) => {
+    if (!testSearchQuery.trim()) return true;
+    const q = testSearchQuery.toLowerCase();
+    return (
+      t.requirement.toLowerCase().includes(q) ||
+      t.expectedBehavior.toLowerCase().includes(q) ||
+      t.detail.toLowerCase().includes(q)
+    );
+  });
+
+  const activeStage = STAGE_NARRATIVES[selectedStageIdx];
+
+  // 6 Zones Technical Descriptions
+  const SYSTEM_ZONES = [
+    {
+      id: 1,
+      name: 'ZONE 01: EXTERNAL DATA SOURCES',
+      subtitle: 'Space Agencies, Sensors, Gauges & Community Registries',
+      tech: 'Sentinel-1 C-Band SAR, GloFAS River Gauges, Open-Meteo, ISRO NRSC Bhuvan, OSM PBF, National Health Mission NHM, Field Incident Feeds',
+      description: 'Ingests real multi-source physical observation layers into an immutable raw evidence ledger. Enforces cloud-penetrating radar at 10m spatial resolution and strict provenance tagging.',
+      sla: 'Continuous or hourly polling • Graceful fallback to baseline caches when external APIs rate-limit or fail.',
+      invariants: ['Strict Provenance Envelope', 'Zero Synthetic Radar Generation', 'WGS84 Raw Ingestion']
+    },
+    {
+      id: 2,
+      name: 'ZONE 02: DATA INGESTION & LOCAL CACHE',
+      subtitle: 'Adapters, Parsing, Reprojection & Offline IndexedDB Storage',
+      tech: 'Fetch API, Proj4js (EPSG:32646 UTM Zone 46N), GeoJSON / WKT Parsers, IndexedDB / CacheStorage Web Workers',
+      description: 'Standardizes and reprojects all geospatial coordinates from spherical WGS84 into metric UTM Zone 46N (EPSG:32646) where euclidean buffer and length operations represent true ground meters.',
+      sla: 'Sub-800ms parsing for 50,000+ points on standard field laptops without cloud dependencies.',
+      invariants: ['Metric Projection Invariant (EPSG:32646)', 'Edge-First Offline Sovereignty', 'Dead-Letter Ingestion Traps']
+    },
+    {
+      id: 3,
+      name: 'ZONE 03: VALIDATION & PROVENANCE',
+      subtitle: 'Schema Checks, Topology & 7-Tier Epistemic Classifier',
+      tech: 'Zod v3 Strict Schemas, Turf.js CleanCoords & Kinks, 6-Hour Radar TTL Monitor, Epistemic Classifier, Quarantine Trap',
+      description: 'Audits geographic bounding boxes, eliminates self-intersecting polygons and polygon unclosed rings, and assigns strict epistemic classification (OBSERVED, OFFICIAL, REPORTED, MODELLED, ASSUMED, SIMULATED).',
+      sla: 'Zero invalid coordinate escape to routing engine. Halts processing on missing critical telemetry with explicit limitation notices.',
+      invariants: ['Sufficiency Decision Gate', 'Explicit Error Quarantine', 'No Silent Auto-Correction']
+    },
+    {
+      id: 4,
+      name: 'ZONE 04: GEOSPATIAL INTELLIGENCE',
+      subtitle: 'Radar Masks, Cut-Edge Slicing & Metric Routing Graph',
+      tech: 'SAR Radar Masking, Turf.js lineSlice, NetworkX Metric Digraph (31,214 nodes, 69,663 edges), Dynamic Dijkstra / OSRM, Catchment Voronoi',
+      description: 'Extracts real flood surface water footprints, identifies 1,830 severed road segments, prunes 163 stranded dead-end bridges with inundated approaches, and computes authentic accessibility graphs.',
+      sla: '100% deterministic Dijkstra shortest path calculation in metric seconds. Complete severance of damaged bridgeheads.',
+      invariants: ['Bridgehead Adjacency Invariant', 'Rural Mud Road Monsoon Degradation (5 km/h)', 'Model-Isolated Settlement Detection']
+    },
+    {
+      id: 5,
+      name: 'ZONE 05: DECISION-SUPPORT ENGINE',
+      subtitle: 'Demand Triage, Staging Optimization & Micro-Bridge ROI',
+      tech: 'Betweenness Centrality Criticality Index, Clinical Priority Estimator, k-Medoids Facility Location, 60-min Golden Hour Validator, Micro-Bridge ROI',
+      description: 'Places rescue staging bases along dry perimeter roadheads and ranks severed bridges by Return on Investment: ROI = (Reconnected Population + Detour km Saved) / Span Length. Escalates unreachable settlements to IAF air-drop.',
+      sla: 'Bounded integer optimization under fiscal and warehouse equipment constraints in <1.2 seconds.',
+      invariants: ['60-Minute Golden-Hour Envelope', 'Physical Axle & Span IRC Compliance', 'Strategic Escalation Air-Bridge Trap']
+    },
+    {
+      id: 6,
+      name: 'ZONE 06: HUMAN OPERATIONS & OUTPUTS',
+      subtitle: 'Command Map, Review, Auditable Memos & SHA-256 Ledger',
+      tech: 'Interactive Leaflet 2D Map, Civil Commander Sign-Off, Gemini 2.5 Flash MCP Agent, ntfy.sh / SMS Webhook, SHA-256 Merkle Provenance Ledger',
+      description: 'Synthesizes situational reports and Form-3B financial sanction estimates. Strictly mandates explicit human civil commander authorization before any alert or dispatch is broadcasted.',
+      sla: 'Zero autonomous dispatch. Cryptographic SHA-256 provenance hash generated for every sanctioned action order.',
+      invariants: ['Civil Commander-in-the-Loop Sovereignty', 'Multi-Channel Alert Deduplication', 'Immutable Audit Provenance']
+    }
+  ];
+
+  const activeZone = SYSTEM_ZONES[selectedZoneIdx];
+
+  const handleCopySchema = () => {
+    const schema = JSON.stringify(
+      {
+        $schema: 'http://json-schema.org/draft-07/schema#',
+        title: 'compile_sdrf_form3b_ticket',
+        description: 'Compiles a statutory State Disaster Response Fund (SDRF) Form-3B sanction order ticket with deterministic engineering constraints and civil commander authorization.',
+        type: 'object',
+        required: [
+          'incident_id',
+          'theater',
+          'breach_id',
+          'remedy_type',
+          'justification',
+          'civil_commander_id',
+          'merkle_root_hash'
+        ],
+        properties: {
+          incident_id: { type: 'string', pattern: '^INC-[A-Z0-9-]+$' },
+          theater: { type: 'string', enum: ['assam_silchar', 'nepal_gorkha'] },
+          breach_id: { type: 'string' },
+          remedy_type: {
+            type: 'string',
+            enum: ['BAILEY_BRIDGE', 'MOBILE_MEDICAL_UNIT', 'MED_DRONE', 'RESCUE_BOAT']
+          },
+          reconnected_settlements_count: { type: 'integer', minimum: 0 },
+          protected_population: { type: 'integer', minimum: 0 },
+          detour_minutes_saved: { type: 'number', minimum: 0 },
+          fiscal_expenditure_inr: { type: 'number', minimum: 0 },
+          irc_compliance: {
+            type: 'object',
+            properties: {
+              design_code: { type: 'string', default: 'IRC:6-2017 Class-40' },
+              span_meters: { type: 'number' },
+              axle_load_tons: { type: 'number' }
+            },
+            required: ['design_code', 'span_meters', 'axle_load_tons']
+          },
+          civil_commander_id: { type: 'string' },
+          merkle_root_hash: { type: 'string', pattern: '^[a-f0-9]{64}$' }
+        }
+      },
+      null,
+      2
+    );
+
+    navigator.clipboard.writeText(schema);
+    setCopiedSchema(true);
+    setTimeout(() => setCopiedSchema(false), 2500);
   };
 
   return (
     <div
-      ref={containerRef}
-      className={`fixed inset-0 z-50 bg-[#080B10] text-slate-100 flex flex-col overflow-hidden font-sans ${
-        isFullscreen ? 'p-0' : 'p-2 md:p-4 bg-black/90 backdrop-blur-xl'
+      className={`fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 ${
+        isFullscreen ? 'p-0' : ''
       }`}
     >
-      {/* ===================================================================== */}
-      {/* 1. TOP COMMAND BAR */}
-      {/* ===================================================================== */}
-      <div className="bg-[#0D121B] border border-slate-800/80 rounded-t-xl px-4 py-2.5 flex items-center justify-between gap-3 shadow-2xl z-20">
-        {/* Left: Branding & View Switcher */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-lg shadow-cyan-500/20">
-              <Network className="w-4 h-4" />
+      <div
+        className={`bg-white text-slate-900 rounded-2xl shadow-2xl border border-slate-200 flex flex-col w-full overflow-hidden transition-all duration-200 ${
+          isFullscreen ? 'h-full rounded-none' : 'h-[96vh] max-w-[1720px]'
+        }`}
+      >
+        {/* ===================================================================== */}
+        {/* 1. TOP HEADER: ENTERPRISE BLUEPRINT SPECIFICATION */}
+        {/* ===================================================================== */}
+        <div className="bg-white border-b border-slate-200 px-5 py-3.5 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+          {/* Left: Branding & Specification Subtitle */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+              <Layers className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-sm tracking-wider uppercase text-white">
-                  LIFELINE OS
+                <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 uppercase tracking-wide">
+                  SOLUTION ARCHITECTURE SPECIFICATION v2.5
                 </span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                  SYSTEM ARCHITECTURE
+                <span className="font-mono text-[10px] font-semibold text-emerald-700 flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                  DETERMINISTIC PIPELINE (EPSG:32646)
+                </span>
+                <span className="hidden sm:inline font-mono text-[10px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
+                  HUMAN-IN-THE-LOOP SOVEREIGN
                 </span>
               </div>
-              <p className="text-[10px] text-slate-400">
-                Evidence Fusion &bull; Accessibility Physics &bull; Response Optimization
-              </p>
+              <h1 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2 mt-0.5">
+                Lifeline OS Enterprise Architecture &amp; Formal Process Model
+              </h1>
             </div>
           </div>
 
-          <div className="h-6 w-px bg-slate-800 mx-1" />
-
-          {/* 3 Main Switchable Views */}
-          <div className="flex items-center bg-[#080B10] p-1 rounded-lg border border-slate-800">
+          {/* Center: Segmented Navigation Tabs */}
+          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80 overflow-x-auto max-w-full">
             <button
-              onClick={() => {
-                setActiveView('process');
-                setIsPresentationMode(false);
-              }}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 ${
-                activeView === 'process'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+              onClick={() => setActiveTab('swimlane')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                activeTab === 'swimlane'
+                  ? 'bg-white text-blue-700 shadow-xs border border-slate-200'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Activity className="w-3.5 h-3.5" />
-              1. Process Flow (7 Stages)
+              <Activity className="w-3.5 h-3.5 text-blue-600" />
+              <span>1. Process Swimlane (7 Stages)</span>
             </button>
             <button
-              onClick={() => {
-                setActiveView('usecases');
-                setIsPresentationMode(false);
-              }}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 ${
-                activeView === 'usecases'
-                  ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+              onClick={() => setActiveTab('system_architecture')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                activeTab === 'system_architecture'
+                  ? 'bg-white text-indigo-700 shadow-xs border border-slate-200'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Users className="w-3.5 h-3.5" />
-              2. UML Use Cases
+              <Server className="w-3.5 h-3.5 text-indigo-600" />
+              <span>2. System Architecture (6 Zones)</span>
             </button>
             <button
-              onClick={() => {
-                setActiveView('architecture');
-                setIsPresentationMode(false);
-              }}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 ${
-                activeView === 'architecture'
-                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+              onClick={() => setActiveTab('dictionary')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                activeTab === 'dictionary'
+                  ? 'bg-white text-emerald-700 shadow-xs border border-slate-200'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Layers className="w-3.5 h-3.5" />
-              3. Technical Layers &amp; GCP
+              <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
+              <span>3. Component Dictionary (31 Nodes)</span>
             </button>
             <button
-              onClick={() => {
-                setActiveView('mcp');
-                setIsPresentationMode(false);
-              }}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 ${
-                activeView === 'mcp'
-                  ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+              onClick={() => setActiveTab('mcp')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                activeTab === 'mcp'
+                  ? 'bg-white text-purple-700 shadow-xs border border-slate-200'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Cpu className="w-3.5 h-3.5 text-purple-400" />
-              4. Gemini MCP Architecture
-            </button>
-          </div>
-        </div>
-
-        {/* Center: Search & Quick Status Filter */}
-        <div className="hidden lg:flex items-center gap-2 flex-1 max-w-md mx-2">
-          <div className="relative w-full">
-            <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Search components, APIs, algorithms, fail states..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#080B10] border border-slate-800 text-xs text-slate-200 pl-8 pr-7 py-1.5 rounded-lg focus:outline-none focus:border-cyan-500/50"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Right: Actions & Controls */}
-        <div className="flex items-center gap-2">
-          {/* Mode Switch: Presentation vs Exploration */}
-          <div className="flex items-center bg-[#080B10] rounded-lg p-0.5 border border-slate-800">
-            <button
-              onClick={() => {
-                setIsPresentationMode(false);
-                setIsPlaying(false);
-              }}
-              className={`px-2.5 py-1 text-xs rounded-md transition-all ${
-                !isPresentationMode
-                  ? 'bg-slate-800 text-cyan-300 font-medium'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Exploration
+              <Cpu className="w-3.5 h-3.5 text-purple-600" />
+              <span>4. Gemini MCP Protocol</span>
             </button>
             <button
-              onClick={() => {
-                setIsPresentationMode(true);
-                setActiveView('process');
-                setCurrentStageIdx(0);
-              }}
-              className={`px-2.5 py-1 text-xs rounded-md transition-all flex items-center gap-1 ${
-                isPresentationMode
-                  ? 'bg-cyan-500 text-black font-bold shadow-md shadow-cyan-500/30'
-                  : 'text-slate-400 hover:text-slate-200'
+              onClick={() => setActiveTab('tests')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                activeTab === 'tests'
+                  ? 'bg-white text-teal-700 shadow-xs border border-slate-200'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Sparkles className="w-3 h-3" />
-              Guided Tour
+              <ShieldCheck className="w-3.5 h-3.5 text-teal-600" />
+              <span>5. Acceptance Suite (15 PASS)</span>
             </button>
           </div>
 
-          {/* Validation Suite Modal Trigger */}
-          <button
-            onClick={() => setIsTestsModalOpen(true)}
-            className="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20 transition-all flex items-center gap-1.5"
-            title="Inspect 15 Acceptance Validation Tests"
-          >
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="hidden sm:inline">15 Tests (PASS)</span>
-          </button>
-
-          {/* Export Dropdown */}
-          <div className="relative group">
-            <button className="p-1.5 rounded-lg bg-slate-800/80 text-slate-300 hover:text-white border border-slate-700/60 transition-all flex items-center gap-1">
-              <Download className="w-3.5 h-3.5" />
-              <ChevronDown className="w-3 h-3" />
-            </button>
-            <div className="absolute right-0 top-full mt-1 w-36 bg-[#0D121B] border border-slate-800 rounded-lg shadow-xl p-1 hidden group-hover:block z-30">
-              <button
-                onClick={handleExportSvg}
-                className="w-full text-left px-2.5 py-1.5 text-xs text-slate-300 hover:bg-slate-800 rounded hover:text-white flex items-center gap-2"
-              >
-                <FileCode className="w-3 h-3 text-cyan-400" /> Export SVG
-              </button>
-              <button
-                onClick={handleExportPng}
-                className="w-full text-left px-2.5 py-1.5 text-xs text-slate-300 hover:bg-slate-800 rounded hover:text-white flex items-center gap-2"
-              >
-                <FileText className="w-3 h-3 text-emerald-400" /> Export PNG
-              </button>
-              <button
-                onClick={handleExportJson}
-                className="w-full text-left px-2.5 py-1.5 text-xs text-slate-300 hover:bg-slate-800 rounded hover:text-white flex items-center gap-2"
-              >
-                <Database className="w-3 h-3 text-amber-400" /> Export JSON
-              </button>
-            </div>
-          </div>
-
-          {/* Fullscreen & Close */}
-          <button
-            onClick={() => setIsFullscreen(!isFullscreen)}
-            className="p-1.5 rounded-lg bg-slate-800/80 text-slate-400 hover:text-white border border-slate-700/60"
-            title="Toggle Fullscreen"
-          >
-            {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
-          </button>
-
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/30"
-            title="Close Explorer"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* ===================================================================== */}
-      {/* 2. SECONDARY CONTROLS & TIMELINE RIBBON */}
-      {/* ===================================================================== */}
-      <div className="bg-[#0A0E17] border-x border-b border-slate-800/80 px-4 py-2 flex flex-wrap items-center justify-between gap-3 z-10 text-xs">
-        {/* Left: Presentation Scrubber (When in Process view) */}
-        {activeView === 'process' ? (
+          {/* Right: Window Controls */}
           <div className="flex items-center gap-2">
-            <span className="text-slate-400 font-mono font-semibold uppercase text-[11px] flex items-center gap-1.5">
-              <Activity className="w-3.5 h-3.5 text-cyan-400" />
-              LIFECYCLE TIMELINE:
-            </span>
-
-            <div className="flex items-center gap-1 bg-[#080B10] px-2 py-1 rounded-lg border border-slate-800">
-              <button
-                onClick={() => setCurrentStageIdx((prev) => Math.max(0, prev - 1))}
-                disabled={currentStageIdx === 0}
-                className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-30"
-                title="Previous Stage"
-              >
-                <ChevronLeft className="w-3.5 h-3.5" />
-              </button>
-
-              <button
-                onClick={() => setIsPlaying(!isPlaying)}
-                className={`px-2 py-0.5 rounded font-bold text-[11px] flex items-center gap-1 ${
-                  isPlaying
-                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                    : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
-                }`}
-              >
-                {isPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
-                {isPlaying ? 'PAUSE' : 'PLAY'}
-              </button>
-
-              <button
-                onClick={() => setCurrentStageIdx((prev) => Math.min(STAGE_NARRATIVES.length - 1, prev + 1))}
-                disabled={currentStageIdx === STAGE_NARRATIVES.length - 1}
-                className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-30"
-                title="Next Stage"
-              >
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-
-              <button
-                onClick={() => {
-                  setCurrentStageIdx(0);
-                  setIsPlaying(false);
-                }}
-                className="p-1 rounded text-slate-400 hover:text-white"
-                title="Reset Timeline"
-              >
-                <RotateCcw className="w-3 h-3" />
-              </button>
-            </div>
-
-            {/* Stage Quick Jump Buttons */}
-            <div className="hidden md:flex items-center gap-1">
-              {STAGE_NARRATIVES.map((s, idx) => (
-                <button
-                  key={s.stage}
-                  onClick={() => setCurrentStageIdx(idx)}
-                  className={`px-2 py-0.5 rounded text-[11px] font-mono transition-all ${
-                    currentStageIdx === idx
-                      ? 'bg-cyan-500 text-black font-bold shadow-md shadow-cyan-500/30'
-                      : 'bg-slate-800/60 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
-                  }`}
-                >
-                  S{s.stage}
-                </button>
-              ))}
-            </div>
-
-            {/* Playback Speed */}
-            <div className="flex items-center gap-1 bg-[#080B10] px-1.5 py-0.5 rounded border border-slate-800 text-[10px] text-slate-400 font-mono">
-              <span>SPEED:</span>
-              {[1, 1.5, 2].map((spd) => (
-                <button
-                  key={spd}
-                  onClick={() => setPlaybackSpeed(spd)}
-                  className={`px-1 rounded ${playbackSpeed === spd ? 'text-cyan-400 font-bold bg-cyan-950/40' : 'hover:text-white'}`}
-                >
-                  {spd}x
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <span className="text-slate-400 font-mono font-semibold uppercase text-[11px]">
-              {activeView === 'usecases' ? 'UML BOUNDARY FILTER:' : 'LAYER FILTER:'}
-            </span>
-
-            {/* Layer Filter Buttons */}
-            {activeView === 'architecture' && (
-              <div className="flex items-center gap-1">
-                {['all', 'presentation', 'application', 'geospatial', 'data', 'ai_external'].map((ly) => (
-                  <button
-                    key={ly}
-                    onClick={() => setSelectedLayer(ly)}
-                    className={`px-2 py-0.5 rounded text-[11px] uppercase font-mono ${
-                      selectedLayer === ly
-                        ? 'bg-indigo-500 text-white font-bold'
-                        : 'bg-slate-800/60 text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    {ly.replace('_', ' ')}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Integration Status Filter */}
-            <div className="flex items-center gap-1 bg-[#080B10] px-2 py-1 rounded border border-slate-800">
-              <span className="text-[10px] text-slate-500 font-mono">STATUS:</span>
-              {['all', 'CONNECTED', 'UNVERIFIED', 'PROPOSED'].map((st) => (
-                <button
-                  key={st}
-                  onClick={() => setSelectedStatus(st)}
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${
-                    selectedStatus === st
-                      ? st === 'CONNECTED'
-                        ? 'bg-emerald-500 text-black'
-                        : st === 'UNVERIFIED'
-                        ? 'bg-amber-500 text-black'
-                        : st === 'PROPOSED'
-                        ? 'bg-purple-500 text-white'
-                        : 'bg-cyan-500 text-black'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  {st}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Right: Reduced Motion & Canvas Navigation */}
-        <div className="flex items-center gap-3">
-          {/* Reduced Motion Toggle */}
-          <label className="flex items-center gap-1.5 cursor-pointer text-[11px] text-slate-400 hover:text-slate-200">
-            <input
-              type="checkbox"
-              checked={isReducedMotion}
-              onChange={(e) => setIsReducedMotion(e.target.checked)}
-              className="rounded bg-slate-800 border-slate-700 text-cyan-500 focus:ring-0"
-            />
-            <span>Reduced Motion</span>
-          </label>
-
-          <div className="h-4 w-px bg-slate-800" />
-
-          {/* Zoom & Canvas Actions */}
-          <div className="flex items-center gap-1 bg-[#080B10] p-0.5 rounded border border-slate-800">
             <button
-              onClick={() => setZoom((prev) => Math.min(2.5, prev * 1.15))}
-              className="p-1 rounded text-slate-400 hover:text-white"
-              title="Zoom In"
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors border border-transparent hover:border-slate-200"
+              title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
             >
-              <ZoomIn className="w-3.5 h-3.5" />
-            </button>
-            <span className="text-[10px] font-mono text-slate-400 px-1">
-              {Math.round(zoom * 100)}%
-            </span>
-            <button
-              onClick={() => setZoom((prev) => Math.max(0.3, prev * 0.85))}
-              className="p-1 rounded text-slate-400 hover:text-white"
-              title="Zoom Out"
-            >
-              <ZoomOut className="w-3.5 h-3.5" />
+              {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
             </button>
             <button
-              onClick={() => {
-                if (activeView === 'process') {
-                  setZoom(0.72);
-                  setPan({ x: 30, y: 60 });
-                } else if (activeView === 'usecases') {
-                  setZoom(0.9);
-                  setPan({ x: 80, y: 30 });
-                } else {
-                  setZoom(0.78);
-                  setPan({ x: 40, y: 20 });
-                }
-              }}
-              className="px-1.5 py-0.5 rounded text-[10px] text-slate-400 hover:text-white font-mono"
-              title="Fit to Screen"
-            >
-              RESET
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ===================================================================== */}
-      {/* 3. MAIN CONTENT: DEDICATED MCP ARCHITECTURE PANEL OR SVG CANVAS */}
-      {/* ===================================================================== */}
-      {activeView === 'mcp' ? (
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#070A0F] scrollbar-thin scrollbar-thumb-slate-700 select-text">
-          {/* MCP Header Banner */}
-          <div className="p-5 rounded-2xl bg-gradient-to-r from-purple-950/80 via-slate-900 to-indigo-950/80 border border-purple-500/40 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase">
-                  Gemini 2.5 Flash + Model Context Protocol (MCP)
-                </span>
-                <span className="text-xs font-mono text-emerald-400 font-semibold flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  Deterministic Grounding
-                </span>
-              </div>
-              <h2 className="text-lg font-black text-white tracking-tight">
-                Model Context Protocol (MCP) Tool Calling &amp; Verification Architecture
-              </h2>
-              <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
-                Lifeline OS interfaces with LLMs strictly through the standardized Model Context Protocol (MCP).
-                Deterministic geographic graph nodes, hydrological sensor readings, and structural physical constraints (IRC:6)
-                are provided directly into structured tool schemas to ensure zero coordinate hallucination and legally defensible SDRF Form-3B tickets.
-              </p>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={() => {
-                  const payload = JSON.stringify(
-                    {
-                      tool: 'compile_sdrf_form3b_ticket',
-                      version: 'gemini-2.5-flash-mcp-v1',
-                      strict_schema: true,
-                      deterministic_nodes: {
-                        village_origin: { name: 'Binnākāndi', elevation_asl: 41.2, lat: 24.885, lon: 92.855 },
-                        dry_roadhead_north: { elevation_asl: 29.4, lat: 24.876, lon: 92.848 },
-                        submerged_breach_channel: { elevation_asl: 17.1, lat: 24.872, lon: 92.845, gap_meters: 80 },
-                        dry_abutment_south: { elevation_asl: 28.3, lat: 24.868, lon: 92.841 },
-                        destination_hospital: { name: 'Silchar Medical College Hospital', elevation_asl: 34.0, lat: 24.789, lon: 92.791 },
-                      },
-                      selected_intervention: {
-                        type: 'Class-40 Modular Bailey Bridge',
-                        span_length_m: 80,
-                        max_span_allowed_m: 100,
-                        compliance: 'IRC:6-2017 & Indian Army Corps of Engineers standard',
-                        capex_inr_lakhs: 180,
-                        reconnected_villages: 42,
-                        golden_hour_mins: 24,
-                      },
-                    },
-                    null,
-                    2
-                  );
-                  navigator.clipboard.writeText(payload);
-                  setCopiedJson(true);
-                  setTimeout(() => setCopiedJson(false), 2000);
-                }}
-                className="px-3 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold font-mono flex items-center gap-1.5 shadow-lg shadow-purple-500/20 cursor-pointer transition-all"
-              >
-                {copiedJson ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copiedJson ? 'Copied MCP Payload' : 'Copy MCP Schema Payload'}</span>
-              </button>
-            </div>
-          </div>
-
-          {/* 4-Tier Cloud Architecture Overview Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
-              <div className="flex items-center gap-2 text-cyan-400">
-                <Cloud className="w-4 h-4" />
-                <span className="text-[10px] font-mono font-bold uppercase">Tier 1 &bull; Ingestion</span>
-              </div>
-              <h3 className="text-sm font-bold text-white">Upstream Sensors &amp; GloFAS</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Open-Meteo GloFAS 1,420 m³/s peak runoff, NASA SRTM 30m DEM elevation profiling, and Sentinel-1 C-Band SAR radar microwave flood inundation mapping.
-              </p>
-              <div className="text-[10px] font-mono text-cyan-300 bg-cyan-950/60 p-1.5 rounded border border-cyan-800/40">
-                Live 15-min interval streams
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
-              <div className="flex items-center gap-2 text-blue-400">
-                <Server className="w-4 h-4" />
-                <span className="text-[10px] font-mono font-bold uppercase">Tier 2 &bull; Graph Engine</span>
-              </div>
-              <h3 className="text-sm font-bold text-white">Cloud Run Topology Engine</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Tarjan O(V+E) cut-edge percolation over 31,214 nodes, 163 phantom overpasses pruned, and IRC:6 16T heavy axle vehicular routing.
-              </p>
-              <div className="text-[10px] font-mono text-blue-300 bg-blue-950/60 p-1.5 rounded border border-blue-800/40">
-                8.4ms deterministic execution
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
-              <div className="flex items-center gap-2 text-amber-400">
-                <Database className="w-4 h-4" />
-                <span className="text-[10px] font-mono font-bold uppercase">Tier 3 &bull; State Store</span>
-              </div>
-              <h3 className="text-sm font-bold text-white">Firestore &amp; IndexedDB</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Distributed ACID document store with 2-way WebSocket synchronization across SEOC command desks, offline IndexedDB buffer, and multi-role RBAC.
-              </p>
-              <div className="text-[10px] font-mono text-amber-300 bg-amber-950/60 p-1.5 rounded border border-amber-800/40">
-                100% evaluation uptime
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
-              <div className="flex items-center gap-2 text-purple-400">
-                <Sparkles className="w-4 h-4" />
-                <span className="text-[10px] font-mono font-bold uppercase">Tier 4 &bull; MCP AI</span>
-              </div>
-              <h3 className="text-sm font-bold text-white">Gemini 2.5 Flash MCP</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Deterministic MCP tool calling (`compile_sdrf_form3b_ticket`), sub-second latency, zero coordinate hallucination, and statutory SDRF Form-3B order generation.
-              </p>
-              <div className="text-[10px] font-mono text-purple-300 bg-purple-950/60 p-1.5 rounded border border-purple-800/40">
-                Strict JSON schema enforcement
-              </div>
-            </div>
-          </div>
-
-          {/* Interactive MCP Tool Contract & Schema Viewer */}
-          <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FileCode className="w-4 h-4 text-purple-400" />
-                <span className="text-xs font-mono font-bold text-white uppercase">
-                  MCP Tool Schema Contract: compile_sdrf_form3b_ticket
-                </span>
-              </div>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800">
-                STRICT VERIFIED JSON SCHEMA
-              </span>
-            </div>
-            <pre className="p-4 rounded-xl bg-black/80 border border-slate-800 text-xs font-mono text-purple-200 overflow-x-auto leading-relaxed">
-{`{
-  "name": "compile_sdrf_form3b_ticket",
-  "description": "Compiles a legally binding SDRF Form-3B statutory dispatch ticket grounded in physical topology.",
-  "parameters": {
-    "type": "object",
-    "required": ["theater_id", "choke_id", "intervention_type", "gps_coordinates", "irc_compliance"],
-    "properties": {
-      "theater_id": { "type": "string", "enum": ["silchar", "nepal"] },
-      "choke_id": { "type": "string", "example": "CHOKE-SILCHAR-01" },
-      "intervention_type": { "type": "string", "enum": ["bridge", "boat", "drone", "booth"] },
-      "gps_coordinates": {
-        "type": "object",
-        "properties": {
-          "breach_lat": { "type": "number", "minimum": -90, "maximum": 90 },
-          "breach_lon": { "type": "number", "minimum": -180, "maximum": 180 },
-          "elevation_asl_m": { "type": "number" }
-        },
-        "required": ["breach_lat", "breach_lon"]
-      },
-      "irc_compliance": {
-        "type": "object",
-        "properties": {
-          "design_code": { "type": "string", "example": "IRC:6-2017 Class-40" },
-          "axle_load_tons": { "type": "number", "example": 16.0 },
-          "span_meters": { "type": "number", "example": 80.0 }
-        }
-      }
-    }
-  }
-}`}
-            </pre>
-          </div>
-        </div>
-      ) : (
-        <div
-          className="flex-1 relative overflow-hidden bg-[#070A0F] cursor-grab active:cursor-grabbing select-none"
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onWheel={handleWheel}
-        >
-        {/* Subtle Engineering Grid Background */}
-        <div
-          className="absolute inset-0 pointer-events-none opacity-20"
-          style={{
-            backgroundImage: `radial-gradient(circle, #38BDF8 0.75px, transparent 0.75px), radial-gradient(circle, #38BDF8 0.75px, #070A0F 0.75px)`,
-            backgroundSize: '24px 24px',
-            backgroundPosition: `${pan.x % 24}px ${pan.y % 24}px`
-          }}
-        />
-
-        {/* View Header Watermark */}
-        <div className="absolute top-4 left-6 pointer-events-none z-0">
-          <h1 className="text-xl font-black tracking-widest text-slate-800 uppercase font-mono">
-            {activeView === 'process'
-              ? 'LIFELINE OS // END-TO-END DISASTER RESPONSE PROCESS FLOW'
-              : activeView === 'usecases'
-              ? 'LIFELINE OS // ACTORS, SYSTEM BOUNDARIES & UML USE CASES'
-              : 'LIFELINE OS // MULTI-TIER TECHNICAL ARCHITECTURE & GCP INTEGRATIONS'}
-          </h1>
-          <p className="text-xs text-slate-700 font-mono">
-            SEMATIC GRAPH v2.4 &bull; EPSG:32646 METRIC PROJECTION &bull; DETERMINISTIC PIPELINE
-          </p>
-        </div>
-
-        {/* Renderable SVG World */}
-        <svg
-          ref={svgRef}
-          className="w-full h-full"
-          style={{
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-            transformOrigin: '0 0'
-          }}
-        >
-          <defs>
-            {/* Arrow Marker Definitions */}
-            <marker
-              id="arrow-cyan"
-              viewBox="0 0 10 10"
-              refX="8"
-              refY="5"
-              markerWidth="6"
-              markerHeight="6"
-              orient="auto-start-reverse"
-            >
-              <path d="M 0 1 L 9 5 L 0 9 z" fill="#06B6D4" />
-            </marker>
-            <marker
-              id="arrow-green"
-              viewBox="0 0 10 10"
-              refX="8"
-              refY="5"
-              markerWidth="6"
-              markerHeight="6"
-              orient="auto-start-reverse"
-            >
-              <path d="M 0 1 L 9 5 L 0 9 z" fill="#10B981" />
-            </marker>
-            <marker
-              id="arrow-amber"
-              viewBox="0 0 10 10"
-              refX="8"
-              refY="5"
-              markerWidth="6"
-              markerHeight="6"
-              orient="auto-start-reverse"
-            >
-              <path d="M 0 1 L 9 5 L 0 9 z" fill="#F59E0B" />
-            </marker>
-            <marker
-              id="arrow-red"
-              viewBox="0 0 10 10"
-              refX="8"
-              refY="5"
-              markerWidth="6"
-              markerHeight="6"
-              orient="auto-start-reverse"
-            >
-              <path d="M 0 1 L 9 5 L 0 9 z" fill="#EF4444" />
-            </marker>
-            <marker
-              id="arrow-slate"
-              viewBox="0 0 10 10"
-              refX="8"
-              refY="5"
-              markerWidth="6"
-              markerHeight="6"
-              orient="auto-start-reverse"
-            >
-              <path d="M 0 1 L 9 5 L 0 9 z" fill="#475569" />
-            </marker>
-
-            {/* Linear Gradients for Nodes */}
-            <linearGradient id="grad-stage" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#1E293B" stopOpacity="0.95" />
-              <stop offset="100%" stopColor="#0F172A" stopOpacity="0.95" />
-            </linearGradient>
-            <linearGradient id="grad-decision" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#451A03" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#1C1917" stopOpacity="0.9" />
-            </linearGradient>
-            <linearGradient id="grad-failure" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#450A0A" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#1C1917" stopOpacity="0.9" />
-            </linearGradient>
-            <linearGradient id="grad-output" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#064E3B" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#022C22" stopOpacity="0.9" />
-            </linearGradient>
-
-            {/* Glowing Drop Shadows */}
-            <filter id="glow-cyan" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="#06B6D4" floodOpacity="0.6" />
-            </filter>
-            <filter id="glow-amber" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="#F59E0B" floodOpacity="0.6" />
-            </filter>
-            <filter id="glow-green" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="#10B981" floodOpacity="0.6" />
-            </filter>
-          </defs>
-
-          {/* ================================================================= */}
-          {/* PROCESS SWIMLANES & BACKGROUND STAGE ZONES */}
-          {/* ================================================================= */}
-          {activeView === 'process' && (
-            <g className="process-swimlanes pointer-events-none">
-              {[
-                { stage: 1, name: 'STAGE 1: OBSERVE', x: 20, w: 560, color: '#06B6D4' },
-                { stage: 2, name: 'STAGE 2: VALIDATE', x: 600, w: 480, color: '#3B82F6' },
-                { stage: 3, name: 'STAGE 3: ASSESS IMPACT', x: 1100, w: 280, color: '#3B82F6' },
-                { stage: 4, name: 'STAGE 4: ACCESSIBILITY', x: 1400, w: 480, color: '#8B5CF6' },
-                { stage: 5, name: 'STAGE 5: PLAN RESPONSE', x: 1900, w: 480, color: '#A855F7' },
-                { stage: 6, name: 'STAGE 6: COMMUNICATE', x: 2400, w: 760, color: '#10B981' },
-                { stage: 7, name: 'STAGE 7: LEARN & FEEDBACK', x: 3180, w: 300, color: '#10B981' }
-              ].map((lane) => {
-                const isActive = currentStageIdx + 1 === lane.stage;
-                return (
-                  <g key={lane.stage}>
-                    <rect
-                      x={lane.x}
-                      y={40}
-                      width={lane.w}
-                      height={580}
-                      rx={12}
-                      fill={isActive ? '#0F172A' : '#0B0F17'}
-                      fillOpacity={isActive ? 0.6 : 0.3}
-                      stroke={isActive ? lane.color : '#1E293B'}
-                      strokeWidth={isActive ? 1.5 : 0.75}
-                      strokeDasharray={isActive ? 'none' : '4 4'}
-                    />
-                    <text
-                      x={lane.x + 16}
-                      y={65}
-                      fill={isActive ? lane.color : '#475569'}
-                      fontSize="11"
-                      fontWeight="bold"
-                      fontFamily="monospace"
-                      letterSpacing="0.1em"
-                    >
-                      {lane.name}
-                    </text>
-                  </g>
-                );
-              })}
-            </g>
-          )}
-
-          {/* ================================================================= */}
-          {/* USE CASES: SYSTEM BOUNDARY RECTANGLE */}
-          {/* ================================================================= */}
-          {activeView === 'usecases' && (
-            <g className="system-boundary">
-              <rect
-                x={300}
-                y={20}
-                width={740}
-                height={620}
-                rx={16}
-                fill="#0B0F17"
-                fillOpacity={0.7}
-                stroke="#3B82F6"
-                strokeWidth={1.5}
-                strokeDasharray="6 6"
-              />
-              <text
-                x={320}
-                y={46}
-                fill="#60A5FA"
-                fontSize="12"
-                fontWeight="bold"
-                fontFamily="monospace"
-                letterSpacing="0.15em"
-              >
-                LIFELINE OS SYSTEM BOUNDARY
-              </text>
-            </g>
-          )}
-
-          {/* ================================================================= */}
-          {/* TECHNICAL ARCHITECTURE: 5 HORIZONTAL LAYER LANES */}
-          {/* ================================================================= */}
-          {activeView === 'architecture' && (
-            <g className="architecture-lanes pointer-events-none">
-              {[
-                { name: '1. PRESENTATION LAYER (Web UI & Tactical 3D Geospatial)', y: 35, h: 125, color: '#06B6D4' },
-                { name: '2. APPLICATION / API LAYER (Routing, Dispatch & Reporting APIs)', y: 195, h: 125, color: '#3B82F6' },
-                { name: '3. GEOSPATIAL INTELLIGENCE LAYER (Topology, Percolation, Bridgehead Defense)', y: 355, h: 125, color: '#A855F7' },
-                { name: '4. DATA & PERSISTENCE LAYER (Spatial Indexes, GeoJSON, Immutable Ledger)', y: 515, h: 125, color: '#10B981' },
-                { name: '5. AI & EXTERNAL SERVICES (Gemini 2.5 Flash, Google Cloud Services, Ingest Feeds)', y: 675, h: 220, color: '#F59E0B' }
-              ].map((lane, idx) => (
-                <g key={idx}>
-                  <rect
-                    x={50}
-                    y={lane.y}
-                    width={1280}
-                    height={lane.h}
-                    rx={10}
-                    fill="#0B0F17"
-                    fillOpacity={0.5}
-                    stroke="#1E293B"
-                    strokeWidth={0.8}
-                  />
-                  <text
-                    x={65}
-                    y={lane.y + 18}
-                    fill={lane.color}
-                    fontSize="10"
-                    fontWeight="bold"
-                    fontFamily="monospace"
-                    letterSpacing="0.1em"
-                  >
-                    {lane.name}
-                  </text>
-                </g>
-              ))}
-            </g>
-          )}
-
-          {/* ================================================================= */}
-          {/* EDGES / CONNECTORS RENDERING */}
-          {/* ================================================================= */}
-          <g className="architecture-edges">
-            {visibleEdges.map((edge) => {
-              const srcNode = ARCHITECTURE_NODES.find((n) => n.id === edge.source);
-              const tgtNode = ARCHITECTURE_NODES.find((n) => n.id === edge.target);
-              if (!srcNode || !tgtNode) return null;
-
-              const srcPos = srcNode.positions[activeView];
-              const tgtPos = tgtNode.positions[activeView];
-              if (!srcPos || !tgtPos) return null;
-
-              const srcW = srcPos.width || 200;
-              const srcH = srcPos.height || 70;
-              const tgtW = tgtPos.width || 200;
-              const tgtH = tgtPos.height || 70;
-
-              // Calculate attachment points based on relative orientation
-              let x1 = srcPos.x + srcW;
-              let y1 = srcPos.y + srcH / 2;
-              let x2 = tgtPos.x;
-              let y2 = tgtPos.y + tgtH / 2;
-
-              // Check if edge is vertical (for layered architecture)
-              const isVertical = activeView === 'architecture';
-              if (isVertical) {
-                if (srcPos.y < tgtPos.y) {
-                  x1 = srcPos.x + srcW / 2;
-                  y1 = srcPos.y + srcH;
-                  x2 = tgtPos.x + tgtW / 2;
-                  y2 = tgtPos.y;
-                } else {
-                  x1 = srcPos.x + srcW / 2;
-                  y1 = srcPos.y;
-                  x2 = tgtPos.x + tgtW / 2;
-                  y2 = tgtPos.y + tgtH;
-                }
-              }
-
-              // Special path for feedback loop (Stage 7 back to Stage 1)
-              let pathD = '';
-              if (edge.edgeType === 'feedback') {
-                // Loop downward under all nodes from x:3320 back to x:440
-                pathD = `M ${srcPos.x + srcW / 2} ${srcPos.y + srcH} C ${srcPos.x + srcW / 2} 660, 440 660, 440 ${
-                  tgtPos.y + tgtH
-                }`;
-              } else if (edge.edgeType === 'decision_false') {
-                // Downward branch for failure
-                x1 = srcPos.x + srcW / 2;
-                y1 = srcPos.y + srcH;
-                x2 = tgtPos.x + tgtW / 2;
-                y2 = tgtPos.y;
-                pathD = `M ${x1} ${y1} L ${x2} ${y2}`;
-              } else if (isVertical) {
-                const dy = y2 - y1;
-                pathD = `M ${x1} ${y1} C ${x1} ${y1 + dy * 0.4}, ${x2} ${y2 - dy * 0.4}, ${x2} ${y2}`;
-              } else {
-                // Smooth horizontal bezier curve
-                const dx = x2 - x1;
-                pathD = `M ${x1} ${y1} C ${x1 + dx * 0.45} ${y1}, ${x2 - dx * 0.45} ${y2}, ${x2} ${y2}`;
-              }
-
-              const isHighlighted =
-                selectedNodeId === edge.source ||
-                selectedNodeId === edge.target ||
-                (isPresentationMode &&
-                  STAGE_NARRATIVES[currentStageIdx].highlightEdges?.includes(edge.id));
-
-              let strokeColor = '#334155';
-              let markerEnd = 'url(#arrow-slate)';
-
-              if (edge.edgeType === 'decision_true') {
-                strokeColor = '#10B981';
-                markerEnd = 'url(#arrow-green)';
-              } else if (edge.edgeType === 'decision_false') {
-                strokeColor = '#EF4444';
-                markerEnd = 'url(#arrow-red)';
-              } else if (edge.edgeType === 'feedback') {
-                strokeColor = '#06B6D4';
-                markerEnd = 'url(#arrow-cyan)';
-              } else if (isHighlighted) {
-                strokeColor = '#38BDF8';
-                markerEnd = 'url(#arrow-cyan)';
-              } else if (edge.color) {
-                strokeColor = edge.color;
-              }
-
-              return (
-                <g key={edge.id} className="transition-all duration-300">
-                  {/* Invisible broad hitbox for hover */}
-                  <path d={pathD} fill="none" stroke="transparent" strokeWidth={14} />
-
-                  {/* Main Connector Path */}
-                  <path
-                    d={pathD}
-                    fill="none"
-                    stroke={strokeColor}
-                    strokeWidth={isHighlighted ? 2.5 : 1.3}
-                    strokeDasharray={
-                      edge.style === 'dashed' || edge.edgeType === 'include' || edge.edgeType === 'extend'
-                        ? '6 4'
-                        : 'none'
-                    }
-                    markerEnd={markerEnd}
-                    className={
-                      !isReducedMotion && (edge.animated || isHighlighted)
-                        ? 'animate-pulse'
-                        : ''
-                    }
-                  />
-
-                  {/* Animated Flow Indication via dash array */}
-                  {!isReducedMotion && (edge.animated || isHighlighted) && (
-                    <path
-                      d={pathD}
-                      fill="none"
-                      stroke={strokeColor}
-                      strokeWidth={isHighlighted ? 3 : 2}
-                      strokeDasharray="8 8"
-                      strokeOpacity={0.8}
-                      className="animate-pulse pointer-events-none"
-                    />
-                  )}
-
-                  {/* Edge Label (if present) */}
-                  {edge.label && (
-                    <text
-                      x={(x1 + x2) / 2}
-                      y={(y1 + y2) / 2 - 6}
-                      fill={isHighlighted ? '#F1F5F9' : '#64748B'}
-                      fontSize="9"
-                      fontFamily="monospace"
-                      fontWeight="bold"
-                      textAnchor="middle"
-                      className="bg-slate-900 px-1 select-none pointer-events-none"
-                    >
-                      {edge.label}
-                    </text>
-                  )}
-                </g>
-              );
-            })}
-          </g>
-
-          {/* ================================================================= */}
-          {/* NODES RENDERING */}
-          {/* ================================================================= */}
-          <g className="architecture-nodes">
-            {visibleNodes.map((node) => {
-              const pos = node.positions[activeView];
-              if (!pos) return null;
-
-              const w = pos.width || 200;
-              const h = pos.height || 70;
-              const x = pos.x;
-              const y = pos.y;
-
-              const isSelected = selectedNodeId === node.id;
-              const isHovered = hoveredNodeId === node.id;
-              const isUpstream = activeDependencies.upstream.has(node.id);
-              const isDownstream = activeDependencies.downstream.has(node.id);
-              const isStageActive =
-                isPresentationMode &&
-                STAGE_NARRATIVES[currentStageIdx].highlightNodes?.includes(node.id);
-
-              let borderColor = '#334155';
-              let fillGradient = 'url(#grad-stage)';
-
-              if (node.type === 'decision') {
-                fillGradient = 'url(#grad-decision)';
-                borderColor = '#D97706';
-              } else if (node.type === 'failure') {
-                fillGradient = 'url(#grad-failure)';
-                borderColor = '#DC2626';
-              } else if (node.type === 'output') {
-                fillGradient = 'url(#grad-output)';
-                borderColor = '#059669';
-              }
-
-              if (isSelected) {
-                borderColor = '#38BDF8';
-              } else if (isStageActive) {
-                borderColor = '#06B6D4';
-              } else if (isUpstream) {
-                borderColor = '#06B6D4';
-              } else if (isDownstream) {
-                borderColor = '#10B981';
-              }
-
-              // Status indicator badge color
-              let statusBadgeBg = '#10B981';
-              if (node.status === 'UNVERIFIED') statusBadgeBg = '#F59E0B';
-              if (node.status === 'PROPOSED') statusBadgeBg = '#8B5CF6';
-
-              return (
-                <g
-                  key={node.id}
-                  transform={`translate(${x}, ${y})`}
-                  onClick={() => handleNodeClick(node)}
-                  onMouseEnter={() => setHoveredNodeId(node.id)}
-                  onMouseLeave={() => setHoveredNodeId(null)}
-                  className="cursor-pointer transition-all duration-200"
-                >
-                  {/* UML USE CASE BUBBLE SHAPE */}
-                  {activeView === 'usecases' && node.type === 'usecase' ? (
-                    <g>
-                      <ellipse
-                        cx={w / 2}
-                        cy={h / 2}
-                        rx={w / 2}
-                        ry={h / 2}
-                        fill="#0F172A"
-                        stroke={isSelected ? '#38BDF8' : '#3B82F6'}
-                        strokeWidth={isSelected ? 2.5 : 1.2}
-                        filter={isSelected ? 'url(#glow-cyan)' : 'none'}
-                      />
-                      <text
-                        x={w / 2}
-                        y={h / 2 + 4}
-                        fill="#E2E8F0"
-                        fontSize="11"
-                        fontWeight="600"
-                        textAnchor="middle"
-                        fontFamily="sans-serif"
-                      >
-                        {node.shortName}
-                      </text>
-                    </g>
-                  ) : activeView === 'usecases' && node.type === 'actor' ? (
-                    /* UML ACTOR FIGURE & LABEL */
-                    <g>
-                      <rect
-                        width={w}
-                        height={h}
-                        rx={8}
-                        fill="#1E293B"
-                        fillOpacity={0.8}
-                        stroke={isSelected ? '#38BDF8' : '#64748B'}
-                        strokeWidth={isSelected ? 2 : 1}
-                      />
-                      <circle cx={25} cy={h / 2} r={10} fill="#0EA5E9" fillOpacity={0.2} stroke="#38BDF8" />
-                      <text x={45} y={h / 2 + 4} fill="#F8FAFC" fontSize="11" fontWeight="bold">
-                        {node.shortName}
-                      </text>
-                    </g>
-                  ) : node.type === 'decision' ? (
-                    /* DIAMOND DECISION GATE */
-                    <g>
-                      <polygon
-                        points={`${w / 2},0 ${w},${h / 2} ${w / 2},${h} 0,${h / 2}`}
-                        fill={fillGradient}
-                        stroke={borderColor}
-                        strokeWidth={isSelected ? 2.5 : 1.5}
-                        filter={isSelected ? 'url(#glow-amber)' : 'none'}
-                      />
-                      <text
-                        x={w / 2}
-                        y={h / 2 + 4}
-                        fill="#FEF3C7"
-                        fontSize="9"
-                        fontWeight="bold"
-                        fontFamily="monospace"
-                        textAnchor="middle"
-                      >
-                        {node.shortName}
-                      </text>
-                    </g>
-                  ) : (
-                    /* STANDARD RECTANGULAR COMPONENT CARD */
-                    <g>
-                      <rect
-                        width={w}
-                        height={h}
-                        rx={10}
-                        fill={fillGradient}
-                        stroke={borderColor}
-                        strokeWidth={isSelected || isStageActive ? 2 : 1}
-                        filter={
-                          isSelected
-                            ? 'url(#glow-cyan)'
-                            : isStageActive
-                            ? 'url(#glow-cyan)'
-                            : 'none'
-                        }
-                      />
-
-                      {/* Header Accent Bar */}
-                      <rect
-                        width={w}
-                        height={4}
-                        rx={2}
-                        fill={
-                          node.type === 'failure'
-                            ? '#EF4444'
-                            : node.type === 'output'
-                            ? '#10B981'
-                            : node.colorTheme === 'cyan'
-                            ? '#06B6D4'
-                            : node.colorTheme === 'purple'
-                            ? '#A855F7'
-                            : '#3B82F6'
-                        }
-                      />
-
-                      {/* Status Dot / Indicator */}
-                      <circle cx={w - 12} cy={14} r={3.5} fill={statusBadgeBg} />
-
-                      {/* Icon */}
-                      <g transform="translate(12, 16)" className="text-cyan-400">
-                        {renderIcon(node.icon, 'w-3.5 h-3.5 text-cyan-400')}
-                      </g>
-
-                      {/* Short Title */}
-                      <text
-                        x={32}
-                        y={26}
-                        fill="#F8FAFC"
-                        fontSize="11"
-                        fontWeight="bold"
-                        fontFamily="sans-serif"
-                      >
-                        {node.shortName.length > 22
-                          ? node.shortName.slice(0, 20) + '...'
-                          : node.shortName}
-                      </text>
-
-                      {/* Subtitle / Purpose preview */}
-                      <text
-                        x={12}
-                        y={46}
-                        fill="#94A3B8"
-                        fontSize="8.5"
-                        fontFamily="sans-serif"
-                      >
-                        {node.purpose.slice(0, 36) + '...'}
-                      </text>
-
-                      {/* Bottom Tags */}
-                      <g transform={`translate(12, ${h - 14})`}>
-                        <text fill="#64748B" fontSize="7.5" fontFamily="monospace" fontWeight="bold">
-                          {node.layer ? node.layer.toUpperCase() : node.type.toUpperCase()}
-                        </text>
-                        {node.evidenceClass && (
-                          <text x={70} fill="#0EA5E9" fontSize="7.5" fontFamily="monospace">
-                            [{node.evidenceClass}]
-                          </text>
-                        )}
-                      </g>
-                    </g>
-                  )}
-                </g>
-              );
-            })}
-          </g>
-        </svg>
-
-        {/* =================================================================== */}
-        {/* PRESENTATION MODE NARRATION BOTTOM DRAWER */}
-        {/* =================================================================== */}
-        {isPresentationMode && activeView === 'process' && (
-          <div className="absolute bottom-4 left-6 right-6 md:right-auto md:max-w-2xl bg-[#0D121B]/95 border border-cyan-500/40 rounded-xl p-4 shadow-2xl backdrop-blur-md z-30">
-            <div className="flex items-center justify-between gap-2 mb-1.5">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-                <h3 className="text-sm font-bold text-cyan-300 uppercase tracking-wider font-mono">
-                  {STAGE_NARRATIVES[currentStageIdx].title}
-                </h3>
-              </div>
-              <span className="text-[11px] font-mono text-slate-400">
-                {currentStageIdx + 1} of {STAGE_NARRATIVES.length}
-              </span>
-            </div>
-
-            <p className="text-xs text-slate-300 leading-relaxed mb-3">
-              {STAGE_NARRATIVES[currentStageIdx].narration}
-            </p>
-
-            <div className="flex items-center justify-between pt-2 border-t border-slate-800">
-              <span className="text-[10px] text-slate-400 font-mono">
-                Focus: #{STAGE_NARRATIVES[currentStageIdx].focusNodeId}
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setCurrentStageIdx((p) => Math.max(0, p - 1))}
-                  disabled={currentStageIdx === 0}
-                  className="px-2.5 py-1 text-xs rounded bg-slate-800 text-slate-300 hover:text-white disabled:opacity-30"
-                >
-                  Previous
-                </button>
-                <button
-                  onClick={() =>
-                    setCurrentStageIdx((p) =>
-                      Math.min(STAGE_NARRATIVES.length - 1, p + 1)
-                    )
-                  }
-                  disabled={currentStageIdx === STAGE_NARRATIVES.length - 1}
-                  className="px-3 py-1 text-xs rounded bg-cyan-500 text-black font-bold hover:bg-cyan-400 disabled:opacity-30"
-                >
-                  Next Step
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-      )}
-
-      {/* ===================================================================== */}
-      {/* 4. CONTEXTUAL NODE INSPECTOR (DRAWER) */}
-      {/* ===================================================================== */}
-      {isInspectorOpen && selectedNode && (
-        <div className="absolute right-0 top-12 bottom-0 w-96 max-w-full bg-[#0D121B] border-l border-slate-800 shadow-2xl z-40 flex flex-col overflow-hidden animate-in slide-in-from-right duration-200">
-          {/* Header */}
-          <div className="p-4 border-b border-slate-800 flex items-start justify-between gap-2 bg-[#090D14]">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span
-                  className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
-                    selectedNode.status === 'CONNECTED'
-                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                      : selectedNode.status === 'UNVERIFIED'
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                      : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                  }`}
-                >
-                  {selectedNode.status}
-                </span>
-                {selectedNode.evidenceClass && (
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                    {selectedNode.evidenceClass}
-                  </span>
-                )}
-              </div>
-              <h3 className="font-bold text-sm text-white leading-tight">
-                {selectedNode.name}
-              </h3>
-              <p className="text-[11px] text-slate-400 font-mono mt-0.5">
-                Node ID: #{selectedNode.id} &bull; Type: {selectedNode.type}
-              </p>
-            </div>
-            <button
-              onClick={() => setIsInspectorOpen(false)}
-              className="text-slate-500 hover:text-white p-1 rounded hover:bg-slate-800"
+              onClick={onClose}
+              className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200"
+              title="Close Architecture Specification (Esc)"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
+        </div>
 
-          {/* Body */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
-            {/* Purpose */}
-            <div>
-              <h4 className="font-bold text-slate-300 mb-1 flex items-center gap-1.5 font-mono uppercase text-[11px]">
-                <Info className="w-3.5 h-3.5 text-cyan-400" /> Operational Purpose
-              </h4>
-              <p className="text-slate-300 leading-relaxed bg-[#080B10] p-2.5 rounded-lg border border-slate-800">
-                {selectedNode.purpose}
-              </p>
-            </div>
-
-            {/* Inputs & Outputs */}
-            <div className="grid grid-cols-1 gap-2">
-              <div className="bg-[#080B10] p-2.5 rounded-lg border border-slate-800">
-                <h5 className="font-bold text-cyan-400 mb-1 font-mono uppercase text-[10px]">
-                  Inputs / Upstream Signals
-                </h5>
-                <ul className="space-y-1 text-slate-300">
-                  {selectedNode.inputs.length > 0 ? (
-                    selectedNode.inputs.map((inItem, idx) => (
-                      <li key={idx} className="flex items-start gap-1.5 text-[11px]">
-                        <span className="text-cyan-500 mt-0.5">&bull;</span>
-                        <span>{inItem}</span>
-                      </li>
-                    ))
-                  ) : (
-                    <li className="text-slate-500 italic text-[11px]">Direct sensor / user origin</li>
-                  )}
-                </ul>
+        {/* ===================================================================== */}
+        {/* 2. TAB 1: OPERATIONAL PROCESS SWIMLANE (7 STAGES END-TO-END) */}
+        {/* ===================================================================== */}
+        {activeTab === 'swimlane' && (
+          <div className="flex-1 flex flex-col min-h-0 bg-slate-50">
+            {/* Viewer Control Toolbar */}
+            <div className="bg-white border-b border-slate-200 px-5 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs">
+              {/* Asset Mode Switcher: 4K PNG vs Animated GIF */}
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-slate-500 font-semibold uppercase text-[11px]">
+                  VIEW MODE:
+                </span>
+                <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                  <button
+                    onClick={() => setSwimlaneAssetType('png')}
+                    className={`px-3 py-1 font-semibold rounded-md transition-all flex items-center gap-1.5 ${
+                      swimlaneAssetType === 'png'
+                        ? 'bg-white text-blue-700 shadow-xs border border-slate-200'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <FileText className="w-3.5 h-3.5 text-blue-600" />
+                    High-Res 4K Blueprint (PNG)
+                  </button>
+                  <button
+                    onClick={() => setSwimlaneAssetType('gif')}
+                    className={`px-3 py-1 font-semibold rounded-md transition-all flex items-center gap-1.5 ${
+                      swimlaneAssetType === 'gif'
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Live Animated Flow (GIF)
+                  </button>
+                </div>
               </div>
 
-              <div className="bg-[#080B10] p-2.5 rounded-lg border border-slate-800">
-                <h5 className="font-bold text-emerald-400 mb-1 font-mono uppercase text-[10px]">
-                  Outputs / Downstream Deliverables
-                </h5>
-                <ul className="space-y-1 text-slate-300">
-                  {selectedNode.outputs.map((outItem, idx) => (
-                    <li key={idx} className="flex items-start gap-1.5 text-[11px]">
-                      <span className="text-emerald-500 mt-0.5">&bull;</span>
-                      <span>{outItem}</span>
-                    </li>
+              {/* View Presets & Zoom Navigation */}
+              <div className="flex items-center gap-2">
+                <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                  <button
+                    onClick={() => setViewFitMode('fit-width')}
+                    className={`px-2.5 py-1 font-semibold rounded-md transition-all ${
+                      viewFitMode === 'fit-width'
+                        ? 'bg-white text-slate-900 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                    title="Fit diagram width to viewport"
+                  >
+                    Fit Width
+                  </button>
+                  <button
+                    onClick={() => setViewFitMode('fit-all')}
+                    className={`px-2.5 py-1 font-semibold rounded-md transition-all ${
+                      viewFitMode === 'fit-all'
+                        ? 'bg-white text-slate-900 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                    title="Fit complete diagram on screen"
+                  >
+                    Fit Entire Diagram
+                  </button>
+                  <button
+                    onClick={() => {
+                      setViewFitMode('custom');
+                      setZoom(1.0);
+                      setPan({ x: 0, y: 0 });
+                    }}
+                    className="px-2.5 py-1 font-semibold rounded-md text-slate-600 hover:text-slate-900 transition-all"
+                    title="Actual 100% pixel scale"
+                  >
+                    100% Scale
+                  </button>
+                </div>
+
+                {/* Zoom +/- controls */}
+                <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                  <button
+                    onClick={() => {
+                      setViewFitMode('custom');
+                      setZoom((prev) => Math.max(0.2, prev * 0.85));
+                    }}
+                    className="p-1 rounded text-slate-600 hover:text-slate-900"
+                    title="Zoom Out"
+                  >
+                    <ZoomOut className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="font-mono font-bold text-[11px] text-slate-700 px-2 min-w-[50px] text-center">
+                    {Math.round(zoom * 100)}%
+                  </span>
+                  <button
+                    onClick={() => {
+                      setViewFitMode('custom');
+                      setZoom((prev) => Math.min(3.5, prev * 1.15));
+                    }}
+                    className="p-1 rounded text-slate-600 hover:text-slate-900"
+                    title="Zoom In"
+                  >
+                    <ZoomIn className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setZoom(1.0);
+                      setPan({ x: 0, y: 0 });
+                      setViewFitMode('fit-width');
+                    }}
+                    className="p-1 rounded text-slate-600 hover:text-slate-900 ml-1 border-l border-slate-200"
+                    title="Reset Canvas"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* Download Asset Button */}
+                <a
+                  href={
+                    swimlaneAssetType === 'png'
+                      ? '/lifeline_os_process_swimlane.png'
+                      : '/lifeline_os_process_swimlane.gif'
+                  }
+                  download={`lifeline_os_process_swimlane.${swimlaneAssetType}`}
+                  className="px-3 py-1 bg-white hover:bg-slate-50 text-slate-700 font-semibold rounded-lg border border-slate-200 flex items-center gap-1.5 transition-colors shadow-xs"
+                  title="Download High-Resolution Blueprint"
+                >
+                  <Download className="w-3.5 h-3.5 text-slate-600" />
+                  Download Blueprint
+                </a>
+
+                {/* External Fullscreen Link */}
+                <a
+                  href="/lifeline_os_process_swimlane.png"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-1.5 bg-white hover:bg-slate-50 text-slate-700 rounded-lg border border-slate-200 transition-colors shadow-xs"
+                  title="Open in new window"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              </div>
+            </div>
+
+            {/* Interactive Canvas */}
+            <div
+              ref={containerRef}
+              className={`flex-1 relative overflow-auto bg-slate-100 flex items-start justify-center p-4 select-none ${
+                isDragging ? 'cursor-grabbing' : 'cursor-grab'
+              }`}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onWheel={handleWheel}
+              style={{
+                backgroundImage:
+                  'radial-gradient(circle, #cbd5e1 1px, transparent 1px), radial-gradient(circle, #cbd5e1 1px, #f8fafc 1px)',
+                backgroundSize: '24px 24px'
+              }}
+            >
+              <div
+                className="transition-transform duration-75 origin-top-left"
+                style={{
+                  transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                  width: viewFitMode === 'fit-width' ? '100%' : 'auto',
+                  maxWidth: viewFitMode === 'fit-width' ? '100%' : 'none'
+                }}
+              >
+                <img
+                  src={
+                    swimlaneAssetType === 'png'
+                      ? '/lifeline_os_process_swimlane.png'
+                      : '/lifeline_os_process_swimlane.gif'
+                  }
+                  alt="Lifeline OS End-to-End Operational Process & Swimlane Architecture (Lanes 1 to 7)"
+                  className="rounded-xl shadow-xl border border-slate-200 bg-white object-contain pointer-events-none"
+                  style={{
+                    width: viewFitMode === 'fit-width' ? '100%' : '3840px',
+                    height: 'auto',
+                    minWidth: viewFitMode === 'fit-width' ? '100%' : '1400px'
+                  }}
+                  draggable={false}
+                />
+              </div>
+
+              {/* Floating Canvas Navigation Hint */}
+              <div className="absolute top-4 right-6 pointer-events-none bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm text-[11px] font-mono text-slate-600 flex items-center gap-2">
+                <span>Drag to Pan</span>
+                <span>&bull;</span>
+                <span>Scroll to Zoom</span>
+                <span>&bull;</span>
+                <span className="text-blue-700 font-semibold">Lanes 01–07 Complete</span>
+              </div>
+            </div>
+
+            {/* Bottom: Interactive Stage Explainer Drawer (Full 7 Stages) */}
+            <div className="bg-white border-t border-slate-200 p-4 shadow-lg">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                {/* Stage Quick Selection Buttons */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
+                  <span className="font-mono text-xs font-bold text-slate-500 uppercase tracking-wider mr-1">
+                    STAGES:
+                  </span>
+                  {STAGE_NARRATIVES.map((s, idx) => (
+                    <button
+                      key={s.stage}
+                      onClick={() => {
+                        setSelectedStageIdx(idx);
+                        setIsStagePlaying(false);
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold font-mono transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                        selectedStageIdx === idx
+                          ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      }`}
+                    >
+                      <span className="font-bold">S{s.stage}</span>
+                      <span className="hidden xl:inline">{s.title.split('—')[1]?.trim() || s.title}</span>
+                    </button>
                   ))}
-                </ul>
+
+                  <button
+                    onClick={() => setIsStagePlaying(!isStagePlaying)}
+                    className={`ml-2 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                      isStagePlaying
+                        ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
+                    }`}
+                    title={isStagePlaying ? 'Pause Stage Tour' : 'Play Stage Tour'}
+                  >
+                    {isStagePlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                    <span>{isStagePlaying ? 'PAUSE TOUR' : 'GUIDED TOUR'}</span>
+                  </button>
+                </div>
+
+                {/* Active Stage Indicator */}
+                <div className="font-mono text-xs text-slate-500 flex items-center gap-2">
+                  <span>STAGE {activeStage.stage} OF 7</span>
+                  <span>&bull;</span>
+                  <span className="text-emerald-700 font-semibold">100% Defensible Ground Truth</span>
+                </div>
+              </div>
+
+              {/* Active Stage Card Details */}
+              <div className="mt-3 bg-slate-50 rounded-xl p-4 border border-slate-200/80 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="space-y-1 max-w-4xl">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800 border border-blue-200">
+                      LANE 0{activeStage.stage}
+                    </span>
+                    <h3 className="text-sm font-bold text-slate-900">{activeStage.title}</h3>
+                  </div>
+                  <p className="text-xs font-medium text-slate-600">{activeStage.subtitle}</p>
+                  <p className="text-xs text-slate-700 leading-relaxed pt-1">{activeStage.narration}</p>
+                </div>
+
+                {/* Stage Invariants & Verification */}
+                <div className="flex flex-col sm:flex-row md:flex-col gap-2 shrink-0 text-right md:text-right">
+                  <div className="bg-white px-3 py-1.5 rounded-lg border border-slate-200 text-left">
+                    <div className="text-[10px] font-mono text-slate-500 uppercase">Decision Diamond</div>
+                    <div className="text-xs font-bold text-blue-700">
+                      {activeStage.stage === 1 && 'Data Available & Parsable?'}
+                      {activeStage.stage === 2 && 'Evidence Sufficient for Analysis?'}
+                      {activeStage.stage === 3 && 'Geometric Outlier / Artifact?'}
+                      {activeStage.stage === 4 && 'Viable Route Exists?'}
+                      {activeStage.stage === 5 && 'Feasible Plan Exists?'}
+                      {activeStage.stage === 6 && 'Authorized for Transmission?'}
+                      {activeStage.stage === 7 && 'Longitudinal Discrepancy Found?'}
+                    </div>
+                  </div>
+                  <div className="bg-white px-3 py-1.5 rounded-lg border border-slate-200 text-left">
+                    <div className="text-[10px] font-mono text-slate-500 uppercase">Operational Guarantee</div>
+                    <div className="text-xs font-bold text-emerald-700">
+                      {activeStage.stage === 1 && 'Raw Sentinel-1 & OSM Ingested'}
+                      {activeStage.stage === 2 && 'Zero Synthetic Hallucination'}
+                      {activeStage.stage === 3 && 'EPSG:32646 Metric Overlays'}
+                      {activeStage.stage === 4 && '163 Stranded Bridges Pruned'}
+                      {activeStage.stage === 5 && 'k-Medoids Bounded Optimization'}
+                      {activeStage.stage === 6 && 'Mandatory Human Commander Sanction'}
+                      {activeStage.stage === 7 && 'Pre-Monsoon Culvert Retrofit Loop'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===================================================================== */}
+        {/* 3. TAB 2: TECHNICAL SYSTEM ARCHITECTURE (6 COMPLETE ZONES) */}
+        {/* ===================================================================== */}
+        {activeTab === 'system_architecture' && (
+          <div className="flex-1 flex flex-col min-h-0 bg-slate-50">
+            {/* Viewer Control Toolbar */}
+            <div className="bg-white border-b border-slate-200 px-5 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs">
+              {/* Asset Mode Switcher: 4K PNG vs Animated GIF */}
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-slate-500 font-semibold uppercase text-[11px]">
+                  VIEW MODE:
+                </span>
+                <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                  <button
+                    onClick={() => setSystemArchAssetType('png')}
+                    className={`px-3 py-1 font-semibold rounded-md transition-all flex items-center gap-1.5 ${
+                      systemArchAssetType === 'png'
+                        ? 'bg-white text-indigo-700 shadow-xs border border-slate-200'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <FileText className="w-3.5 h-3.5 text-indigo-600" />
+                    High-Res 4K Blueprint (PNG)
+                  </button>
+                  <button
+                    onClick={() => setSystemArchAssetType('gif')}
+                    className={`px-3 py-1 font-semibold rounded-md transition-all flex items-center gap-1.5 ${
+                      systemArchAssetType === 'gif'
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Live Animated Flow (GIF)
+                  </button>
+                </div>
+              </div>
+
+              {/* View Presets & Zoom Navigation */}
+              <div className="flex items-center gap-2">
+                <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                  <button
+                    onClick={() => setViewFitMode('fit-width')}
+                    className={`px-2.5 py-1 font-semibold rounded-md transition-all ${
+                      viewFitMode === 'fit-width'
+                        ? 'bg-white text-slate-900 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Fit Width
+                  </button>
+                  <button
+                    onClick={() => setViewFitMode('fit-all')}
+                    className={`px-2.5 py-1 font-semibold rounded-md transition-all ${
+                      viewFitMode === 'fit-all'
+                        ? 'bg-white text-slate-900 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Fit Entire Diagram
+                  </button>
+                  <button
+                    onClick={() => {
+                      setViewFitMode('custom');
+                      setZoom(1.0);
+                      setPan({ x: 0, y: 0 });
+                    }}
+                    className="px-2.5 py-1 font-semibold rounded-md text-slate-600 hover:text-slate-900 transition-all"
+                  >
+                    100% Scale
+                  </button>
+                </div>
+
+                {/* Zoom +/- controls */}
+                <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                  <button
+                    onClick={() => {
+                      setViewFitMode('custom');
+                      setZoom((prev) => Math.max(0.2, prev * 0.85));
+                    }}
+                    className="p-1 rounded text-slate-600 hover:text-slate-900"
+                    title="Zoom Out"
+                  >
+                    <ZoomOut className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="font-mono font-bold text-[11px] text-slate-700 px-2 min-w-[50px] text-center">
+                    {Math.round(zoom * 100)}%
+                  </span>
+                  <button
+                    onClick={() => {
+                      setViewFitMode('custom');
+                      setZoom((prev) => Math.min(3.5, prev * 1.15));
+                    }}
+                    className="p-1 rounded text-slate-600 hover:text-slate-900"
+                    title="Zoom In"
+                  >
+                    <ZoomIn className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setZoom(1.0);
+                      setPan({ x: 0, y: 0 });
+                      setViewFitMode('fit-width');
+                    }}
+                    className="p-1 rounded text-slate-600 hover:text-slate-900 ml-1 border-l border-slate-200"
+                    title="Reset Canvas"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* Download Asset Button */}
+                <a
+                  href={
+                    systemArchAssetType === 'png'
+                      ? '/lifeline_os_system_architecture.png'
+                      : '/lifeline_os_system_architecture.gif'
+                  }
+                  download={`lifeline_os_system_architecture.${systemArchAssetType}`}
+                  className="px-3 py-1 bg-white hover:bg-slate-50 text-slate-700 font-semibold rounded-lg border border-slate-200 flex items-center gap-1.5 transition-colors shadow-xs"
+                >
+                  <Download className="w-3.5 h-3.5 text-slate-600" />
+                  Download Blueprint
+                </a>
+
+                {/* External Fullscreen Link */}
+                <a
+                  href="/lifeline_os_system_architecture.png"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-1.5 bg-white hover:bg-slate-50 text-slate-700 rounded-lg border border-slate-200 transition-colors shadow-xs"
+                  title="Open in new window"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
               </div>
             </div>
 
-            {/* Connected Dependencies */}
-            <div>
-              <h4 className="font-bold text-slate-300 mb-1 flex items-center gap-1.5 font-mono uppercase text-[11px]">
-                <GitFork className="w-3.5 h-3.5 text-purple-400" /> Graph Dependencies
-              </h4>
-              <div className="space-y-1.5">
-                {selectedNode.dependencies.length > 0 ? (
-                  selectedNode.dependencies.map((depId) => {
-                    const depNode = ARCHITECTURE_NODES.find((n) => n.id === depId);
-                    return (
-                      <button
-                        key={depId}
-                        onClick={() => setSelectedNodeId(depId)}
-                        className="w-full text-left p-1.5 rounded bg-[#080B10] border border-slate-800 hover:border-cyan-500/50 flex items-center justify-between text-slate-300 hover:text-white"
-                      >
-                        <span className="font-medium text-[11px] truncate">
-                          {depNode ? depNode.name : depId}
+            {/* Interactive Canvas */}
+            <div
+              className={`flex-1 relative overflow-auto bg-slate-100 flex items-start justify-center p-4 select-none ${
+                isDragging ? 'cursor-grabbing' : 'cursor-grab'
+              }`}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onWheel={handleWheel}
+              style={{
+                backgroundImage:
+                  'radial-gradient(circle, #cbd5e1 1px, transparent 1px), radial-gradient(circle, #cbd5e1 1px, #f8fafc 1px)',
+                backgroundSize: '24px 24px'
+              }}
+            >
+              <div
+                className="transition-transform duration-75 origin-top-left"
+                style={{
+                  transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                  width: viewFitMode === 'fit-width' ? '100%' : 'auto',
+                  maxWidth: viewFitMode === 'fit-width' ? '100%' : 'none'
+                }}
+              >
+                <img
+                  src={
+                    systemArchAssetType === 'png'
+                      ? '/lifeline_os_system_architecture.png'
+                      : '/lifeline_os_system_architecture.gif'
+                  }
+                  alt="Lifeline OS Publication Technical System Architecture (6 Operational Zones)"
+                  className="rounded-xl shadow-xl border border-slate-200 bg-white object-contain pointer-events-none"
+                  style={{
+                    width: viewFitMode === 'fit-width' ? '100%' : '3840px',
+                    height: 'auto',
+                    minWidth: viewFitMode === 'fit-width' ? '100%' : '1400px'
+                  }}
+                  draggable={false}
+                />
+              </div>
+
+              {/* Floating Canvas Navigation Hint */}
+              <div className="absolute top-4 right-6 pointer-events-none bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm text-[11px] font-mono text-slate-600 flex items-center gap-2">
+                <span>Drag to Pan</span>
+                <span>&bull;</span>
+                <span>Scroll to Zoom</span>
+                <span>&bull;</span>
+                <span className="text-indigo-700 font-semibold">Zones 01–06 Complete</span>
+              </div>
+            </div>
+
+            {/* Bottom: Interactive Zone Breakdown Drawer (6 Zones) */}
+            <div className="bg-white border-t border-slate-200 p-4 shadow-lg">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                {/* Zone Quick Selection Buttons */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
+                  <span className="font-mono text-xs font-bold text-slate-500 uppercase tracking-wider mr-1">
+                    ZONES:
+                  </span>
+                  {SYSTEM_ZONES.map((z, idx) => (
+                    <button
+                      key={z.id}
+                      onClick={() => setSelectedZoneIdx(idx)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold font-mono transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                        selectedZoneIdx === idx
+                          ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      }`}
+                    >
+                      <span className="font-bold">Z0{z.id}</span>
+                      <span className="hidden xl:inline">{z.name.split(':')[1]?.trim() || z.name}</span>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="font-mono text-xs text-slate-500 flex items-center gap-2">
+                  <span>ZONE {activeZone.id} OF 6</span>
+                  <span>&bull;</span>
+                  <span className="text-indigo-700 font-semibold">Pure Client-Edge Architecture</span>
+                </div>
+              </div>
+
+              {/* Active Zone Details Card */}
+              <div className="mt-3 bg-slate-50 rounded-xl p-4 border border-slate-200/80 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="space-y-1 max-w-4xl">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 border border-indigo-200">
+                      ARCHITECTURE TIER 0{activeZone.id}
+                    </span>
+                    <h3 className="text-sm font-bold text-slate-900">{activeZone.name}</h3>
+                  </div>
+                  <p className="text-xs font-medium text-slate-600">{activeZone.subtitle}</p>
+                  <p className="text-xs text-slate-700 leading-relaxed pt-1">{activeZone.description}</p>
+                  <div className="text-[11px] font-mono text-slate-500 pt-1">
+                    <span className="font-semibold text-slate-700">Tech Stack:</span> {activeZone.tech}
+                  </div>
+                </div>
+
+                {/* Zone Invariants */}
+                <div className="flex flex-col sm:flex-row md:flex-col gap-2 shrink-0 text-left">
+                  <div className="bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+                    <div className="text-[10px] font-mono text-slate-500 uppercase">SLA &amp; Resilience</div>
+                    <div className="text-xs font-medium text-slate-800 max-w-xs">{activeZone.sla}</div>
+                  </div>
+                  <div className="bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+                    <div className="text-[10px] font-mono text-slate-500 uppercase">Enforced Invariants</div>
+                    <div className="flex flex-wrap gap-1 mt-0.5">
+                      {activeZone.invariants.map((inv, i) => (
+                        <span
+                          key={i}
+                          className="font-mono text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200"
+                        >
+                          {inv}
                         </span>
-                        <ChevronRight className="w-3 h-3 text-slate-500 shrink-0" />
-                      </button>
-                    );
-                  })
-                ) : (
-                  <p className="text-slate-500 italic text-[11px]">Root node in active hierarchy</p>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===================================================================== */}
+        {/* 4. TAB 3: COMPONENT DICTIONARY & INVARIANTS (31 SYSTEM NODES) */}
+        {/* ===================================================================== */}
+        {activeTab === 'dictionary' && (
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50">
+            {/* Filter & Search Bar */}
+            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
+              {/* Search Bar */}
+              <div className="relative flex-1 min-w-[280px]">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search 31 components, algorithms, APIs, SLAs, and limitations..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 text-xs text-slate-900 pl-9 pr-8 py-2 rounded-lg focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 )}
               </div>
+
+              {/* Filter Pills */}
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Layer Filter */}
+                <div className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg border border-slate-200 text-xs">
+                  <span className="text-[11px] font-mono text-slate-500 font-semibold">LAYER:</span>
+                  <select
+                    value={selectedLayer}
+                    onChange={(e) => setSelectedLayer(e.target.value)}
+                    className="bg-transparent text-xs font-medium text-slate-700 focus:outline-none cursor-pointer"
+                  >
+                    <option value="all">All Layers</option>
+                    <option value="presentation">Presentation</option>
+                    <option value="application">Application</option>
+                    <option value="geospatial">Geospatial</option>
+                    <option value="data">Data &amp; Feeds</option>
+                    <option value="ai_external">AI &amp; Cloud</option>
+                  </select>
+                </div>
+
+                {/* Status Filter */}
+                <div className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg border border-slate-200 text-xs">
+                  <span className="text-[11px] font-mono text-slate-500 font-semibold">STATUS:</span>
+                  <select
+                    value={selectedStatus}
+                    onChange={(e) => setSelectedStatus(e.target.value)}
+                    className="bg-transparent text-xs font-medium text-slate-700 focus:outline-none cursor-pointer"
+                  >
+                    <option value="all">All Statuses</option>
+                    <option value="CONNECTED">Connected (Live)</option>
+                    <option value="UNVERIFIED">Unverified (Audit Trap)</option>
+                    <option value="PROPOSED">Proposed (Future)</option>
+                  </select>
+                </div>
+
+                {/* Stage Filter */}
+                <div className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg border border-slate-200 text-xs">
+                  <span className="text-[11px] font-mono text-slate-500 font-semibold">STAGE:</span>
+                  <select
+                    value={selectedStageFilter}
+                    onChange={(e) => setSelectedStageFilter(e.target.value)}
+                    className="bg-transparent text-xs font-medium text-slate-700 focus:outline-none cursor-pointer"
+                  >
+                    <option value="all">All Stages (1–7)</option>
+                    <option value="1">Stage 1: Observe</option>
+                    <option value="2">Stage 2: Validate</option>
+                    <option value="3">Stage 3: Assess Impact</option>
+                    <option value="4">Stage 4: Accessibility</option>
+                    <option value="5">Stage 5: Plan Response</option>
+                    <option value="6">Stage 6: Multi-Agency</option>
+                    <option value="7">Stage 7: Learning Loop</option>
+                  </select>
+                </div>
+
+                <div className="font-mono text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1.5 rounded-lg border border-slate-200">
+                  Showing {filteredNodes.length} / {ARCHITECTURE_NODES.length}
+                </div>
+              </div>
             </div>
 
-            {/* Evidence Requirements */}
-            {selectedNode.evidenceRequirements.length > 0 && (
-              <div>
-                <h4 className="font-bold text-slate-300 mb-1 flex items-center gap-1.5 font-mono uppercase text-[11px]">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Data Requirements
-                </h4>
-                <div className="space-y-1 text-slate-300 bg-[#080B10] p-2 rounded border border-slate-800 text-[11px]">
-                  {selectedNode.evidenceRequirements.map((er, idx) => (
-                    <div key={idx} className="flex items-center gap-1.5">
-                      <Check className="w-3 h-3 text-emerald-400 shrink-0" />
-                      <span>{er}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Grid of Component Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {filteredNodes.map((node) => {
+                const isExpanded = expandedNodeId === node.id;
+                return (
+                  <div
+                    key={node.id}
+                    className="bg-white rounded-xl border border-slate-200 shadow-xs hover:shadow-md transition-all p-4 flex flex-col justify-between"
+                  >
+                    <div>
+                      {/* Top Badges */}
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                          {node.type.toUpperCase()}
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          {node.stageNumber && (
+                            <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
+                              STAGE 0{node.stageNumber}
+                            </span>
+                          )}
+                          <span
+                            className={`font-mono text-[10px] font-bold px-2 py-0.5 rounded border ${
+                              node.status === 'CONNECTED'
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                : node.status === 'UNVERIFIED'
+                                ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                : 'bg-purple-50 text-purple-700 border-purple-200'
+                            }`}
+                          >
+                            {node.status}
+                          </span>
+                        </div>
+                      </div>
 
-            {/* Limitations */}
-            {selectedNode.limitations.length > 0 && (
-              <div>
-                <h4 className="font-bold text-amber-400 mb-1 flex items-center gap-1.5 font-mono uppercase text-[11px]">
-                  <AlertTriangle className="w-3.5 h-3.5 text-amber-400" /> Operational Limitations
-                </h4>
-                <div className="space-y-1 text-slate-300 bg-[#080B10] p-2 rounded border border-amber-900/30 text-[11px]">
-                  {selectedNode.limitations.map((lim, idx) => (
-                    <div key={idx} className="flex items-start gap-1.5">
-                      <span className="text-amber-500 mt-0.5">&bull;</span>
-                      <span>{lim}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+                      {/* Title & Short Name */}
+                      <h4 className="text-sm font-bold text-slate-900 tracking-tight">{node.name}</h4>
+                      <div className="text-[11px] font-mono text-slate-500 mb-2">ID: {node.id}</div>
 
-            {/* Associated Acceptance Tests */}
-            {selectedNode.acceptanceTests.length > 0 && (
-              <div>
-                <h4 className="font-bold text-emerald-400 mb-1 flex items-center gap-1.5 font-mono uppercase text-[11px]">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Acceptance Tests
-                </h4>
-                <div className="space-y-1 text-slate-300 bg-[#080B10] p-2 rounded border border-emerald-900/30 text-[11px]">
-                  {selectedNode.acceptanceTests.map((tst, idx) => (
-                    <div key={idx} className="flex items-start gap-1.5">
-                      <CheckCircle2 className="w-3 h-3 text-emerald-400 mt-0.5 shrink-0" />
-                      <span className="text-slate-200">{tst}</span>
+                      {/* Purpose */}
+                      <p className="text-xs text-slate-600 leading-relaxed mb-3">{node.purpose}</p>
+
+                      {/* Epistemic Provenance */}
+                      {node.evidenceClass && (
+                        <div className="mb-3 flex items-center gap-1.5">
+                          <span className="text-[10px] font-mono text-slate-500">PROVENANCE:</span>
+                          <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                            {node.evidenceClass}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Expanded Technical Details */}
+                      {isExpanded && (
+                        <div className="space-y-3 pt-3 border-t border-slate-100 text-xs">
+                          {/* Inputs & Outputs */}
+                          <div className="space-y-1">
+                            <span className="font-mono text-[10px] font-bold text-slate-500 uppercase">
+                              INPUTS:
+                            </span>
+                            <ul className="list-disc list-inside text-slate-700 text-[11px] space-y-0.5">
+                              {node.inputs.map((inp, idx) => (
+                                <li key={idx}>{inp}</li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          <div className="space-y-1">
+                            <span className="font-mono text-[10px] font-bold text-slate-500 uppercase">
+                              OUTPUTS:
+                            </span>
+                            <ul className="list-disc list-inside text-slate-700 text-[11px] space-y-0.5">
+                              {node.outputs.map((out, idx) => (
+                                <li key={idx}>{out}</li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          {/* Limitations & Edge Cases */}
+                          {node.limitations.length > 0 && (
+                            <div className="space-y-1 bg-amber-50/60 p-2.5 rounded-lg border border-amber-200/60">
+                              <span className="font-mono text-[10px] font-bold text-amber-800 uppercase flex items-center gap-1">
+                                <AlertTriangle className="w-3 h-3 text-amber-600" />
+                                LIMITATIONS &amp; AUDIT BOUNDS:
+                              </span>
+                              <ul className="list-disc list-inside text-amber-900 text-[11px] space-y-0.5">
+                                {node.limitations.map((lim, idx) => (
+                                  <li key={idx}>{lim}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* Formal Acceptance Tests */}
+                          {node.acceptanceTests.length > 0 && (
+                            <div className="space-y-1 bg-emerald-50/60 p-2.5 rounded-lg border border-emerald-200/60">
+                              <span className="font-mono text-[10px] font-bold text-emerald-800 uppercase flex items-center gap-1">
+                                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                FORMAL ACCEPTANCE VERIFICATION:
+                              </span>
+                              <ul className="list-disc list-inside text-emerald-900 text-[11px] space-y-0.5">
+                                {node.acceptanceTests.map((test, idx) => (
+                                  <li key={idx}>{test}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
+
+                    {/* Bottom Expand Toggle Button */}
+                    <button
+                      onClick={() => setExpandedNodeId(isExpanded ? null : node.id)}
+                      className="mt-3 w-full py-1.5 px-3 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold text-xs border border-slate-200 transition-colors flex items-center justify-center gap-1"
+                    >
+                      <span>{isExpanded ? 'Collapse Spec' : 'Expand Invariants & In/Out'}</span>
+                      <ChevronRight
+                        className={`w-3.5 h-3.5 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                      />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* ===================================================================== */}
-      {/* 5. VALIDATION TEST SUITE MODAL (SECTION 9) */}
-      {/* ===================================================================== */}
-      {isTestsModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#0D121B] border border-slate-700 max-w-3xl w-full rounded-xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
-            <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-[#080B10]">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                <h3 className="font-bold text-sm text-white uppercase font-mono tracking-wider">
-                  SYSTEM ARCHITECTURE VALIDATION SUITE (15 / 15 PASS)
-                </h3>
+        {/* ===================================================================== */}
+        {/* 5. TAB 4: GEMINI 2.5 FLASH MCP PROTOCOL CONTRACT */}
+        {/* ===================================================================== */}
+        {activeTab === 'mcp' && (
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50">
+            {/* Header Banner */}
+            <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1.5 max-w-3xl">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-xs font-bold px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 uppercase">
+                    GEMINI 2.5 FLASH &bull; MODEL CONTEXT PROTOCOL (MCP)
+                  </span>
+                  <span className="font-mono text-xs font-semibold text-emerald-700 flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                    TOOL CONTRACT ACTIVE
+                  </span>
+                </div>
+                <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+                  Statutory Protocol Spec: SDRF Form-3B Automated Sanction
+                </h2>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Lifeline OS separates raw topological routing physics from LLM natural language generation.
+                  Gemini 2.5 Flash acts strictly as an auditable policy agent that receives structured solver
+                  telemetry, evaluates Indian IRC:6-2017 bridging codes, and prepares statutory memos.
+                </p>
               </div>
-              <button
-                onClick={() => setIsTestsModalOpen(false)}
-                className="text-slate-500 hover:text-white p-1"
-              >
-                <X className="w-4 h-4" />
-              </button>
+
+              <div className="flex flex-col gap-2 shrink-0">
+                <button
+                  onClick={handleCopySchema}
+                  className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs transition-all shadow-md shadow-purple-500/20 flex items-center gap-2 justify-center"
+                >
+                  {copiedSchema ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  <span>{copiedSchema ? 'SCHEMA COPIED!' : 'COPY MCP SCHEMA'}</span>
+                </button>
+                <div className="text-[10px] font-mono text-slate-500 text-center">
+                  JSON-Schema Draft-07 Compliant
+                </div>
+              </div>
             </div>
 
-            <div className="p-4 overflow-y-auto space-y-2 text-xs">
-              {ARCHITECTURE_VALIDATION_TESTS.map((test) => (
+            {/* Core Invariants Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+                <div className="flex items-center gap-2 text-blue-700 font-bold text-xs mb-1.5">
+                  <ShieldCheck className="w-4 h-4" />
+                  ZERO HALLUCINATION INVARIANT
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Gemini cannot invent coordinates, road lengths, or casualty counts. It receives an immutable JSON
+                  payload generated by the deterministic Dijkstra network engine.
+                </p>
+              </div>
+
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+                <div className="flex items-center gap-2 text-emerald-700 font-bold text-xs mb-1.5">
+                  <Lock className="w-4 h-4" />
+                  MANDATORY HUMAN SIGN-OFF
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  No SDRF funds are dispersed and no public alert broadcast occurs autonomously. The Incident
+                  Commander must explicitly sign with a cryptographic SHA-256 seal.
+                </p>
+              </div>
+
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+                <div className="flex items-center gap-2 text-purple-700 font-bold text-xs mb-1.5">
+                  <FileCode className="w-4 h-4" />
+                  IRC:6-2017 BRIDGING HARD-CAPS
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Enforces statutory Indian Road Congress Class-40 multi-axle vehicle load constraints (16 tons, 80m
+                  span) for all bridge repair sanction orders.
+                </p>
+              </div>
+            </div>
+
+            {/* MCP Schema JSON Viewer */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+              <div className="bg-slate-100 px-4 py-2.5 border-b border-slate-200 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2 font-mono font-semibold text-slate-700">
+                  <FileCode className="w-4 h-4 text-purple-600" />
+                  <span>tools/compile_sdrf_form3b_ticket.json</span>
+                </div>
+                <span className="font-mono text-[10px] text-slate-500">FORMAT: JSON SCHEMA DRAFT-07</span>
+              </div>
+              <pre className="p-4 bg-slate-900 text-slate-100 text-xs font-mono overflow-x-auto leading-relaxed max-h-[500px]">
+{`{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "compile_sdrf_form3b_ticket",
+  "description": "Compiles a statutory State Disaster Response Fund (SDRF) Form-3B sanction order ticket with deterministic engineering constraints and civil commander authorization.",
+  "type": "object",
+  "required": [
+    "incident_id",
+    "theater",
+    "breach_id",
+    "remedy_type",
+    "justification",
+    "civil_commander_id",
+    "merkle_root_hash"
+  ],
+  "properties": {
+    "incident_id": {
+      "type": "string",
+      "pattern": "^INC-[A-Z0-9-]+$",
+      "description": "Deterministic identifier of the validated flood incident."
+    },
+    "theater": {
+      "type": "string",
+      "enum": ["assam_silchar", "nepal_gorkha"],
+      "description": "Disaster theater for jurisdictional SDRF / NDM rules."
+    },
+    "breach_id": {
+      "type": "string",
+      "description": "Unique road cut-edge identifier verified by satellite SAR."
+    },
+    "remedy_type": {
+      "type": "string",
+      "enum": [
+        "BAILEY_BRIDGE",
+        "MOBILE_MEDICAL_UNIT",
+        "MED_DRONE",
+        "RESCUE_BOAT"
+      ]
+    },
+    "reconnected_settlements_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of isolated habitations restored by the intervention."
+    },
+    "protected_population": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Verified census population receiving restored hospital access."
+    },
+    "detour_minutes_saved": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Minutes of transit latency saved relative to flooded detour."
+    },
+    "fiscal_expenditure_inr": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Statutory disbursement cap under SDRF norms."
+    },
+    "irc_compliance": {
+      "type": "object",
+      "properties": {
+        "design_code": { "type": "string", "example": "IRC:6-2017 Class-40" },
+        "axle_load_tons": { "type": "number", "example": 16.0 },
+        "span_meters": { "type": "number", "example": 80.0 }
+      },
+      "required": ["design_code", "span_meters", "axle_load_tons"]
+    },
+    "civil_commander_id": {
+      "type": "string",
+      "description": "Empowered incident officer credential."
+    },
+    "merkle_root_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 Merkle root hash linking evidence and optimization inputs."
+    }
+  }
+}`}
+              </pre>
+            </div>
+          </div>
+        )}
+
+        {/* ===================================================================== */}
+        {/* 6. TAB 5: ACCEPTANCE VERIFICATION SUITE (15/15 PASS) */}
+        {/* ===================================================================== */}
+        {activeTab === 'tests' && (
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50">
+            {/* Header Stats */}
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase">
+                    FORMAL VERIFICATION SUITE
+                  </span>
+                  <span className="font-mono text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                    15/15 TESTS PASSING (100%)
+                  </span>
+                </div>
+                <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+                  Architecture Acceptance Invariants &amp; Compliance Audit
+                </h2>
+                <p className="text-xs text-slate-600">
+                  Every test below is codified in deterministic unit suites verifying epistemic integrity, routing
+                  soundness, and statutory governance.
+                </p>
+              </div>
+
+              {/* Search in tests */}
+              <div className="relative min-w-[260px]">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search requirement, clause, or detail..."
+                  value={testSearchQuery}
+                  onChange={(e) => setTestSearchQuery(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 text-xs text-slate-900 pl-9 pr-4 py-2 rounded-lg focus:outline-none focus:border-blue-500 focus:bg-white"
+                />
+              </div>
+            </div>
+
+            {/* Test Cards List */}
+            <div className="space-y-3">
+              {filteredTests.map((test) => (
                 <div
                   key={test.id}
-                  className="bg-[#080B10] border border-slate-800 rounded-lg p-3 flex items-start justify-between gap-3"
+                  className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-300 transition-colors flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
                 >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-mono text-[10px] text-cyan-400 font-bold">
-                        TEST #{test.id}
+                  <div className="space-y-1.5 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                        TEST #{test.id.toString().padStart(2, '0')}
                       </span>
-                      <h4 className="font-bold text-white text-xs">{test.requirement}</h4>
+                      <h4 className="text-sm font-bold text-slate-900">{test.requirement}</h4>
                     </div>
-                    <p className="text-slate-400 text-[11px] mb-1">
-                      <span className="text-slate-500 font-mono">Expected:</span>{' '}
-                      {test.expectedBehavior}
-                    </p>
-                    <p className="text-emerald-300 text-[11px] bg-emerald-950/20 p-1.5 rounded border border-emerald-900/30">
-                      <span className="text-emerald-500 font-bold font-mono">Verified:</span>{' '}
-                      {test.detail}
-                    </p>
+                    <div className="text-xs text-slate-600 flex items-start gap-1.5">
+                      <span className="font-semibold text-slate-700 shrink-0">Expected Behavior:</span>
+                      <span>{test.expectedBehavior}</span>
+                    </div>
+                    <div className="text-[11px] font-mono text-slate-500 pt-0.5">
+                      <span className="font-semibold text-slate-600">Verification:</span> {test.detail}
+                    </div>
                   </div>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    {test.status}
-                  </span>
+
+                  <div className="shrink-0 flex items-center gap-2">
+                    <div className="font-mono text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1.5 shadow-xs">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>{test.status}</span>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
-
-            <div className="p-3 border-t border-slate-800 bg-[#080B10] flex justify-end">
-              <button
-                onClick={() => setIsTestsModalOpen(false)}
-                className="px-4 py-1.5 bg-cyan-500 text-black text-xs font-bold rounded-lg hover:bg-cyan-400"
-              >
-                Close Verification Suite
-              </button>
-            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
