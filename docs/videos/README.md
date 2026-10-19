@@ -6,7 +6,7 @@ Story-led, programmatic demonstration video engineered with [Remotion](https://w
 - **Target Duration:** 3 minutes 40 seconds (220.0 seconds)
 - **Total Frames:** 6,600 frames @ 30 FPS
 - **Resolution:** 1920 × 1080 (Full HD, 16:9 widescreen)
-- **Output Artifact:** `docs/videos/Lifeline_OS_Walkthrough_Demo.mp4` (and `demo-assets/Lifeline_OS_Hackathon_Demo_3m40s.mp4`)
+- **Output Artifact:** [`demo-assets/Lifeline_OS_Hackathon_Demo_3m40s.mp4`](../../demo-assets/Lifeline_OS_Hackathon_Demo_3m40s.mp4) (Canonical playback location: `https://github.com/MsMansiDhruv/lifeline-os/blob/main/demo-assets/Lifeline_OS_Hackathon_Demo_3m40s.mp4`)
 
 ---
 
@@ -63,5 +63,5 @@ npm run dev
 
 ### Render Final High-Resolution MP4
 ```bash
-npx remotion render LifelineOS-Demo docs/videos/Lifeline_OS_Walkthrough_Demo.mp4
+npx remotion render LifelineOS-Demo ../../demo-assets/Lifeline_OS_Hackathon_Demo_3m40s.mp4
 ```

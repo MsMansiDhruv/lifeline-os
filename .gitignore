@@ -54,6 +54,7 @@ pitch_deck_slides/
 extracted_template_assets/
 docs/videos/node_modules/
 *.mp4
+!demo-assets/*.mp4
 *.webm
 *.wav
 test_deck.pptx

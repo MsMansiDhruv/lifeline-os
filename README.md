@@ -12,7 +12,7 @@
 
 **Deterministic Disaster Accessibility, Physical Asset Optimization & Resilient Public Health Equity**
 
-[🚀 Live Deployed Platform](https://lifeline-os.ai.studio/) • [🎥 Video Walkthrough](docs/videos/Lifeline_OS_Walkthrough_Demo.mp4) • [📊 Executive Brief (PPTX)](docs/presentation/Lifeline_OS_Pitch_Deck.pptx) • [📑 Executive Brief (PDF)](docs/presentation/Lifeline_OS_Pitch_Deck.pdf) • [📚 Technical Docs](docs/ARCHITECTURE.md) • [📲 Live Phone Demo](https://ntfy.sh/lifeline-os-alert-2026)
+[🚀 Live Deployed Platform](https://lifeline-os.ai.studio/) • [🎥 Video Walkthrough (MP4)](demo-assets/Lifeline_OS_Hackathon_Demo_3m40s.mp4) • [📊 Executive Brief (PPTX)](docs/presentation/Lifeline_OS_Pitch_Deck.pptx) • [📑 Executive Brief (PDF)](docs/presentation/Lifeline_OS_Pitch_Deck.pdf) • [📚 Technical Docs](docs/ARCHITECTURE.md) • [📲 Live Phone Demo](https://ntfy.sh/lifeline-os-alert-2026)
 
 </div>
 
@@ -162,7 +162,7 @@ $$v = \sqrt{Q} \times 0.062 + 0.3$$
 
 A complete, story-led technical walkthrough of Lifeline OS is recorded and programmatically engineered using the Remotion engine in `docs/videos/`:
 
-- **Video Asset**: [`docs/videos/Lifeline_OS_Walkthrough_Demo.mp4`](docs/videos/Lifeline_OS_Walkthrough_Demo.mp4) *(3 minutes 40 seconds, Full HD 1080p @ 30 FPS, 6,600 frames)*.
+- **Video Asset**: [`demo-assets/Lifeline_OS_Hackathon_Demo_3m40s.mp4`](demo-assets/Lifeline_OS_Hackathon_Demo_3m40s.mp4) *(3 minutes 40 seconds, Full HD 1080p @ 30 FPS, 6,600 frames)* • **[Direct GitHub Playback Link](https://github.com/MsMansiDhruv/lifeline-os/blob/main/demo-assets/Lifeline_OS_Hackathon_Demo_3m40s.mp4)**.
 - **Remotion Project**: Complete React 19 source code, assets, and narration scripts are located in [`docs/videos/`](docs/videos/).
 - **Operational Capabilities Demonstrated**:
   1. **Disaster Context & Dilemma**: Inundation vs operational disruption across Cachar / Silchar 2022.
@@ -304,7 +304,7 @@ Comprehensive architectural, scientific, and governance specifications are maint
 | [`docs/sustainability/Lifeline_OS_Sustainability_Impact.pdf`](docs/sustainability/Lifeline_OS_Sustainability_Impact.pdf) | **Sustainability** | Socio-economic impact, climate adaptation metrics, and public health equity assessment. |
 | [`docs/research/`](docs/research/) | **Research** | Initial field research papers, flood mitigation concepts, and domain analyses. |
 | [`docs/specifications/`](docs/specifications/) | **Specifications** | Comprehensive platform requirements and systems design documentation. |
-| [`docs/videos/`](docs/videos/) | **Demonstration** | Full 3m40s technical video walkthrough (`Lifeline_OS_Walkthrough_Demo.mp4`) and Remotion studio project. |
+| [`demo-assets/Lifeline_OS_Hackathon_Demo_3m40s.mp4`](demo-assets/Lifeline_OS_Hackathon_Demo_3m40s.mp4) | **Video Walkthrough** | Full 3m40s technical walkthrough video (`Lifeline_OS_Hackathon_Demo_3m40s.mp4`) and Remotion studio project in `docs/videos/`. |
 
 ---
 
