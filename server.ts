@@ -34,6 +34,17 @@ if (fs.existsSync('.env')) {
   }
 }
 
+// Support passing full service account JSON as an environment variable (e.g. in AI Studio / Cloud Run)
+if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON && !process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+  try {
+    const credPath = path.resolve('.gcp-temp-credentials.json');
+    fs.writeFileSync(credPath, process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON, 'utf-8');
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = credPath;
+  } catch (e) {
+    console.error('Failed to write credentials from GOOGLE_APPLICATION_CREDENTIALS_JSON:', e);
+  }
+}
+
 let apiKey = process.env.GEMINI_API_KEY || '';
 if (!apiKey) {
   try {
