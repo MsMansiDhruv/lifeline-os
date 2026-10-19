@@ -58,5 +58,13 @@ docs/videos/node_modules/
 *.wav
 test_deck.pptx
 pdf_inspection_output.txt
-/Lifeline_OS_Pitch_Deck*.pdf
-/Lifeline_OS_Pitch_Deck*.pptx
+
+# GCP Service Account Credentials & Keys
+*service*account*.json
+*gcp*.json
+# Root files protection (media & docs belong in docs/assets and docs/presentation)
+/*.pdf
+/*.pptx
+/*.gif
+/*.png
+/*.geojson

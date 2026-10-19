@@ -9,12 +9,12 @@ It transforms heterogeneous geospatial, meteorological, hydrological, and clinic
 ## 2. Technical Visual Architecture & Process Flow
 
 ### System Architecture & Data Flow
-![Lifeline OS System Architecture](../lifeline_os_system_architecture.gif)
-*Figure 1: High-resolution animated system reference architecture showing ingestion from Copernicus Sentinel-1 SAR and Open-Meteo, local edge caching, Turf.js/NetworkX graph analysis, and multi-channel emergency dispatch. (Static PNG: [`lifeline_os_system_architecture.png`](../lifeline_os_system_architecture.png))*
+![Lifeline OS System Architecture](assets/lifeline_os_system_architecture.gif)
+*Figure 1: High-resolution animated system reference architecture showing ingestion from Copernicus Sentinel-1 SAR and Open-Meteo, local edge caching, Turf.js/NetworkX graph analysis, and multi-channel emergency dispatch. (Static PNG: [`assets/lifeline_os_system_architecture.png`](assets/lifeline_os_system_architecture.png))*
 
 ### End-to-End Operational Process Swimlanes
-![Lifeline OS Process Flow & Operational Swimlanes](../lifeline_os_process_swimlane.gif)
-*Figure 2: End-to-end operational decision flow across 7 distinct organizational swimlanes: External Data Providers, Ingestion & Cache, Epistemic Validation, Spatial Graph Core, Decision Optimization Engine, Civil Incident Commander Sanction, and State State Ledger. (Static PNG: [`lifeline_os_process_swimlane.png`](../lifeline_os_process_swimlane.png))*
+![Lifeline OS Process Flow & Operational Swimlanes](assets/lifeline_os_process_swimlane.gif)
+*Figure 2: End-to-end operational decision flow across 7 distinct organizational swimlanes: External Data Providers, Ingestion & Cache, Epistemic Validation, Spatial Graph Core, Decision Optimization Engine, Civil Incident Commander Sanction, and State State Ledger. (Static PNG: [`assets/lifeline_os_process_swimlane.png`](assets/lifeline_os_process_swimlane.png))*
 
 ---
 

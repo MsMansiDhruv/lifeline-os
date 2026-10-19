@@ -33,8 +33,8 @@ During catastrophic monsoon river surges in Assam's **Barak River basin (Cachar 
 
 Lifeline OS executes an end-to-end operational pipeline across 5 architectural tiers, balancing client-side edge computation with Google Cloud serverless scalability:
 
-![Lifeline OS System Architecture](lifeline_os_system_architecture.gif)
-*Figure 1: High-resolution animated system reference architecture showing multi-source ingestion, client-side Web Worker graph traversal, and multi-channel emergency dispatch. (Static PNG: [`lifeline_os_system_architecture.png`](lifeline_os_system_architecture.png))*
+![Lifeline OS System Architecture](docs/assets/lifeline_os_system_architecture.gif)
+*Figure 1: High-resolution animated system reference architecture showing multi-source ingestion, client-side Web Worker graph traversal, and multi-channel emergency dispatch. (Static PNG: [`docs/assets/lifeline_os_system_architecture.png`](docs/assets/lifeline_os_system_architecture.png))*
 
 ### System Architecture Layers:
 1. **External Telemetry & Provider Layer**: Keyless ingestion from Copernicus Sentinel-1 SAR (10m radar), Open-Meteo Weather (10m wind, precipitation, temperature), Copernicus GloFAS (daily river discharge $Q\text{ m}^3/\text{s}$), and OpenStreetMap (OSM) highway infrastructure.
@@ -49,8 +49,8 @@ Lifeline OS executes an end-to-end operational pipeline across 5 architectural t
 
 Lifeline OS enforces strict operational separation between external inputs, algorithmic evaluation, and statutory human authority across 7 organizational swimlanes:
 
-![Lifeline OS Process Flow & Operational Swimlanes](lifeline_os_process_swimlane.gif)
-*Figure 2: End-to-end operational decision flow from raw satellite evidence to digital commander sanction. (Static PNG: [`lifeline_os_process_swimlane.png`](lifeline_os_process_swimlane.png))*
+![Lifeline OS Process Flow & Operational Swimlanes](docs/assets/lifeline_os_process_swimlane.gif)
+*Figure 2: End-to-end operational decision flow from raw satellite evidence to digital commander sanction. (Static PNG: [`docs/assets/lifeline_os_process_swimlane.png`](docs/assets/lifeline_os_process_swimlane.png))*
 
 ### 7 Operational Swimlanes:
 | # | Swimlane | Operational Function |
@@ -129,7 +129,7 @@ $$v = \sqrt{Q} \times 0.062 + 0.3$$
 <div align="center">
 
 ### 🎥 Live Operational Simulation & Dynamic Re-Routing
-![Lifeline OS Live Simulation](lifeline_os_live_simulation.gif)  
+![Lifeline OS Live Simulation](docs/assets/lifeline_os_live_simulation.gif)  
 *Figure: Real-time dual-panel situational awareness showing 10m Sentinel-1 SAR flood extent overlay, topological graph percolation over 69,663 road links, dynamic Dijkstra ambulance re-routing around severed causeways, and instantaneous $k$-medoids boat staging calculations.*
 
 </div>
