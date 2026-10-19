@@ -146,7 +146,6 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
   onSelectTheater,
   onInspectDamageReport,
 }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [showAllChokes, setShowAllChokes] = useState(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [dispatchState, setDispatchState] = useState<DispatchStateMachineState>(isLiveDispatched ? 'ACCEPTED' : 'DRAFT');
@@ -154,7 +153,13 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
   const [isConfirmedByOperator, setIsConfirmedByOperator] = useState(false);
   const [dispatchTimestamp, setDispatchTimestamp] = useState<string | null>(null);
 
-  const [workspaceMode, setWorkspaceMode] = useState<'investigation' | 'response'>('investigation');
+  const [workspaceMode, setWorkspaceMode] = useState<'investigation' | 'response'>('response');
+
+  // When user clicks a workflow chapter in NavigationRail, automatically switch to response/workflow mode
+  useEffect(() => {
+    setWorkspaceMode('response');
+  }, [activeChapter]);
+
   const [isEvidenceCatalogueOpen, setIsEvidenceCatalogueOpen] = useState(false);
   const [isFieldEditorOpen, setIsFieldEditorOpen] = useState(false);
   const [reportFilterStatus, setReportFilterStatus] = useState<DamageReportStatus | 'ALL'>('ALL');
@@ -375,143 +380,75 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
     setIsReviewModalOpen(false);
   };
 
-  if (isCollapsed) {
-    return (
-      <aside className="fixed top-20 left-4 z-30 flex items-center bg-slate-900/95 backdrop-blur-xl border border-slate-800 rounded-2xl shadow-2xl p-1.5 select-none">
-        <button
-          type="button"
-          onClick={() => setIsCollapsed(false)}
-          className="p-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 flex items-center gap-2 cursor-pointer transition-colors"
-          title="Expand command panel"
-        >
-          <currentMeta.icon className="w-5 h-5 text-cyan-400" />
-          <span className="text-xs font-bold font-mono uppercase">{currentMeta.title}</span>
-          <ChevronRight className="w-4 h-4 text-slate-400" />
-        </button>
-      </aside>
-    );
-  }
-
   return (
     <>
-      <aside className="fixed top-18 left-4 bottom-4 z-30 flex select-none pointer-events-auto">
-        {/* 1. VERTICAL NAVIGATION RAIL WITH VISIBLE LABELS & TOOLTIPS */}
-        <div className="w-28 bg-slate-950 border-y border-l border-slate-700/80 rounded-l-2xl flex flex-col items-center py-3 justify-between shadow-2xl">
-          <div className="w-full px-1.5 space-y-2 flex flex-col items-center">
-            <span className="text-[9px] font-mono font-bold text-slate-400 uppercase tracking-wider text-center">
-              Chapters
-            </span>
-            {chapters.map((ch, idx) => {
-              const isActive = activeChapter === ch.id;
-              const Icon = ch.icon;
-              const shortAction = ch.id === 'prevent' ? 'Baseline' : ch.id === 'predict' ? 'Simulate' : ch.id === 'protect' ? 'Detour' : ch.id === 'respond' ? 'Fix' : 'Audit';
-              return (
-                <button
-                  key={ch.id}
-                  type="button"
-                  onClick={() => {
-                    onSelectChapter(ch.id);
-                    setWorkspaceMode('response');
-                  }}
-                  className={`w-full py-2 px-1 rounded-xl flex flex-col items-center text-center transition-all cursor-pointer group ${
-                    isActive && workspaceMode === 'response'
-                      ? 'bg-cyan-950 text-cyan-300 border border-cyan-500 shadow-[0_0_12px_rgba(6,182,212,0.3)]'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent'
-                  }`}
-                  title={`Chapter ${idx + 1}: ${ch.title} — ${ch.subtitle}`}
-                >
-                  <Icon className={`w-4 h-4 mb-1 ${isActive && workspaceMode === 'response' ? 'text-cyan-400 scale-110' : 'group-hover:scale-110 transition-transform'}`} />
-                  <span className="text-[10px] font-mono font-bold leading-tight block">
-                    {idx + 1}. {ch.title}
-                  </span>
-                  <span className="text-[8px] text-slate-400 leading-none truncate max-w-full mt-0.5">
-                    {shortAction}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Bottom Collapse Toggle */}
+      <div className="w-full h-full bg-[#0E1625] flex flex-col overflow-hidden text-[#E8EEF7]">
+        {/* Segmented Workspace Mode Switcher */}
+        <div className="flex border-b border-[#26364B] bg-[#0E1625] p-2.5 gap-2 shrink-0">
           <button
             type="button"
-            onClick={() => setIsCollapsed(true)}
-            className="w-full py-1.5 px-2 rounded-xl flex items-center justify-center gap-1 text-slate-400 hover:text-white hover:bg-slate-900 transition-colors cursor-pointer text-[10px] font-mono"
-            title="Collapse command panel"
+            onClick={() => {
+              playClickSound();
+              setWorkspaceMode('response');
+            }}
+            className={`flex-1 py-1.5 px-2.5 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer ${
+              workspaceMode === 'response'
+                ? 'bg-[#182437] text-[#13B8D5] border border-[#26364B]'
+                : 'text-[#9AAAC0] hover:text-[#E8EEF7] hover:bg-[#121D2D]'
+            }`}
           >
-            <ChevronLeft className="w-3.5 h-3.5" />
-            <span>Hide</span>
+            <Zap className="w-3.5 h-3.5" />
+            <span className="capitalize">{activeChapter} Workflow</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              playClickSound();
+              setWorkspaceMode('investigation');
+            }}
+            className={`flex-1 py-1.5 px-2.5 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer ${
+              workspaceMode === 'investigation'
+                ? 'bg-[#182437] text-[#13B8D5] border border-[#26364B]'
+                : 'text-[#9AAAC0] hover:text-[#E8EEF7] hover:bg-[#121D2D]'
+            }`}
+          >
+            <Search className="w-3.5 h-3.5" />
+            <span>Damage Explorer</span>
           </button>
         </div>
 
-        {/* 2. EDITORIAL COMMAND CARD */}
-        <div className="w-[450px] max-w-[calc(100vw-80px)] bg-slate-900/95 backdrop-blur-2xl border border-slate-800 rounded-r-2xl shadow-2xl flex flex-col overflow-hidden text-slate-100">
-          {/* Segmented Workspace Mode Switcher */}
-          <div className="flex border-b border-slate-800 bg-slate-950/80 p-2 gap-2 shrink-0">
-            <button
-              type="button"
-              onClick={() => {
-                playClickSound();
-                setWorkspaceMode('investigation');
-              }}
-              className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                workspaceMode === 'investigation'
-                  ? 'bg-cyan-500 text-slate-950 shadow-md font-extrabold'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
-            >
-              <Search className="w-3.5 h-3.5" />
-              <span>Damage Explorer</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                playClickSound();
-                setWorkspaceMode('response');
-              }}
-              className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                workspaceMode === 'response'
-                  ? 'bg-blue-600 text-white shadow-md font-extrabold'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
-            >
-              <Zap className="w-3.5 h-3.5" />
-              <span>Response (5 Chapters)</span>
-            </button>
-          </div>
-
-          {/* Card Header: Dynamic based on Mode */}
-          <div className="p-4 px-5 border-b border-slate-800 shrink-0">
+        {/* Card Header: Dynamic based on Mode */}
+        <div className="p-3 px-4 border-b border-[#26364B] shrink-0 bg-[#0E1625]">
             {workspaceMode === 'investigation' ? (
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-mono tracking-widest text-cyan-400 font-bold uppercase flex items-center gap-1.5">
+                  <span className="text-[11px] font-mono tracking-widest text-[#13B8D5] font-bold uppercase flex items-center gap-1.5">
                     <Search className="w-3.5 h-3.5" />
                     Damage &amp; Ground Truth Explorer
                   </span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 uppercase">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#182437] text-[#9AAAC0] border border-[#26364B] uppercase">
                     Rapid Assessment
                   </span>
                 </div>
-                <h2 className="text-xl font-extrabold text-white tracking-tight mt-1">
+                <h2 className="text-xl font-extrabold text-[#E8EEF7] tracking-tight mt-1">
                   Damage &amp; Ground Reports
                 </h2>
-                <p className="text-xs text-slate-400 mt-0.5 font-medium leading-relaxed">
+                <p className="text-xs text-[#9AAAC0] mt-0.5 font-medium leading-relaxed">
                   Inspect verified bridge breaches, municipal infrastructure damage, and isolated communities.
                 </p>
               </div>
             ) : (
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-mono tracking-widest text-cyan-400 font-bold uppercase">
+                  <span className="text-[11px] font-mono tracking-widest text-[#13B8D5] font-bold uppercase">
                     Incident Command • {currentMeta.title}
                   </span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 uppercase">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#182437] text-[#9AAAC0] border border-[#26364B] uppercase">
                     {currentTheater.id === 'silchar' ? 'Historical replay' : 'Dynamic scenario'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between mt-1">
-                  <h2 className="text-lg font-extrabold text-white tracking-tight">
+                  <h2 className="text-lg font-extrabold text-[#E8EEF7] tracking-tight">
                     {activeGuideStep.label}
                   </h2>
                   <div className="flex items-center gap-1">
@@ -519,7 +456,7 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                       type="button"
                       disabled={currentStepIdx <= 0}
                       onClick={() => handleStepChange(currentStepIdx - 1)}
-                      className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-800 text-slate-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                      className="px-2.5 py-1 rounded text-[10px] font-mono font-bold bg-[#182437] text-[#9AAAC0] hover:text-[#E8EEF7] border border-[#26364B] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
                     >
                       &larr; Back
                     </button>
@@ -527,14 +464,14 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                       type="button"
                       disabled={currentStepIdx >= guideSteps.length - 1}
                       onClick={() => handleStepChange(currentStepIdx + 1)}
-                      className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-950 text-cyan-300 hover:bg-cyan-900 border border-cyan-800 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                      className="px-2.5 py-1 rounded text-[10px] font-mono font-bold bg-[#13B8D5]/15 text-[#13B8D5] hover:bg-[#13B8D5]/25 border border-[#13B8D5]/40 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
                     >
                       Next &rarr;
                     </button>
                   </div>
                 </div>
                 {/* One-line "What you're seeing" caption */}
-                <div className="mt-2 p-2 rounded-lg bg-cyan-950/50 border border-cyan-800/40 text-[11px] text-cyan-200 font-sans leading-snug">
+                <div className="mt-2 p-2 rounded-lg bg-[#121D2D] border border-[#26364B] text-[11px] text-[#9AAAC0] font-sans leading-snug">
                   {activeGuideStep.caption}
                 </div>
               </div>
@@ -543,84 +480,69 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
 
           {/* Scrollable Chapter Content */}
           <div className="flex-1 overflow-y-auto p-5 space-y-4 scrollbar-thin scrollbar-thumb-slate-700">
-            {/* Simulation Journey & Prevention Step Explainer (Moved from center of map) */}
-            <div className="p-3.5 rounded-xl bg-gradient-to-br from-slate-900 to-slate-950 border border-cyan-500/30 shadow-lg space-y-2 text-xs">
+            {/* Collapsible Scenario Summary & Impact (Moved from floating story) */}
+            <div className="p-3.5 rounded-lg bg-[#121D2D] border border-[#26364B] space-y-2 text-xs">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-mono uppercase tracking-wider font-bold text-cyan-400 flex items-center gap-1.5">
-                  <Activity className="w-3.5 h-3.5 text-cyan-400" />
-                  Simulation Journey &amp; Impact
+                <span className="text-[10px] font-mono uppercase tracking-wider font-semibold text-[#13B8D5] flex items-center gap-1.5">
+                  <Activity className="w-3.5 h-3.5" />
+                  Scenario Summary &amp; Impact
                 </span>
-                <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-700/60 font-semibold">
-                  {currentTheater.id === 'silchar' ? 'Assam Flood Baseline' : 'Nepal Mountain Surge'}
+                <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-[#182437] text-[#13B8D5] border border-[#26364B] font-semibold">
+                  {currentTheater.id === 'silchar' ? 'Assam Flood' : 'Nepal Surge'}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-300 leading-relaxed">
+              <p className="text-[11px] text-[#9AAAC0] leading-relaxed">
                 {currentTheater.id === 'silchar'
-                  ? 'Historical flood replay (June 20, 2022). See how 1 dyke breach severed critical road access to 42 habitations, imposing a +47 min detour penalty. Compare Before (Danger) vs After (Rescue) on the map swipe divider.'
+                  ? 'Historical flood replay (June 20, 2022). Embankment breach severed highway egress to 42 habitations, imposing a +47 min detour penalty. Compare Before (Danger) vs After (Rescue) on the map comparison divider.'
                   : 'High-altitude monsoon surge on the Roshi Khola / BP Highway corridor. Simulating debris breach cut-off to high-risk valley settlements.'}
               </p>
               <div className="grid grid-cols-2 gap-2 pt-1 font-mono text-[10px]">
-                <div className="p-2 rounded-lg bg-rose-950/40 border border-rose-800/50 space-y-0.5">
-                  <div className="text-rose-400 font-bold flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                <div className="p-2 rounded-md bg-[#F06472]/10 border border-[#F06472]/25 space-y-0.5">
+                  <div className="text-[#F06472] font-semibold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#F06472]" />
                     BEFORE (Danger)
                   </div>
-                  <div className="text-slate-300">{currentTheater.id === 'nepal' ? '18 Hamlets Cut Off' : '42 Villages Severed'}</div>
-                  <div className="text-rose-300 font-semibold">{currentTheater.id === 'nepal' ? '120m Gorge Washout (No Bypass)' : '+47m Detour Penalty'}</div>
+                  <div className="text-[#E8EEF7]">{currentTheater.id === 'nepal' ? '18 Hamlets Cut Off' : '42 Villages Severed'}</div>
+                  <div className="text-[#F06472] font-medium">{currentTheater.id === 'nepal' ? '120m Gorge Washout' : '+47m Detour Penalty'}</div>
                 </div>
-                <div className="p-2 rounded-lg bg-emerald-950/40 border border-emerald-800/50 space-y-0.5">
-                  <div className="text-emerald-400 font-bold flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <div className="p-2 rounded-md bg-[#22C58B]/10 border border-[#22C58B]/25 space-y-0.5">
+                  <div className="text-[#22C58B] font-semibold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#22C58B]" />
                     AFTER (Rescue)
                   </div>
-                  <div className="text-slate-300">{currentTheater.id === 'nepal' ? '18 Hamlets Reconnected' : '42 Reconnected'}</div>
-                  <div className="text-emerald-300 font-semibold">{currentTheater.id === 'nepal' ? 'Roshi Gorge Restored in 28m' : 'Corridor Restored in 18m'}</div>
+                  <div className="text-[#E8EEF7]">{currentTheater.id === 'nepal' ? '18 Hamlets Reconnected' : '42 Reconnected'}</div>
+                  <div className="text-[#22C58B] font-medium">{currentTheater.id === 'nepal' ? 'Restored in 28m' : 'Restored in 18m'}</div>
                 </div>
               </div>
             </div>
 
-            {/* Scenario & Evidence Context (Always Visible across Chapters) */}
-            <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-2.5">
+            {/* Scenario & Evidence Context */}
+            <div className="p-3.5 rounded-lg bg-[#121D2D] border border-[#26364B] space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-white flex items-center gap-1.5">
-                  <MapPin className="w-4 h-4 text-rose-400" />
+                <span className="text-xs font-semibold text-[#E8EEF7] flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-[#13B8D5]" />
                   <span>{currentTheater.name}</span>
                 </span>
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-950/80 text-amber-300 border border-amber-700/60">
-                  {currentTheater.id === 'silchar' ? 'June 2022 Flood' : 'Sep 2024 Flash Flood'}
+                <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-[#182437] text-[#F0B44D] border border-[#26364B]">
+                  {currentTheater.id === 'silchar' ? 'June 2022 Event' : 'Sep 2024 Event'}
                 </span>
               </div>
 
-              {onSelectTheater && (
-                <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-800/80">
-                  <span className="text-[11px] font-mono text-slate-400">Incident Scenario:</span>
-                  <select
-                    value={currentTheater.id}
-                    onChange={(e) => onSelectTheater(e.target.value)}
-                    className="bg-slate-900 text-cyan-300 border border-slate-700 hover:border-cyan-500 rounded-lg px-2 py-1 text-xs font-semibold cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-500"
-                    title="Switch active disaster theater"
-                  >
-                    <option value="silchar">🇮🇳 Assam: Silchar / Cachar Basin</option>
-                    <option value="nepal">🇳🇵 Nepal: Roshi Khola / BP Highway</option>
-                  </select>
-                </div>
-              )}
-
-              <div className="space-y-1.5 pt-1">
-                <span className="text-[10px] uppercase font-mono text-slate-400 block font-semibold">
-                  Evidence available for this scenario
+              <div className="space-y-1 pt-1">
+                <span className="text-[10px] uppercase font-mono text-[#74859D] block font-semibold">
+                  Evidence Layers
                 </span>
                 <div className="flex flex-wrap gap-1.5 text-xs font-mono">
-                  <span className="px-2 py-1 rounded bg-slate-900 border border-slate-700/80 text-cyan-300 text-[11px] flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                  <span className="px-2 py-0.5 rounded bg-[#182437] border border-[#26364B] text-[#9AAAC0] text-[10px] flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#13B8D5]" />
                     Flood extent
                   </span>
-                  <span className="px-2 py-1 rounded bg-slate-900 border border-slate-700/80 text-cyan-300 text-[11px] flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                  <span className="px-2 py-0.5 rounded bg-[#182437] border border-[#26364B] text-[#9AAAC0] text-[10px] flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#13B8D5]" />
                     Road network
                   </span>
-                  <span className="px-2 py-1 rounded bg-slate-900 border border-slate-700/80 text-cyan-300 text-[11px] flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                  <span className="px-2 py-0.5 rounded bg-[#182437] border border-[#26364B] text-[#9AAAC0] text-[10px] flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#13B8D5]" />
                     Facilities
                   </span>
                 </div>
@@ -638,9 +560,9 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                       playClickSound();
                       setIsEvidenceCatalogueOpen(true);
                     }}
-                    className="p-2.5 rounded-xl bg-slate-950/80 hover:bg-slate-900 border border-cyan-800/80 hover:border-cyan-500 text-cyan-300 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm"
+                    className="p-2.5 rounded-lg bg-[#121D2D] hover:bg-[#182437] border border-[#26364B] hover:border-[#13B8D5] text-[#E8EEF7] font-medium text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm"
                   >
-                    <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
+                    <BookOpen className="w-3.5 h-3.5 text-[#13B8D5]" />
                     <span>Evidence Catalogue ({allDatasetsCount})</span>
                   </button>
 
@@ -650,21 +572,21 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                       playClickSound();
                       setIsFieldEditorOpen(true);
                     }}
-                    className="p-2.5 rounded-xl bg-slate-950/80 hover:bg-slate-900 border border-amber-800/80 hover:border-amber-500 text-amber-300 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm"
+                    className="p-2.5 rounded-lg bg-[#121D2D] hover:bg-[#182437] border border-[#26364B] hover:border-[#F0B44D] text-[#E8EEF7] font-medium text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm"
                   >
-                    <Edit3 className="w-3.5 h-3.5 text-amber-400" />
+                    <Edit3 className="w-3.5 h-3.5 text-[#F0B44D]" />
                     <span>Submit Ground Report</span>
                   </button>
                 </div>
 
                 {/* 2. Quick Zoom Buttons */}
-                <div className="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-2">
+                <div className="p-3.5 rounded-lg bg-[#121D2D] border border-[#26364B] space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-mono text-slate-400 font-semibold flex items-center gap-1.5">
-                      <Compass className="w-3.5 h-3.5 text-cyan-400" />
+                    <span className="text-[10px] uppercase font-mono text-[#74859D] font-semibold flex items-center gap-1.5">
+                      <Compass className="w-3.5 h-3.5 text-[#13B8D5]" />
                       Quick Zoom to Critical Damage Sites
                     </span>
-                    <span className="text-[10px] font-mono text-cyan-400">Jump to Camera</span>
+                    <span className="text-[10px] font-mono text-[#13B8D5]">Jump to Camera</span>
                   </div>
                   <div className="flex flex-wrap gap-1.5 text-xs font-mono">
                     {quickZoomTargets.map((qz) => (
@@ -672,9 +594,9 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                         key={qz.name}
                         type="button"
                         onClick={() => handleQuickZoom(qz)}
-                        className="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-cyan-300 hover:text-white border border-slate-700/80 hover:border-cyan-500 transition-colors cursor-pointer text-[11px] flex items-center gap-1 shadow-sm"
+                        className="px-2.5 py-1.5 rounded-lg bg-[#182437] hover:bg-[#26364B] text-[#E8EEF7] border border-[#26364B] hover:border-[#13B8D5] transition-colors cursor-pointer text-[11px] flex items-center gap-1 shadow-sm"
                       >
-                        <span className="text-[10px]">📍</span>
+                        <MapPin className="w-3 h-3 text-[#13B8D5]" />
                         <span>{qz.label}</span>
                       </button>
                     ))}
@@ -682,18 +604,18 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                 </div>
 
                 {/* 3. Search & Filterable Incident Reports List */}
-                <div className="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-3">
+                <div className="p-3.5 rounded-lg bg-[#121D2D] border border-[#26364B] space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-mono text-slate-400 font-semibold flex items-center gap-1.5">
-                      <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
+                    <span className="text-[10px] uppercase font-mono text-[#74859D] font-semibold flex items-center gap-1.5">
+                      <AlertTriangle className="w-3.5 h-3.5 text-[#F06472]" />
                       Damage &amp; Bridge Ground Reports ({filteredReports.length})
                     </span>
                     {currentTheater.id === 'nepal' ? (
-                      <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800/60">
+                      <span className="text-[10px] font-mono text-[#22C58B] font-bold bg-[#22C58B]/10 px-1.5 py-0.5 rounded border border-[#22C58B]/30">
                         Nepal Field Model
                       </span>
                     ) : (
-                      <span className="text-[10px] font-mono text-cyan-400 font-bold bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-800/60">
+                      <span className="text-[10px] font-mono text-[#13B8D5] font-bold bg-[#182437] px-1.5 py-0.5 rounded border border-[#26364B]">
                         Ground Reports
                       </span>
                     )}
@@ -701,13 +623,13 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
 
                   {/* Search Input */}
                   <div className="relative">
-                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <Search className="w-3.5 h-3.5 text-[#74859D] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="text"
                       value={reportSearchQuery}
                       onChange={(e) => setReportSearchQuery(e.target.value)}
                       placeholder="Search reports by road, bridge, keyword..."
-                      className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono text-[11px]"
+                      className="w-full h-9 pl-8 pr-3 rounded-lg bg-[#182437] border border-[#26364B] text-xs text-[#E8EEF7] placeholder-[#74859D] focus:outline-none focus:border-[#13B8D5] font-mono text-[11px] transition-colors"
                     />
                   </div>
 
@@ -718,10 +640,10 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                         key={st}
                         type="button"
                         onClick={() => setReportFilterStatus(st)}
-                        className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
+                        className={`px-2 py-1 rounded transition-colors cursor-pointer ${
                           reportFilterStatus === st
-                            ? 'bg-cyan-500 text-slate-950 font-bold'
-                            : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                            ? 'bg-[#13B8D5] text-[#080D16] font-semibold'
+                            : 'bg-[#182437] text-[#9AAAC0] hover:text-[#E8EEF7] border border-[#26364B]'
                         }`}
                       >
                         {st === 'ALL' ? 'All' : st.replace('REPORTED_', '').replace('_', ' ')}
@@ -730,9 +652,9 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                   </div>
 
                   {/* Reports List */}
-                  <div className="space-y-2 max-h-[380px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700">
+                  <div className="space-y-2 max-h-[380px] overflow-y-auto scrollbar-thin scrollbar-thumb-[#26364B]">
                     {filteredReports.length === 0 ? (
-                      <div className="p-4 text-center text-slate-500 font-mono text-[11px]">
+                      <div className="p-4 text-center text-[#74859D] font-mono text-[11px]">
                         No damage reports match the selected filter.
                       </div>
                     ) : (
@@ -746,76 +668,76 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                               onFocusMapPoint({ lat: r.coordinates[0], lon: r.coordinates[1], name: r.featureName });
                               onInspectDamageReport?.(r);
                             }}
-                            className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                            className={`p-3 rounded-lg border transition-all cursor-pointer ${
                               isSelected
-                                ? 'bg-cyan-950/40 border-cyan-500 shadow-[0_0_12px_rgba(6,182,212,0.25)]'
-                                : 'bg-slate-900/80 hover:bg-slate-850 border-slate-800'
+                                ? 'bg-[#182437] border-[#13B8D5] ring-1 ring-[#13B8D5]/30'
+                                : 'bg-[#121D2D] hover:bg-[#182437] border-[#26364B]'
                             }`}
                           >
                             <div className="flex items-start justify-between gap-2">
                               <div>
                                 <div className="flex items-center gap-1.5">
-                                  <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                                  <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-[#0E1625] text-[#9AAAC0] border border-[#26364B]">
                                     {r.id}
                                   </span>
-                                  <span className="text-[9px] font-mono uppercase text-cyan-400">
+                                  <span className="text-[9px] font-mono uppercase text-[#13B8D5] font-semibold">
                                     {r.featureType}
                                   </span>
                                 </div>
-                                <strong className="text-xs text-white block font-semibold mt-0.5">{r.featureName}</strong>
-                                <span className="text-[10px] text-slate-400 font-mono block">{r.roadName}</span>
+                                <strong className="text-xs text-[#E8EEF7] block font-semibold mt-0.5">{r.featureName}</strong>
+                                <span className="text-[10px] text-[#9AAAC0] font-mono block">{r.roadName}</span>
                               </div>
 
                               <span
                                 className={`text-[9px] font-mono uppercase px-1.5 py-0.5 rounded font-bold border shrink-0 ${
                                   r.normalizedStatus === 'REPORTED_DESTROYED'
-                                    ? 'bg-rose-950 text-rose-300 border-rose-700'
+                                    ? 'bg-[#F06472]/10 text-[#F06472] border-[#F06472]/30'
                                     : r.normalizedStatus === 'CONFLICTING_REPORTS'
-                                    ? 'bg-amber-950 text-amber-300 border-amber-700'
-                                    : 'bg-orange-950 text-orange-300 border-orange-700'
+                                    ? 'bg-[#F0B44D]/10 text-[#F0B44D] border-[#F0B44D]/30'
+                                    : 'bg-[#F0B44D]/10 text-[#F0B44D] border-[#F0B44D]/30'
                                 }`}
                               >
                                 {r.normalizedStatus.replace('REPORTED_', '')}
                               </span>
                             </div>
 
-                            <p className="text-[11px] text-slate-300 font-sans leading-relaxed mt-1.5 bg-slate-950/60 p-2 rounded-lg border border-slate-850">
+                            <p className="text-[11px] text-[#9AAAC0] font-sans leading-relaxed mt-1.5 bg-[#0E1625] p-2 rounded-md border border-[#26364B]">
                               "{r.reportedCondition}"
                             </p>
 
-                            <div className="mt-2 text-[11px] font-mono text-slate-400 space-y-0.5 border-t border-slate-800/80 pt-1.5">
+                            <div className="mt-2 text-[11px] font-mono text-[#9AAAC0] space-y-0.5 border-t border-[#1E2B3D] pt-1.5">
                               <div className="flex justify-between items-center">
                                 <span>Verification Status:</span>
-                                <span className={r.verificationStatus === 'VERIFIED' ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
+                                <span className={r.verificationStatus === 'VERIFIED' ? 'text-[#22C58B] font-bold' : 'text-[#F0B44D] font-bold'}>
                                   {r.verificationStatus}
                                 </span>
                               </div>
                               <div className="flex justify-between items-center">
                                 <span>Coordinates (WGS84):</span>
-                                <span className="text-cyan-300 font-bold">{r.coordinates[0].toFixed(4)}°N, {r.coordinates[1].toFixed(4)}°E</span>
+                                <span className="text-[#13B8D5] font-bold">{r.coordinates[0].toFixed(4)}°N, {r.coordinates[1].toFixed(4)}°E</span>
                               </div>
                               {r.isolatedPopEst !== undefined && r.isolatedPopEst > 0 && (
                                 <div className="flex justify-between items-center">
                                   <span>Cut-off Population:</span>
-                                  <span className="text-amber-300 font-bold">{r.isolatedPopEst.toLocaleString()} residents</span>
+                                  <span className="text-[#F0B44D] font-bold">{r.isolatedPopEst.toLocaleString()} residents</span>
                                 </div>
                               )}
                             </div>
 
                             {/* Attachments preview */}
                             {r.attachments && r.attachments.length > 0 && (
-                              <div className="mt-2 pt-1.5 border-t border-slate-800/60 text-[10px] font-mono text-slate-400 space-y-1">
-                                <div className="flex items-center gap-1 text-slate-300 font-semibold">
-                                  <Image className="w-3 h-3 text-cyan-400" />
+                              <div className="mt-2 pt-1.5 border-t border-[#1E2B3D] text-[10px] font-mono text-[#9AAAC0] space-y-1">
+                                <div className="flex items-center gap-1 text-[#E8EEF7] font-semibold">
+                                  <Image className="w-3 h-3 text-[#13B8D5]" />
                                   <span>Ground Attachment: {r.attachments[0].title}</span>
                                 </div>
-                                <div className="text-slate-400 italic">"{r.attachments[0].caption}"</div>
-                                <div className="text-slate-500">Credit: {r.attachments[0].credit} ({r.attachments[0].license})</div>
+                                <div className="text-[#9AAAC0] italic">"{r.attachments[0].caption}"</div>
+                                <div className="text-[#74859D]">Credit: {r.attachments[0].credit} ({r.attachments[0].license})</div>
                               </div>
                             )}
 
-                            <div className="mt-2 pt-1.5 border-t border-slate-800/60 flex items-center justify-between text-[10px] font-mono">
-                              <span className="text-slate-500 truncate max-w-[210px]">{r.source} • <span className="text-amber-400/90 italic">source link not verified</span></span>
+                            <div className="mt-2 pt-1.5 border-t border-[#1E2B3D] flex items-center justify-between text-[10px] font-mono">
+                              <span className="text-[#74859D] truncate max-w-[210px]">{r.source} • <span className="text-[#F0B44D] italic">source link not verified</span></span>
                               <span
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -823,7 +745,7 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                                   onFocusMapPoint({ lat: r.coordinates[0], lon: r.coordinates[1], name: r.featureName });
                                   onInspectDamageReport?.(r);
                                 }}
-                                className="text-cyan-400 flex items-center gap-1 font-semibold hover:underline cursor-pointer"
+                                className="text-[#13B8D5] flex items-center gap-1 font-semibold hover:underline cursor-pointer"
                               >
                                 <span>Inspect on Map</span>
                                 <ExternalLink className="w-3 h-3" />
@@ -837,17 +759,17 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                 </div>
 
                 {/* 3. Damage by Municipality / Sector Breakdown Table */}
-                <div className="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-2.5">
+                <div className="p-3.5 rounded-lg bg-[#121D2D] border border-[#26364B] space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-mono text-slate-400 font-semibold block">
+                    <span className="text-[10px] uppercase font-mono text-[#74859D] font-semibold block">
                       Damage by Municipality / Administrative Sector
                     </span>
-                    <span className="text-[10px] font-mono text-cyan-400">OSM + SAR Overlay</span>
+                    <span className="text-[10px] font-mono text-[#13B8D5]">OSM + SAR Overlay</span>
                   </div>
 
-                  <div className="rounded-xl border border-slate-800 overflow-hidden shadow-inner">
+                  <div className="rounded-lg border border-[#26364B] overflow-hidden shadow-inner">
                     <table className="w-full text-[11px] font-mono text-left">
-                      <thead className="bg-slate-950 text-slate-400 border-b border-slate-800 text-[10px] uppercase">
+                      <thead className="bg-[#0E1625] text-[#74859D] border-b border-[#26364B] text-[10px] uppercase">
                         <tr>
                           <th className="py-2 px-2.5">Sector</th>
                           <th className="py-2 px-1 text-right">Bldgs</th>
@@ -856,27 +778,27 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                           <th className="py-2 px-2 text-right">Pop. Cut</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-850 bg-slate-900/60 text-slate-300">
+                      <tbody className="divide-y divide-[#1E2B3D] bg-[#121D2D] text-[#9AAAC0]">
                         {sectorList.map((sec) => (
-                          <tr key={sec.sector} className="hover:bg-slate-800/40">
-                            <td className="py-1.5 px-2.5 font-sans font-medium text-white flex items-center gap-1.5">
-                              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${sec.riskLevel === 'CRITICAL' ? 'bg-rose-500' : 'bg-amber-500'}`} />
+                          <tr key={sec.sector} className="hover:bg-[#182437] transition-colors">
+                            <td className="py-1.5 px-2.5 font-sans font-medium text-[#E8EEF7] flex items-center gap-1.5">
+                              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${sec.riskLevel === 'CRITICAL' ? 'bg-[#F06472]' : 'bg-[#F0B44D]'}`} />
                               <span className="truncate max-w-[120px]">{sec.sector}</span>
                             </td>
-                            <td className="py-1.5 px-1 text-right text-rose-300 font-bold">{sec.submergedStructures}</td>
+                            <td className="py-1.5 px-1 text-right text-[#F06472] font-bold">{sec.submergedStructures}</td>
                             <td className="py-1.5 px-1 text-right">{sec.roadCutKm}</td>
                             <td className="py-1.5 px-1 text-right">{sec.bridgesDamaged}</td>
-                            <td className="py-1.5 px-2 text-right text-amber-300 font-bold">{(sec.populationCutOff / 1000).toFixed(1)}k</td>
+                            <td className="py-1.5 px-2 text-right text-[#F0B44D] font-bold">{(sec.populationCutOff / 1000).toFixed(1)}k</td>
                           </tr>
                         ))}
                       </tbody>
-                      <tfoot className="bg-slate-950 text-slate-200 font-bold border-t border-slate-800 text-[10px]">
+                      <tfoot className="bg-[#0E1625] text-[#E8EEF7] font-bold border-t border-[#26364B] text-[10px]">
                         <tr>
                           <td className="py-1.5 px-2.5">TOTAL / DISTRICT</td>
-                          <td className="py-1.5 px-1 text-right text-rose-300">{sectorList.reduce((acc, s) => acc + s.submergedStructures, 0)}</td>
+                          <td className="py-1.5 px-1 text-right text-[#F06472]">{sectorList.reduce((acc, s) => acc + s.submergedStructures, 0)}</td>
                           <td className="py-1.5 px-1 text-right">{sectorList.reduce((acc, s) => acc + s.roadCutKm, 0).toFixed(1)}</td>
                           <td className="py-1.5 px-1 text-right">{sectorList.reduce((acc, s) => acc + s.bridgesDamaged, 0)}</td>
-                          <td className="py-1.5 px-2 text-right text-amber-300">{(sectorList.reduce((acc, s) => acc + s.populationCutOff, 0) / 1000).toFixed(0)}k</td>
+                          <td className="py-1.5 px-2 text-right text-[#F0B44D]">{(sectorList.reduce((acc, s) => acc + s.populationCutOff, 0) / 1000).toFixed(0)}k</td>
                         </tr>
                       </tfoot>
                     </table>
@@ -891,10 +813,10 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                     setWorkspaceMode('response');
                     onSelectChapter('protect');
                   }}
-                  className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-cyan-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white font-extrabold text-xs transition-all flex items-center justify-center gap-2 shadow-xl shadow-cyan-950/60 cursor-pointer"
+                  className="w-full h-10 px-4 rounded-lg bg-[#13B8D5] hover:bg-[#11A3BE] text-[#080D16] font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
                 >
-                  <Zap className="w-4 h-4 text-cyan-200 animate-pulse" />
-                  <span>⚡ Coordinate Response for this Incident &rarr;</span>
+                  <Zap className="w-4 h-4" />
+                  <span>Coordinate Response for this Incident &rarr;</span>
                 </button>
               </div>
             )}
@@ -902,21 +824,21 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
             {/* CHAPTER 1: PREVENT */}
             {workspaceMode === 'response' && activeChapter === 'prevent' && (
               <div className="space-y-4 animate-in fade-in">
-                <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-3">
+                <div className="p-3.5 rounded-lg bg-[#121D2D] border border-[#26364B] space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-white">Cut-Edge Percolation Screening</h3>
-                    <span className="text-[10px] font-mono text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800/60 font-semibold">
+                    <h3 className="text-sm font-semibold text-[#E8EEF7]">Cut-Edge Percolation Screening</h3>
+                    <span className="text-[10px] font-mono text-[#13B8D5] bg-[#182437] px-2 py-0.5 rounded border border-[#26364B] font-semibold">
                       183 Roads Screened
                     </span>
                   </div>
-                  <p className="text-xs text-slate-300 leading-relaxed font-sans">
+                  <p className="text-xs text-[#9AAAC0] leading-relaxed font-sans">
                     Graph criticality analysis identifies {currentTheater.chokePoints.length} single-point-of-failure
                     corridors whose embankment washout disconnects rural population clusters.
                   </p>
 
                   {/* Corridor Selector */}
                   <div className="space-y-2 pt-1">
-                    <span className="text-[11px] font-semibold text-slate-400 block">
+                    <span className="text-[11px] font-semibold text-[#74859D] block">
                       Inspect Vulnerable Choke Points:
                     </span>
                     <div className="space-y-1.5">
@@ -925,19 +847,19 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                           key={cp.id}
                           type="button"
                           onClick={() => onSelectChokeIdx(idx)}
-                          className={`w-full p-2.5 rounded-xl border text-left text-xs transition-all flex items-center justify-between cursor-pointer ${
+                          className={`w-full p-2.5 rounded-lg border text-left text-xs transition-all flex items-center justify-between cursor-pointer ${
                             selectedChokeIdx === idx
-                              ? 'bg-slate-900 border-cyan-500/80 text-white shadow-md'
-                              : 'bg-slate-950/50 border-slate-800 text-slate-300 hover:bg-slate-900'
+                              ? 'bg-[#182437] border-[#13B8D5] text-[#E8EEF7] shadow-sm'
+                              : 'bg-[#121D2D] border-[#26364B] text-[#9AAAC0] hover:bg-[#182437]'
                           }`}
                         >
                           <div>
-                            <strong className="block font-semibold">{cp.road_name}</strong>
-                            <span className="text-[10px] text-slate-400">
+                            <strong className="block font-semibold text-[#E8EEF7]">{cp.road_name}</strong>
+                            <span className="text-[10px] text-[#74859D]">
                               {cp.trapped_villages_count} habitations • {cp.exposed_meters}m breach gap
                             </span>
                           </div>
-                          <span className="text-xs font-mono font-bold text-rose-400">
+                          <span className="text-xs font-mono font-bold text-[#F06472]">
                             +{cp.detour_travel_mins || Math.round(cp.detour_km * 2.5)}m delay
                           </span>
                         </button>
@@ -946,13 +868,13 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                   </div>
 
                   {/* Hospital Candidates Ranking Card (P1 Requirement) */}
-                  <div className="pt-2 border-t border-slate-800 space-y-2">
+                  <div className="pt-2 border-t border-[#1E2B3D] space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-slate-300 uppercase font-mono flex items-center gap-1.5">
-                        <Building2 className="w-3.5 h-3.5 text-cyan-400" />
+                      <span className="text-[11px] font-semibold text-[#E8EEF7] uppercase font-mono flex items-center gap-1.5">
+                        <Building2 className="w-3.5 h-3.5 text-[#13B8D5]" />
                         <span>Regional Hospital Audit &amp; Selection</span>
                       </span>
-                      <span className="text-[9px] font-mono text-slate-400">OSM &amp; NHM Sourced</span>
+                      <span className="text-[9px] font-mono text-[#74859D]">OSM &amp; NHM Sourced</span>
                     </div>
 
                     <div className="space-y-2 text-xs">
@@ -964,21 +886,21 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                         return (
                           <div
                             key={hosp.id}
-                            className={`p-2.5 rounded-xl border ${
+                            className={`p-2.5 rounded-lg border ${
                               isValley
-                                ? 'bg-rose-950/30 border-rose-800/60'
+                                ? 'bg-[#F06472]/10 border-[#F06472]/30'
                                 : isSmch
-                                ? 'bg-cyan-950/40 border-cyan-800/60'
+                                ? 'bg-[#13B8D5]/10 border-[#13B8D5]/30'
                                 : isCivil
-                                ? 'bg-emerald-950/30 border-emerald-800/60'
-                                : 'bg-slate-950/60 border-slate-800'
+                                ? 'bg-[#22C58B]/10 border-[#22C58B]/30'
+                                : 'bg-[#121D2D] border-[#26364B]'
                             }`}
                           >
                             <div className="flex items-center justify-between">
-                              <strong className="text-white font-semibold flex items-center gap-1.5">
+                              <strong className="text-[#E8EEF7] font-semibold flex items-center gap-1.5">
                                 <span>{hosp.name}</span>
                                 {isCivil && (
-                                  <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-slate-800 text-slate-300">
+                                  <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-[#182437] text-[#9AAAC0] border border-[#26364B]">
                                     OSM: node/441289102
                                   </span>
                                 )}
@@ -986,33 +908,33 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                               <span
                                 className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
                                   isValley
-                                    ? 'bg-rose-950 text-rose-300 border border-rose-700'
-                                    : 'bg-emerald-950 text-emerald-300 border border-emerald-700'
+                                    ? 'bg-[#F06472]/15 text-[#F06472] border border-[#F06472]/30'
+                                    : 'bg-[#22C58B]/15 text-[#22C58B] border border-[#22C58B]/30'
                                 }`}
                               >
                                 {isValley ? 'EXCLUDED / SATURATED' : `${hosp.availableBeds} Avail Beds`}
                               </span>
                             </div>
 
-                            <div className="grid grid-cols-3 gap-1.5 text-[10px] font-mono text-slate-400 mt-1.5">
+                            <div className="grid grid-cols-3 gap-1.5 text-[10px] font-mono text-[#9AAAC0] mt-1.5">
                               <div>
-                                <span className="block text-slate-500">Total Beds:</span>
-                                <strong className="text-slate-200">{hosp.beds || hosp.totalBeds} ({hosp.icuBeds} ICU)</strong>
+                                <span className="block text-[#74859D]">Total Beds:</span>
+                                <strong className="text-[#E8EEF7]">{hosp.beds || hosp.totalBeds} ({hosp.icuBeds} ICU)</strong>
                               </div>
                               <div>
-                                <span className="block text-slate-500">Direct Route:</span>
-                                <strong className="text-slate-200">{hosp.directDistanceKm || 14.2} km ({hosp.directMins || 18}m)</strong>
+                                <span className="block text-[#74859D]">Direct Route:</span>
+                                <strong className="text-[#E8EEF7]">{hosp.directDistanceKm || 14.2} km ({hosp.directMins || 18}m)</strong>
                               </div>
                               <div>
-                                <span className="block text-slate-500">Detour Route:</span>
-                                <strong className={isValley ? 'text-rose-400' : 'text-amber-400'}>
+                                <span className="block text-[#74859D]">Detour Route:</span>
+                                <strong className={isValley ? 'text-[#F06472]' : 'text-[#F0B44D]'}>
                                   {hosp.detourDistanceKm || 24.5} km ({hosp.detourMins || 65}m)
                                 </strong>
                               </div>
                             </div>
 
-                            <p className="text-[11px] text-slate-300 mt-1.5 font-sans leading-snug">
-                              <span className="text-slate-400 font-semibold">Rationale: </span>
+                            <p className="text-[11px] text-[#9AAAC0] mt-1.5 font-sans leading-snug">
+                              <span className="text-[#74859D] font-semibold">Rationale: </span>
                               {hosp.selectionReason ||
                                 (isValley
                                   ? 'Baseline bed capacity exhausted (0 available beds). Diverting ambulances here triggers triage collapse.'
@@ -1029,9 +951,9 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                   <button
                     type="button"
                     onClick={() => onSelectChapter('predict')}
-                    className="w-full py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs transition-colors flex items-center justify-center gap-2 shadow-lg cursor-pointer mt-2"
+                    className="w-full h-9 rounded-lg bg-[#13B8D5] hover:bg-[#11A3BE] text-[#080D16] font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer mt-2"
                   >
-                    <span>Proceed to Predict (Hazard Analysis)</span>
+                    <span>Proceed to Predict (Breach Dynamics)</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -1041,80 +963,80 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
             {/* CHAPTER 2: PREDICT */}
             {workspaceMode === 'response' && activeChapter === 'predict' && (
               <div className="space-y-4 animate-in fade-in">
-                <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-3">
+                <div className="p-3.5 rounded-lg bg-[#121D2D] border border-[#26364B] space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-white">Live Hydrological &amp; Weather Evidence</h3>
-                    <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/60 font-semibold">
+                    <h3 className="text-sm font-semibold text-[#E8EEF7]">Live Hydrological &amp; Weather Evidence</h3>
+                    <span className="text-[10px] font-mono text-[#22C58B] bg-[#22C58B]/10 px-2 py-0.5 rounded border border-[#22C58B]/30 font-semibold">
                       Open-Meteo Verified
                     </span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                    <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
-                      <span className="text-slate-400 text-[10px] block">10m Wind Velocity</span>
-                      <strong className="text-white text-sm">
+                    <div className="p-2.5 rounded-lg bg-[#182437] border border-[#26364B]">
+                      <span className="text-[#9AAAC0] text-[10px] block">10m Wind Velocity</span>
+                      <strong className="text-[#E8EEF7] text-sm">
                         {isSimulatedHighWind ? '52.4' : ecosystemState.weather.wind_speed_10m.toFixed(1)} km/h
                       </strong>
-                      <span className="text-[9px] text-slate-500 block">
-                        {ecosystemState.weather.isDroneViable ? '✅ Below 45 km/h limit' : '🚫 Above 45 km/h limit'}
+                      <span className="text-[9px] text-[#74859D] block">
+                        {ecosystemState.weather.isDroneViable ? 'Below 45 km/h threshold' : 'Above 45 km/h threshold'}
                       </span>
                     </div>
 
-                    <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
-                      <span className="text-slate-400 text-[10px] block">River Discharge (Q)</span>
-                      <strong className="text-white text-sm">
+                    <div className="p-2.5 rounded-lg bg-[#182437] border border-[#26364B]">
+                      <span className="text-[#9AAAC0] text-[10px] block">River Discharge (Q)</span>
+                      <strong className="text-[#E8EEF7] text-sm">
                         {ecosystemState.hydrology.dischargeM3s} m³/s
                       </strong>
-                      <span className="text-[9px] text-slate-500 block">
+                      <span className="text-[9px] text-[#74859D] block">
                         Copernicus GloFAS
                       </span>
                     </div>
                   </div>
 
                   {/* Active Calibrated Sensor State Card */}
-                  <div className="p-3 rounded-lg bg-slate-900 border border-emerald-500/40 flex items-start gap-2.5 text-xs shadow-sm">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <div className="p-3 rounded-lg bg-[#182437] border border-[#22C58B]/30 flex items-start gap-2.5 text-xs shadow-sm">
+                    <CheckCircle2 className="w-4 h-4 text-[#22C58B] shrink-0 mt-0.5" />
                     <div className="space-y-1 w-full">
                       <div className="flex items-center justify-between">
-                        <strong className="text-white">
+                        <strong className="text-[#E8EEF7]">
                           {currentTheater.id === 'nepal' ? 'DHM Roshi Station #450 Stream:' : 'CWC Station #AS-18 Telemetric Stream:'}
                         </strong>
-                        <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-300 border border-emerald-700 font-bold">
+                        <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-[#22C58B]/10 text-[#22C58B] border border-[#22C58B]/30 font-bold">
                           ACTIVE &bull; CALIBRATED
                         </span>
                       </div>
-                      <div className="text-[11px] font-mono text-emerald-300 font-semibold">
+                      <div className="text-[11px] font-mono text-[#22C58B] font-semibold">
                         {currentTheater.id === 'nepal'
                           ? 'DHM Telemetric Stream • Inflow Calibrated: 2,420 m³/s'
                           : 'CWC Telemetric Stream • Inflow Calibrated: 3,850 m³/s'}
                       </div>
-                      <div className="text-[10px] text-slate-300 font-sans flex items-center justify-between pt-0.5">
-                        <span>River Water Level: <strong className="text-white font-mono">{currentTheater.id === 'nepal' ? '14.12m' : '19.83m'}</strong></span>
-                        <span className="text-amber-400 font-semibold">{currentTheater.id === 'nepal' ? '+0.22m over Danger Mark (13.90m)' : '+0.03m over Danger Mark (19.80m)'}</span>
+                      <div className="text-[10px] text-[#9AAAC0] font-sans flex items-center justify-between pt-0.5">
+                        <span>River Water Level: <strong className="text-[#E8EEF7] font-mono">{currentTheater.id === 'nepal' ? '14.12m' : '19.83m'}</strong></span>
+                        <span className="text-[#F0B44D] font-semibold">{currentTheater.id === 'nepal' ? '+0.22m over Danger Mark (13.90m)' : '+0.03m over Danger Mark (19.80m)'}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Pretrained Hydrology Model Active Card */}
-                  <div className="p-3 rounded-lg bg-slate-900 border border-emerald-500/40 space-y-2.5 text-xs shadow-sm">
+                  <div className="p-3 rounded-lg bg-[#182437] border border-[#22C58B]/30 space-y-2.5 text-xs shadow-sm">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
-                        <Cpu className="w-3.5 h-3.5 text-cyan-400" />
-                        <strong className="text-white font-semibold">Google Research OpenHydromet LSTM &bull; Active</strong>
+                        <Cpu className="w-3.5 h-3.5 text-[#13B8D5]" />
+                        <strong className="text-[#E8EEF7] font-semibold">Google Research OpenHydromet LSTM &bull; Active</strong>
                       </div>
-                      <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-300 border border-emerald-700 font-bold">
+                      <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-[#22C58B]/10 text-[#22C58B] border border-[#22C58B]/30 font-bold">
                         ACTIVE
                       </span>
                     </div>
 
-                    <div className="text-[11px] space-y-1 font-mono text-slate-400">
-                      <div>Architecture: <span className="text-slate-200">Bidirectional LSTM + Catchment Topography Physical Routing Tensor</span></div>
-                      <div>Calibrated Peak Inflow: <span className="text-emerald-300 font-bold">{currentTheater.id === 'nepal' ? '2,420 m³/s' : '3,850 m³/s'}</span> &bull; Lead Time: <span className="text-cyan-300 font-bold">{currentTheater.id === 'nepal' ? '24h' : '48h'}</span></div>
-                      <div>License: <span className="text-slate-300">Apache-2.0</span> &bull; Paper: <span className="text-cyan-400">Nevo et al., Nature (2022)</span></div>
+                    <div className="text-[11px] space-y-1 font-mono text-[#9AAAC0]">
+                      <div>Architecture: <span className="text-[#E8EEF7]">Bidirectional LSTM + Catchment Topography Physical Routing Tensor</span></div>
+                      <div>Calibrated Peak Inflow: <span className="text-[#22C58B] font-bold">{currentTheater.id === 'nepal' ? '2,420 m³/s' : '3,850 m³/s'}</span> &bull; Lead Time: <span className="text-[#13B8D5] font-bold">{currentTheater.id === 'nepal' ? '24h' : '48h'}</span></div>
+                      <div>License: <span className="text-[#E8EEF7]">Apache-2.0</span> &bull; Paper: <span className="text-[#13B8D5]">Nevo et al., Nature (2022)</span></div>
                     </div>
 
-                    <div className="p-2 rounded bg-emerald-950/30 border border-emerald-800/40 text-[10px] font-mono text-emerald-200 space-y-0.5">
-                      <div className="font-bold uppercase tracking-wider text-emerald-300">Hydrological Validation:</div>
+                    <div className="p-2 rounded bg-[#22C58B]/10 border border-[#22C58B]/20 text-[10px] font-mono text-[#22C58B] space-y-0.5">
+                      <div className="font-bold uppercase tracking-wider text-[#22C58B]">Hydrological Validation:</div>
                       <div>Stream Calibration: {currentTheater.id === 'nepal' ? 'Nepal DHM Roshi Station #450 Telemetry' : 'CWC Station #AS-18 Barak River Gauge'}</div>
                       <div>Confidence Interval: {currentTheater.id === 'nepal' ? '[2,100 – 2,750] m³/s (90% CI)' : '[3,400 – 4,200] m³/s (90% CI)'}</div>
                     </div>
@@ -1126,35 +1048,35 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                       <button
                         type="button"
                         onClick={onToggleHighWind}
-                        className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                        className={`flex-1 h-9 px-3 rounded-lg text-xs font-semibold transition-colors border cursor-pointer ${
                           isSimulatedHighWind
-                            ? 'bg-rose-600 text-white border-rose-500 shadow-md'
-                            : 'bg-slate-900 text-slate-300 hover:text-white border-slate-700'
+                            ? 'bg-[#F06472]/15 text-[#F06472] border-[#F06472]/40'
+                            : 'bg-[#182437] text-[#E8EEF7] hover:bg-[#26364B] border-[#26364B]'
                         }`}
                       >
-                        {isSimulatedHighWind ? '🌪️ High Wind Active (52 km/h)' : '💨 Test Gale Wind (>45 km/h)'}
+                        {isSimulatedHighWind ? 'High Wind Active (52 km/h)' : 'Test Gale Wind (>45 km/h)'}
                       </button>
 
                       <button
                         type="button"
                         onClick={onOpenEcosystemDrawer}
-                        className="py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-cyan-800/80 text-cyan-300 text-xs font-semibold cursor-pointer"
+                        className="h-9 px-3 rounded-lg bg-[#182437] hover:bg-[#26364B] border border-[#26364B] text-[#13B8D5] text-xs font-semibold cursor-pointer"
                       >
                         Ecosystem Bus
                       </button>
                     </div>
 
                     {/* Wind Simulation Button Effect Explanation (Section 5 Requirement) */}
-                    <div className="p-2.5 rounded-lg bg-slate-900/90 border border-slate-800 text-[11px] font-sans space-y-1">
-                      <div className="flex items-center gap-1.5 font-bold text-slate-300 font-mono text-[10px] uppercase">
-                        <Info className="w-3 h-3 text-cyan-400" />
+                    <div className="p-2.5 rounded-lg bg-[#182437] border border-[#26364B] text-[11px] font-sans space-y-1">
+                      <div className="flex items-center gap-1.5 font-semibold text-[#E8EEF7] font-mono text-[10px] uppercase">
+                        <Info className="w-3 h-3 text-[#13B8D5]" />
                         <span>Atmospheric Action Impact</span>
                       </div>
-                      <div className="grid grid-cols-2 gap-1 text-[10px] font-mono text-slate-400">
-                        <div>What Changes: <span className="text-slate-200">Sets wind to 52.4 km/h gust</span></div>
-                        <div>Data Source: <span className="text-slate-200">Open-Meteo GFS Weather Model</span></div>
-                        <div>Evidence Class: <span className="text-cyan-300">SIMULATED STRESS TEST</span></div>
-                        <div>Airframe Status: <span className={isSimulatedHighWind ? 'text-rose-400 font-bold' : 'text-emerald-400 font-bold'}>{isSimulatedHighWind ? '🚫 UAV Drones Grounded' : '✅ Drones Operational'}</span></div>
+                      <div className="grid grid-cols-2 gap-1 text-[10px] font-mono text-[#9AAAC0]">
+                        <div>What Changes: <span className="text-[#E8EEF7]">Sets wind to 52.4 km/h gust</span></div>
+                        <div>Data Source: <span className="text-[#E8EEF7]">Open-Meteo GFS Weather Model</span></div>
+                        <div>Evidence Class: <span className="text-[#13B8D5]">SIMULATED STRESS TEST</span></div>
+                        <div>Airframe Status: <span className={isSimulatedHighWind ? 'text-[#F06472] font-semibold' : 'text-[#22C58B] font-semibold'}>{isSimulatedHighWind ? 'UAV Drones Grounded' : 'Drones Operational'}</span></div>
                       </div>
                     </div>
                   </div>
@@ -1162,7 +1084,7 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                   <button
                     type="button"
                     onClick={() => onSelectChapter('protect')}
-                    className="w-full py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs transition-colors flex items-center justify-center gap-2 shadow-lg cursor-pointer mt-1"
+                    className="w-full h-9 rounded-lg bg-[#13B8D5] hover:bg-[#11A3BE] text-[#080D16] font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer mt-1"
                   >
                     <span>Proceed to Protect (Assess Disruption)</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -1175,21 +1097,21 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
             {workspaceMode === 'response' && activeChapter === 'protect' && (
               <div className="space-y-4 animate-in fade-in">
                 {/* 1. Road Detour Visualization Card (Dynamic per Corridor & Theater) */}
-                <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-3">
+                <div className="p-3.5 rounded-lg bg-[#121D2D] border border-[#26364B] space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                      <GitBranch className="w-4 h-4 text-cyan-400" />
+                    <h3 className="text-sm font-semibold text-[#E8EEF7] flex items-center gap-2">
+                      <GitBranch className="w-4 h-4 text-[#13B8D5]" />
                       <span>{selectedChoke.road_name} Detour Assessment</span>
                     </h3>
                   </div>
 
                   {/* Corridor Selector Dropdown in Chapter 3 */}
-                  <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-slate-900 border border-slate-800">
-                    <span className="text-[11px] font-mono text-slate-400">Select Road:</span>
+                  <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-[#0E1625] border border-[#26364B]">
+                    <span className="text-[11px] font-mono text-[#74859D]">Select Road:</span>
                     <select
                       value={selectedChokeIdx}
                       onChange={(e) => onSelectChokeIdx(Number(e.target.value))}
-                      className="bg-slate-950 text-cyan-300 border border-slate-700 hover:border-cyan-500 rounded-lg px-2 py-1 text-xs font-semibold cursor-pointer focus:outline-none max-w-[240px] truncate"
+                      className="bg-[#080D16] text-[#13B8D5] border border-[#26364B] hover:border-[#13B8D5] rounded-lg px-2 py-1 text-xs font-semibold cursor-pointer focus:outline-none max-w-[240px] truncate"
                     >
                       {currentTheater.chokePoints.map((cp, idx) => (
                         <option key={cp.id} value={idx}>
@@ -1202,29 +1124,29 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                   {/* Side-by-Side Comparison */}
                   <div className="grid grid-cols-2 gap-2 text-xs font-mono">
                     {/* Direct Baseline */}
-                    <div className={`p-2.5 rounded-xl border ${isBreachTemporarilyReopened ? 'bg-emerald-950/40 border-emerald-600' : 'bg-slate-900 border-slate-800'}`}>
+                    <div className={`p-2.5 rounded-lg border ${isBreachTemporarilyReopened ? 'bg-[#22C58B]/10 border-[#22C58B]/40' : 'bg-[#182437] border-[#26364B]'}`}>
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] text-slate-400">Direct Baseline</span>
-                        <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${isBreachTemporarilyReopened ? 'bg-emerald-950 text-emerald-300 border border-emerald-700' : 'bg-rose-950 text-rose-300 border border-rose-700'}`}>
+                        <span className="text-[10px] text-[#74859D]">Direct Baseline</span>
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${isBreachTemporarilyReopened ? 'bg-[#22C58B]/20 text-[#22C58B] border-[#22C58B]/40' : 'bg-[#F06472]/20 text-[#F06472] border-[#F06472]/40'}`}>
                           {isBreachTemporarilyReopened ? 'RESTORED' : 'SEVERED'}
                         </span>
                       </div>
-                      <strong className="text-white text-sm block mt-1">{selectedChoke.baseline_km} km • {selectedChoke.baseline_travel_mins || 18} mins</strong>
-                      <span className="text-[10px] text-slate-400 block mt-0.5">
+                      <strong className="text-[#E8EEF7] text-sm block mt-1">{selectedChoke.baseline_km} km • {selectedChoke.baseline_travel_mins || 18} mins</strong>
+                      <span className="text-[10px] text-[#74859D] block mt-0.5">
                         {selectedChoke.exposed_meters}m breach gap across flood channel
                       </span>
                     </div>
 
                     {/* Flood Detour Bypass */}
-                    <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                    <div className="p-2.5 rounded-lg bg-[#182437] border border-[#26364B]">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] text-slate-400 truncate max-w-[100px]">{selectedChoke.road_name.split(' ')[0]} Bypass</span>
-                        <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-950 text-amber-300 border border-amber-700">
+                        <span className="text-[10px] text-[#74859D] truncate max-w-[100px]">{selectedChoke.road_name.split(' ')[0]} Bypass</span>
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#F0B44D]/20 text-[#F0B44D] border border-[#F0B44D]/40">
                           +{Math.max(15, (selectedChoke.detour_travel_mins || 65) - (selectedChoke.baseline_travel_mins || 18))}m DELAY
                         </span>
                       </div>
-                      <strong className="text-amber-400 text-sm block mt-1">{selectedChoke.detour_km} km • {selectedChoke.detour_travel_mins || 65} mins</strong>
-                      <span className="text-[10px] text-slate-400 block mt-0.5">
+                      <strong className="text-[#F0B44D] text-sm block mt-1">{selectedChoke.detour_km} km • {selectedChoke.detour_travel_mins || 65} mins</strong>
+                      <span className="text-[10px] text-[#74859D] block mt-0.5">
                         +{(selectedChoke.detour_km - selectedChoke.baseline_km).toFixed(1)} km detour bypass route
                       </span>
                     </div>
@@ -1232,7 +1154,7 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
 
                   {/* Route Display Toggles */}
                   <div className="space-y-1.5 pt-1">
-                    <span className="text-[10px] uppercase font-mono text-slate-400 block font-semibold">
+                    <span className="text-[10px] uppercase font-mono text-[#74859D] block font-semibold">
                       Map Route Layer Controls:
                     </span>
                     <div className="grid grid-cols-3 gap-1.5 text-xs font-mono">
@@ -1241,8 +1163,8 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                         onClick={() => onSetDetourRouteMode?.('both')}
                         className={`p-1.5 rounded-lg border text-center transition-all cursor-pointer ${
                           detourRouteMode === 'both'
-                            ? 'bg-cyan-950 border-cyan-500 text-cyan-200 font-bold'
-                            : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                            ? 'bg-[#13B8D5]/20 border-[#13B8D5] text-[#13B8D5] font-semibold'
+                            : 'bg-[#0E1625] border-[#26364B] text-[#9AAAC0] hover:text-[#E8EEF7]'
                         }`}
                       >
                         Both Routes
@@ -1252,8 +1174,8 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                         onClick={() => onSetDetourRouteMode?.('detour')}
                         className={`p-1.5 rounded-lg border text-center transition-all cursor-pointer ${
                           detourRouteMode === 'detour'
-                            ? 'bg-amber-950 border-amber-500 text-amber-200 font-bold'
-                            : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                            ? 'bg-[#F0B44D]/20 border-[#F0B44D] text-[#F0B44D] font-semibold'
+                            : 'bg-[#0E1625] border-[#26364B] text-[#9AAAC0] hover:text-[#E8EEF7]'
                         }`}
                       >
                         Detour Only
@@ -1263,8 +1185,8 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                         onClick={() => onSetDetourRouteMode?.('baseline')}
                         className={`p-1.5 rounded-lg border text-center transition-all cursor-pointer ${
                           detourRouteMode === 'baseline'
-                            ? 'bg-slate-800 border-slate-600 text-white font-bold'
-                            : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                            ? 'bg-[#182437] border-[#74859D] text-[#E8EEF7] font-semibold'
+                            : 'bg-[#0E1625] border-[#26364B] text-[#9AAAC0] hover:text-[#E8EEF7]'
                         }`}
                       >
                         Baseline Only
@@ -1273,13 +1195,13 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                   </div>
 
                   {/* Breach Closure / Culvert Toggle */}
-                  <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+                  <div className="p-2.5 rounded-lg bg-[#0E1625] border border-[#26364B] space-y-2">
                     {currentTheater.id === 'nepal' ? (
                       <>
                         <div className="flex items-center justify-between">
                           <div>
-                            <strong className="text-xs text-white block">Roshi Gorge Bridging Model</strong>
-                            <span className="text-[10px] text-slate-400">
+                            <strong className="text-xs text-[#E8EEF7] block font-semibold">Roshi Gorge Bridging Model</strong>
+                            <span className="text-[10px] text-[#74859D]">
                               Simulated bridge closure: BP Highway Km 48 (120m gorge washout)
                             </span>
                           </div>
@@ -1293,35 +1215,35 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                                 name: `${selectedChoke.road_name} (120m Gorge Washout)`,
                               });
                             }}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                               isBreachTemporarilyReopened
-                                ? 'bg-emerald-600 text-white shadow-md'
-                                : 'bg-slate-800 text-slate-300 hover:text-white border border-slate-700'
+                                ? 'bg-[#22C58B] hover:bg-[#1eb37d] text-[#080D16] shadow-sm'
+                                : 'bg-[#182437] text-[#E8EEF7] hover:bg-[#26364B] border border-[#26364B]'
                             }`}
                           >
-                            {isBreachTemporarilyReopened ? 'Bridged ✅' : 'Simulate Bridging'}
+                            {isBreachTemporarilyReopened ? 'Bridged ✓' : 'Simulate Bridging'}
                           </button>
                         </div>
 
                         {/* Precomputed metrics for Roshi Khola */}
-                        <div className="p-2 rounded-lg bg-slate-950/80 border border-slate-850 space-y-1 text-[11px] font-mono">
-                          <div className="flex items-center justify-between text-slate-300">
+                        <div className="p-2.5 rounded-lg bg-[#121D2D] border border-[#26364B] space-y-1.5 text-[11px] font-mono">
+                          <div className="flex items-center justify-between text-[#9AAAC0]">
                             <span>Breach Corridor:</span>
-                            <span className="text-amber-400 font-bold">BP Highway (NH08) Km 48 Roshi Gorge</span>
+                            <span className="text-[#F0B44D] font-semibold">BP Highway (NH08) Km 48 Roshi Gorge</span>
                           </div>
-                          <div className="flex items-center justify-between text-slate-300">
+                          <div className="flex items-center justify-between text-[#9AAAC0]">
                             <span>Isolated Hamlets Reconnected:</span>
-                            <span className="text-emerald-400 font-bold">18 Hamlets (16,300 residents)</span>
+                            <span className="text-[#22C58B] font-semibold">18 Hamlets (16,300 residents)</span>
                           </div>
-                          <div className="flex items-center justify-between text-slate-300">
+                          <div className="flex items-center justify-between text-[#9AAAC0]">
                             <span>Transit Achieved:</span>
-                            <span className="text-cyan-300 font-bold">28m Direct to Dhulikhel Hospital (vs 135m delay)</span>
+                            <span className="text-[#13B8D5] font-semibold">28m Direct to Dhulikhel Hospital (vs 135m delay)</span>
                           </div>
-                          <div className="pt-1 text-slate-300 text-[10px]">
-                            <span className="text-slate-400 block">Recommended Action:</span>
-                            <span className="text-slate-200">Rapid deployment of Nepal Army Class-40 120m modular bridge</span>
+                          <div className="pt-1 text-[#9AAAC0] text-[10px]">
+                            <span className="text-[#74859D] block">Recommended Action:</span>
+                            <span className="text-[#E8EEF7]">Rapid deployment of Nepal Army Class-40 120m modular bridge</span>
                           </div>
-                          <div className="p-1.5 mt-1 rounded bg-emerald-950/40 border border-emerald-800/50 text-[10px] text-emerald-300 font-sans leading-snug">
+                          <div className="p-2 mt-1 rounded bg-[#22C58B]/10 border border-[#22C58B]/30 text-[10px] text-[#22C58B] font-sans leading-snug">
                             ✓ <strong>Counterfactual Assessment:</strong> Demonstrates timely bridging preventing complete winter isolation of Roshi River basin.
                           </div>
                         </div>
@@ -1330,8 +1252,8 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                       <>
                         <div className="flex items-center justify-between">
                           <div>
-                            <strong className="text-xs text-white block">Temporary Culvert Simulation</strong>
-                            <span className="text-[10px] text-slate-400">
+                            <strong className="text-xs text-[#E8EEF7] block font-semibold">Temporary Culvert Simulation</strong>
+                            <span className="text-[10px] text-[#74859D]">
                               Precomputed cut edge: {topCutEdge.serving_settlement}
                             </span>
                           </div>
@@ -1346,37 +1268,37 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                                 name: `${topCutEdge.serving_settlement} (approximate: serving settlement, not bridge location)`,
                               });
                             }}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                               isBreachTemporarilyReopened
-                                ? 'bg-emerald-600 text-white shadow-md'
-                                : 'bg-slate-800 text-slate-300 hover:text-white border border-slate-700'
+                                ? 'bg-[#22C58B] hover:bg-[#1eb37d] text-[#080D16] shadow-sm'
+                                : 'bg-[#182437] text-[#E8EEF7] hover:bg-[#26364B] border border-[#26364B]'
                             }`}
                           >
-                            {isBreachTemporarilyReopened ? 'Simulated ✅' : 'Simulate Culvert'}
+                            {isBreachTemporarilyReopened ? 'Simulated ✓' : 'Simulate Culvert'}
                           </button>
                         </div>
 
                         {/* Precomputed metrics & honest disclaimer as mandated by Requirement 6 */}
-                        <div className="p-2 rounded-lg bg-slate-950/80 border border-slate-850 space-y-1 text-[11px] font-mono">
-                          <div className="flex items-center justify-between text-slate-300">
+                        <div className="p-2.5 rounded-lg bg-[#121D2D] border border-[#26364B] space-y-1.5 text-[11px] font-mono">
+                          <div className="flex items-center justify-between text-[#9AAAC0]">
                             <span>Cut Edge:</span>
-                            <span className="text-amber-400 font-bold">{topCutEdge.cut_edge_id}</span>
+                            <span className="text-[#F0B44D] font-semibold">{topCutEdge.cut_edge_id}</span>
                           </div>
-                          <div className="flex items-center justify-between text-slate-300">
+                          <div className="flex items-center justify-between text-[#9AAAC0]">
                             <span>Serving Settlement:</span>
-                            <span className="text-cyan-300 font-bold">{topCutEdge.serving_settlement}</span>
+                            <span className="text-[#13B8D5] font-semibold">{topCutEdge.serving_settlement}</span>
                           </div>
-                          <div className="flex items-center justify-between text-slate-300">
+                          <div className="flex items-center justify-between text-[#9AAAC0]">
                             <span>Estimated Settlements Reconnected:</span>
-                            <span className="text-emerald-400 font-bold">
+                            <span className="text-[#22C58B] font-semibold">
                               {topCutEdge.isolated_settlements_count} (precomputed)
                             </span>
                           </div>
-                          <div className="pt-1 text-slate-300 text-[10px]">
-                            <span className="text-slate-400 block">Recommended Action:</span>
-                            <span className="text-slate-200">{topCutEdge.recommended_action}</span>
+                          <div className="pt-1 text-[#9AAAC0] text-[10px]">
+                            <span className="text-[#74859D] block">Recommended Action:</span>
+                            <span className="text-[#E8EEF7]">{topCutEdge.recommended_action}</span>
                           </div>
-                          <div className="p-1.5 mt-1 rounded bg-amber-950/40 border border-amber-800/50 text-[10px] text-amber-300 font-sans leading-snug">
+                          <div className="p-2 mt-1 rounded bg-[#F0B44D]/10 border border-[#F0B44D]/30 text-[10px] text-[#F0B44D] font-sans leading-snug">
                             ⚠️ <strong>Graph Limitation:</strong> Full re-route calculation requires the road graph, which is not loaded.
                           </div>
                         </div>
@@ -1384,7 +1306,7 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                     )}
                   </div>
 
-                  {/* Road Condition vs Route Accessibility Separation Disclosure (Section 6 Requirement) */}
+                  {/* Road Condition vs Route Accessibility Separation Disclosure */}
                   {(() => {
                     const routeEval = roadConditionService.evaluateRouteAccessibility({
                       origin: { name: `${selectedChoke.road_name.split(' (')[0]} North Roadhead`, coordinates: [selectedChoke.lat, selectedChoke.lon] },
@@ -1400,43 +1322,43 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                     });
 
                     return (
-                      <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-2 text-xs">
+                      <div className="p-3 rounded-lg bg-[#0E1625] border border-[#26364B] space-y-2 text-xs">
                         <div className="flex items-center justify-between">
-                          <strong className="text-white flex items-center gap-1.5 font-bold">
-                            <Shield className="w-3.5 h-3.5 text-cyan-400" />
+                          <strong className="text-[#E8EEF7] flex items-center gap-1.5 font-semibold">
+                            <Shield className="w-3.5 h-3.5 text-[#13B8D5]" />
                             <span>Road Condition vs. Route Accessibility</span>
                           </strong>
-                          <span className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded border ${
+                          <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border ${
                             routeEval.validity === 'REAL_ROUTED'
-                              ? 'bg-emerald-950 text-emerald-300 border-emerald-700'
-                              : 'bg-rose-950 text-rose-300 border-rose-700'
+                              ? 'bg-[#22C58B]/20 text-[#22C58B] border-[#22C58B]/40'
+                              : 'bg-[#F06472]/20 text-[#F06472] border-[#F06472]/40'
                           }`}>
                             {routeEval.validity}
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2 text-[11px] font-mono text-slate-400">
+                        <div className="grid grid-cols-2 gap-2 text-[11px] font-mono text-[#9AAAC0]">
                           <div>
-                            <span className="text-slate-500 block">Segment Condition:</span>
-                            <span className={isBreachTemporarilyReopened ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
+                            <span className="text-[#74859D] block">Segment Condition:</span>
+                            <span className={isBreachTemporarilyReopened ? 'text-[#22C58B] font-semibold' : 'text-[#F06472] font-semibold'}>
                               {isBreachTemporarilyReopened ? 'TEMPORARY_RESTORED' : 'REPORTED_DESTROYED (80m)'}
                             </span>
                           </div>
                           <div>
-                            <span className="text-slate-500 block">Algorithmic Path:</span>
-                            <span className={routeEval.validity === 'REAL_ROUTED' ? 'text-emerald-300 font-bold' : 'text-rose-300 font-bold'}>
+                            <span className="text-[#74859D] block">Algorithmic Path:</span>
+                            <span className={routeEval.validity === 'REAL_ROUTED' ? 'text-[#22C58B] font-semibold' : 'text-[#F06472] font-semibold'}>
                               {routeEval.validity === 'REAL_ROUTED' ? `${routeEval.distanceKm} km (${routeEval.estimatedTravelMins}m)` : 'NO_ROUTE'}
                             </span>
                           </div>
                         </div>
 
                         {routeEval.conflictDetected ? (
-                          <div className="p-2 rounded bg-rose-950/40 border border-rose-800 text-[10px] text-rose-200">
+                          <div className="p-2 rounded bg-[#F06472]/10 border border-[#F06472]/30 text-[10px] text-[#F06472]">
                             <strong>⚠️ Safety Conflict: </strong>
                             {routeEval.conflictDetails}
                           </div>
                         ) : (
-                          <div className="p-2 rounded bg-cyan-950/30 border border-cyan-800/40 text-[10px] text-cyan-200">
+                          <div className="p-2 rounded bg-[#13B8D5]/10 border border-[#13B8D5]/30 text-[10px] text-[#13B8D5]">
                             <strong>Scientific Safeguard: </strong>
                             Detour calculation respects active breach closure. No simulated route traverses unbridged water.
                           </div>
@@ -1446,15 +1368,15 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                   })()}
                 </div>
 
-                {/* 2. Deterministic Ambulance Surge Balancing Card (P3 Requirement) */}
-                <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-3">
+                {/* 2. Deterministic Ambulance Surge Balancing Card */}
+                <div className="p-3.5 rounded-lg bg-[#121D2D] border border-[#26364B] space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                        <Activity className="w-4 h-4 text-emerald-400" />
+                      <h3 className="text-sm font-semibold text-[#E8EEF7] flex items-center gap-2">
+                        <Activity className="w-4 h-4 text-[#22C58B]" />
                         <span>Deterministic Ambulance Surge Balancing</span>
                       </h3>
-                      <span className="text-[10px] text-slate-400">
+                      <span className="text-[10px] text-[#74859D]">
                         Hard capacity limits • Zero negative beds • Hospital beds are assumed demo values
                       </span>
                     </div>
@@ -1473,106 +1395,106 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                           human_authorized: true,
                         });
                       }}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                         rerouteAmbulances
-                          ? 'bg-emerald-600 text-white shadow-md'
-                          : 'bg-cyan-600 hover:bg-cyan-500 text-white shadow'
+                          ? 'bg-[#22C58B] hover:bg-[#1eb37d] text-[#080D16] shadow-sm'
+                          : 'bg-[#13B8D5] hover:bg-[#11A3BE] text-[#080D16] shadow-sm'
                       }`}
                     >
-                      {rerouteAmbulances ? 'Active (Surge Balanced) ✅' : 'Engage Surge Balancing'}
+                      {rerouteAmbulances ? 'Active (Surge Balanced) ✓' : 'Engage Surge Balancing'}
                     </button>
                   </div>
 
-                  {/* Ambulance Surge Balancing Impact (Section 5 Requirement) */}
-                  <div className="p-2.5 rounded-lg bg-slate-900/90 border border-slate-800 text-[11px] font-sans space-y-1">
-                    <div className="flex items-center gap-1.5 font-bold text-slate-300 font-mono text-[10px] uppercase">
-                      <Info className="w-3 h-3 text-cyan-400" />
+                  {/* Ambulance Surge Balancing Impact */}
+                  <div className="p-2.5 rounded-lg bg-[#0E1625] border border-[#26364B] text-[11px] font-sans space-y-1">
+                    <div className="flex items-center gap-1.5 font-semibold text-[#9AAAC0] font-mono text-[10px] uppercase">
+                      <Info className="w-3 h-3 text-[#13B8D5]" />
                       <span>Healthcare Surge Impact Disclosure</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-1 text-[10px] font-mono text-slate-400">
-                      <div>What Changes: <span className="text-slate-200">Rebalances patients away from Valley to SMCH &amp; Civil (SIMULATED CLOSURE on OSM graph)</span></div>
-                      <div>Data Source: <span className="text-slate-200">NHM Cachar Bed Registry (assumed demo values)</span></div>
-                      <div>Evidence Class: <span className="text-cyan-300">SIMULATED CLOSURE on OSM graph</span></div>
-                      <div>Hospital Beds: <span className="text-amber-300 font-bold">assumed demo values</span></div>
+                    <div className="grid grid-cols-2 gap-1 text-[10px] font-mono text-[#74859D]">
+                      <div>What Changes: <span className="text-[#E8EEF7]">Rebalances patients away from Valley to SMCH &amp; Civil (SIMULATED CLOSURE on OSM graph)</span></div>
+                      <div>Data Source: <span className="text-[#E8EEF7]">NHM Cachar Bed Registry (assumed demo values)</span></div>
+                      <div>Evidence Class: <span className="text-[#13B8D5]">SIMULATED CLOSURE on OSM graph</span></div>
+                      <div>Hospital Beds: <span className="text-[#F0B44D] font-semibold">assumed demo values</span></div>
                     </div>
                   </div>
 
                   {/* Hospital Occupancy Before vs After Bars */}
                   <div className="space-y-2 pt-1 text-xs">
                     {/* Valley Hospital */}
-                    <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 space-y-1">
+                    <div className="p-2.5 rounded-lg bg-[#0E1625] border border-[#26364B] space-y-1">
                       <div className="flex items-center justify-between">
-                        <span className="font-semibold text-white">Valley Hospital (Primary Referral)</span>
-                        <span className={`font-mono text-[11px] font-bold ${rerouteAmbulances ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        <span className="font-semibold text-[#E8EEF7]">Valley Hospital (Primary Referral)</span>
+                        <span className={`font-mono text-[11px] font-bold ${rerouteAmbulances ? 'text-[#22C58B]' : 'text-[#F06472]'}`}>
                           {rerouteAmbulances ? '74% (260/350 Beds • Surge Balanced)' : '100% Saturated (350/350 Beds • 0 Avail)'}
                         </span>
                       </div>
-                      <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                      <div className="w-full bg-[#182437] h-2 rounded-full overflow-hidden">
                         <div
-                          className={`h-full transition-all duration-500 ${rerouteAmbulances ? 'bg-emerald-500 w-[74%]' : 'bg-rose-500 w-[100%]'}`}
+                          className={`h-full transition-all duration-500 ${rerouteAmbulances ? 'bg-[#22C58B] w-[74%]' : 'bg-[#F06472] w-[100%]'}`}
                         />
                       </div>
-                      <div className="text-[10px] text-slate-400 flex items-center justify-between">
+                      <div className="text-[10px] text-[#74859D] flex items-center justify-between">
                         <span>Baseline: 350 occupied</span>
                         <span>{rerouteAmbulances ? 'Ambulance diversion bypass active' : 'Overload risk!'}</span>
                       </div>
                     </div>
 
                     {/* SMCH Apex */}
-                    <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 space-y-1">
+                    <div className="p-2.5 rounded-lg bg-[#0E1625] border border-[#26364B] space-y-1">
                       <div className="flex items-center justify-between">
-                        <span className="font-semibold text-white">SMCH Apex Hospital</span>
-                        <span className="font-mono text-[11px] font-bold text-cyan-300">
+                        <span className="font-semibold text-[#E8EEF7]">SMCH Apex Hospital</span>
+                        <span className="font-mono text-[11px] font-bold text-[#13B8D5]">
                           {rerouteAmbulances ? '95% (807/850 Beds • +22 Pts)' : '92% (785/850 Beds • 65 Avail)'}
                         </span>
                       </div>
-                      <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                      <div className="w-full bg-[#182437] h-2 rounded-full overflow-hidden">
                         <div
-                          className={`h-full transition-all duration-500 ${rerouteAmbulances ? 'bg-cyan-500 w-[95%]' : 'bg-cyan-600 w-[92%]'}`}
+                          className={`h-full transition-all duration-500 ${rerouteAmbulances ? 'bg-[#13B8D5] w-[95%]' : 'bg-[#13B8D5]/70 w-[92%]'}`}
                         />
                       </div>
-                      <div className="text-[10px] text-slate-400 flex items-center justify-between">
+                      <div className="text-[10px] text-[#74859D] flex items-center justify-between">
                         <span>120 ICU Beds available</span>
                         <span>Capacity safe: 43 open beds remain</span>
                       </div>
                     </div>
 
                     {/* S.M. Dev Civil Hospital */}
-                    <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 space-y-1">
+                    <div className="p-2.5 rounded-lg bg-[#0E1625] border border-[#26364B] space-y-1">
                       <div className="flex items-center justify-between">
-                        <span className="font-semibold text-white">S.M. Dev Civil Hospital</span>
-                        <span className="font-mono text-[11px] font-bold text-emerald-300">
+                        <span className="font-semibold text-[#E8EEF7]">S.M. Dev Civil Hospital</span>
+                        <span className="font-mono text-[11px] font-bold text-[#22C58B]">
                           {rerouteAmbulances ? '94% (188/200 Beds • +12 Pts)' : '88% (176/200 Beds • 24 Avail)'}
                         </span>
                       </div>
-                      <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                      <div className="w-full bg-[#182437] h-2 rounded-full overflow-hidden">
                         <div
-                          className={`h-full transition-all duration-500 ${rerouteAmbulances ? 'bg-emerald-500 w-[94%]' : 'bg-emerald-600 w-[88%]'}`}
+                          className={`h-full transition-all duration-500 ${rerouteAmbulances ? 'bg-[#22C58B] w-[94%]' : 'bg-[#22C58B]/70 w-[88%]'}`}
                         />
                       </div>
-                      <div className="text-[10px] text-slate-400 flex items-center justify-between">
+                      <div className="text-[10px] text-[#74859D] flex items-center justify-between">
                         <span>General surgical stabilization</span>
                         <span>Capacity safe: 12 open beds remain</span>
                       </div>
                     </div>
 
                     {/* Nightingale Hospital */}
-                    <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 space-y-1">
+                    <div className="p-2.5 rounded-lg bg-[#0E1625] border border-[#26364B] space-y-1">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-semibold text-white">Nightingale Hospital & Trauma</span>
-                          <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-950 text-amber-300 border border-amber-700 font-bold">
+                          <span className="font-semibold text-[#E8EEF7]">Nightingale Hospital & Trauma</span>
+                          <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#F0B44D]/20 text-[#F0B44D] border border-[#F0B44D]/40 font-bold">
                             4x4 Access Only
                           </span>
                         </div>
-                        <span className="font-mono text-[11px] font-bold text-amber-300">
+                        <span className="font-mono text-[11px] font-bold text-[#F0B44D]">
                           92% (110/120 Beds • 10 Avail)
                         </span>
                       </div>
-                      <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                        <div className="h-full bg-amber-500 w-[92%]" />
+                      <div className="w-full bg-[#182437] h-2 rounded-full overflow-hidden">
+                        <div className="h-full bg-[#F0B44D] w-[92%]" />
                       </div>
-                      <div className="text-[10px] text-slate-400 flex items-center justify-between">
+                      <div className="text-[10px] text-[#74859D] flex items-center justify-between">
                         <span>Approach waterlogged; restricted to high-clearance</span>
                         <span>Capacity: 10 reserved triage beds</span>
                       </div>
@@ -1582,23 +1504,23 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                   {/* Vehicle Assignment Table (when engaged) */}
                   {rerouteAmbulances && (
                     <div className="space-y-1.5 pt-1">
-                      <span className="text-[10px] uppercase font-mono text-slate-400 block font-semibold">
+                      <span className="text-[10px] uppercase font-mono text-[#74859D] block font-semibold">
                         Simulated Demonstration Fleet Assignments:
                       </span>
                       <div className="space-y-1 text-xs font-mono">
                         {surgeAllocation.assignments.map((asgn) => (
                           <div
                             key={asgn.ambulanceId}
-                            className="p-2 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-between"
+                            className="p-2 rounded-lg bg-[#0E1625] border border-[#26364B] flex items-center justify-between"
                           >
                             <div className="flex items-center gap-2">
-                              <span className="w-2 h-2 rounded-full bg-cyan-400" />
-                              <strong className="text-white">{asgn.ambulanceId}</strong>
-                              <span className="text-[11px] text-slate-400">({asgn.callsign.split(' ')[0]})</span>
+                              <span className="w-2 h-2 rounded-full bg-[#13B8D5]" />
+                              <strong className="text-[#E8EEF7]">{asgn.ambulanceId}</strong>
+                              <span className="text-[11px] text-[#74859D]">({asgn.callsign.split(' ')[0]})</span>
                             </div>
                             <div className="text-right">
-                              <span className="text-emerald-400 font-bold">{asgn.patientsCarried} Pts</span>
-                              <span className="text-[10px] text-slate-400 block">→ {asgn.destHospitalName.split(' ')[0]} ({asgn.estimatedTransitMins}m)</span>
+                              <span className="text-[#22C58B] font-bold">{asgn.patientsCarried} Pts</span>
+                              <span className="text-[10px] text-[#74859D] block">→ {asgn.destHospitalName.split(' ')[0]} ({asgn.estimatedTransitMins}m)</span>
                             </div>
                           </div>
                         ))}
@@ -1609,7 +1531,7 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                   <button
                     type="button"
                     onClick={() => onSelectChapter('respond')}
-                    className="w-full py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs transition-colors flex items-center justify-center gap-2 shadow-lg cursor-pointer mt-2"
+                    className="w-full h-9 rounded-lg bg-[#13B8D5] hover:bg-[#11A3BE] text-[#080D16] font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer mt-2"
                   >
                     <span>Proceed to Respond (Resource Allocation)</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -1621,13 +1543,13 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
             {/* CHAPTER 4: RESPOND */}
             {workspaceMode === 'response' && activeChapter === 'respond' && (
               <div className="space-y-4 animate-in fade-in">
-                <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-3">
+                <div className="p-3.5 rounded-lg bg-[#121D2D] border border-[#26364B] space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-white">4-Tool Resource Allocation</h3>
+                    <h3 className="text-sm font-semibold text-[#E8EEF7]">4-Tool Resource Allocation</h3>
                     <button
                       type="button"
                       onClick={onResetInterventions}
-                      className="text-[11px] text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer"
+                      className="text-[11px] text-[#74859D] hover:text-[#E8EEF7] flex items-center gap-1 cursor-pointer transition-colors"
                     >
                       <RotateCcw className="w-3 h-3" />
                       <span>Reset</span>
@@ -1635,12 +1557,12 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                   </div>
 
                   {/* Strategic Corridor Navigation Dropdown in Chapter 4 */}
-                  <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-slate-900 border border-slate-800">
-                    <span className="text-[11px] font-mono text-slate-400">Target Road Corridor:</span>
+                  <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-[#0E1625] border border-[#26364B]">
+                    <span className="text-[11px] font-mono text-[#74859D]">Target Road Corridor:</span>
                     <select
                       value={selectedChokeIdx}
                       onChange={(e) => onSelectChokeIdx(Number(e.target.value))}
-                      className="bg-slate-950 text-cyan-300 border border-slate-700 hover:border-cyan-500 rounded-lg px-2.5 py-1 text-xs font-semibold cursor-pointer focus:outline-none max-w-[240px] truncate"
+                      className="bg-[#080D16] text-[#13B8D5] border border-[#26364B] hover:border-[#13B8D5] rounded-lg px-2.5 py-1 text-xs font-semibold cursor-pointer focus:outline-none max-w-[240px] truncate"
                       title="Select road corridor to deploy tactical intervention"
                     >
                       {currentTheater.chokePoints.map((cp, idx) => (
@@ -1654,29 +1576,28 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                   {/* 4 Multi-Modal Tactical Tools */}
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     {/* Tool 1: Bailey Bridge */}
-                    {/* Tool 1: Bailey Bridge */}
                     <button
                       type="button"
                       onClick={() => onSetIntervention(selectedChoke.id, activeTool === 'bridge' ? 'none' : 'bridge')}
-                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                      className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
                         activeTool === 'bridge'
-                          ? 'bg-amber-950/90 border-amber-500 text-amber-200 ring-2 ring-amber-500/40 shadow-lg'
-                          : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'
+                          ? 'bg-[#182437] border-[#F0B44D] text-[#E8EEF7] shadow-sm'
+                          : 'bg-[#0E1625] border-[#26364B] text-[#9AAAC0] hover:bg-[#182437]'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <BridgeIcon size={16} color={activeTool === 'bridge' ? '#f59e0b' : '#94a3b8'} />
-                        <span className="text-[10px] font-mono font-bold text-amber-400">₹1.8 Cr</span>
+                        <BridgeIcon size={16} color={activeTool === 'bridge' ? '#F0B44D' : '#74859D'} />
+                        <span className="text-[10px] font-mono font-bold text-[#F0B44D]">₹1.8 Cr</span>
                       </div>
-                      <strong className="block text-white font-semibold">Bailey Bridge</strong>
+                      <strong className="block text-[#E8EEF7] font-semibold">Bailey Bridge</strong>
                       <div className="mt-1 space-y-0.5 text-[10px] font-mono">
-                        <span className="text-emerald-300 block font-bold">
+                        <span className="text-[#22C58B] block font-semibold">
                           ✓ {currentTheater.id === 'nepal' ? '18 Hamlets' : '42 Villages'} Reconnected
                         </span>
-                        <span className="text-cyan-300 block">
+                        <span className="text-[#13B8D5] block">
                           👥 {currentTheater.id === 'nepal' ? '16,300' : '14,000'} Pop. Protected
                         </span>
-                        <span className="text-amber-300 block">
+                        <span className="text-[#F0B44D] block">
                           ⚡ {currentTheater.id === 'nepal' ? '28m (vs 135m)' : '18m (vs 65m)'} Transit
                         </span>
                       </div>
@@ -1686,25 +1607,25 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                     <button
                       type="button"
                       onClick={() => onSetIntervention(selectedChoke.id, activeTool === 'booth' ? 'none' : 'booth')}
-                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                      className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
                         activeTool === 'booth'
-                          ? 'bg-yellow-950/90 border-yellow-500 text-yellow-200 ring-2 ring-yellow-500/40 shadow-lg'
-                          : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'
+                          ? 'bg-[#182437] border-[#F0B44D] text-[#E8EEF7] shadow-sm'
+                          : 'bg-[#0E1625] border-[#26364B] text-[#9AAAC0] hover:bg-[#182437]'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <CampIcon size={16} color={activeTool === 'booth' ? '#facc15' : '#94a3b8'} />
-                        <span className="text-[10px] font-mono font-bold text-yellow-400">₹25 Lakh</span>
+                        <CampIcon size={16} color={activeTool === 'booth' ? '#F0B44D' : '#74859D'} />
+                        <span className="text-[10px] font-mono font-bold text-[#F0B44D]">₹25 Lakh</span>
                       </div>
-                      <strong className="block text-white font-semibold">Hospital Camp (MMU)</strong>
+                      <strong className="block text-[#E8EEF7] font-semibold">Hospital Camp (MMU)</strong>
                       <div className="mt-1 space-y-0.5 text-[10px] font-mono">
-                        <span className="text-emerald-300 block font-bold">
+                        <span className="text-[#22C58B] block font-semibold">
                           ✓ {currentTheater.id === 'nepal' ? '18 Hamlets' : '42 Villages'} Serviced
                         </span>
-                        <span className="text-cyan-300 block">
+                        <span className="text-[#13B8D5] block">
                           👥 {currentTheater.id === 'nepal' ? '16,300' : '14,000'} Pop. Protected
                         </span>
-                        <span className="text-amber-300 block">
+                        <span className="text-[#F0B44D] block">
                           ⚡ 0m On-Site (vs {currentTheater.id === 'nepal' ? '135m' : '65m'})
                         </span>
                       </div>
@@ -1715,27 +1636,27 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                       type="button"
                       disabled={!ecosystemState.weather.isDroneViable}
                       onClick={() => onSetIntervention(selectedChoke.id, activeTool === 'drone' ? 'none' : 'drone')}
-                      className={`p-2.5 rounded-xl border text-left transition-all ${
+                      className={`p-2.5 rounded-lg border text-left transition-all ${
                         !ecosystemState.weather.isDroneViable
-                          ? 'bg-slate-900/40 border-slate-800/50 text-slate-600 opacity-60 cursor-not-allowed'
+                          ? 'bg-[#0E1625]/40 border-[#26364B]/50 text-[#74859D] opacity-50 cursor-not-allowed'
                           : activeTool === 'drone'
-                          ? 'bg-purple-950/90 border-purple-500 text-purple-200 ring-2 ring-purple-500/40 shadow-lg cursor-pointer'
-                          : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800 cursor-pointer'
+                          ? 'bg-[#182437] border-[#13B8D5] text-[#E8EEF7] shadow-sm cursor-pointer'
+                          : 'bg-[#0E1625] border-[#26364B] text-[#9AAAC0] hover:bg-[#182437] cursor-pointer'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <DroneIcon size={16} color={activeTool === 'drone' ? '#c084fc' : '#94a3b8'} />
-                        <span className="text-[10px] font-mono font-bold text-purple-400">₹12 Lakh</span>
+                        <DroneIcon size={16} color={activeTool === 'drone' ? '#13B8D5' : '#74859D'} />
+                        <span className="text-[10px] font-mono font-bold text-[#13B8D5]">₹12 Lakh</span>
                       </div>
-                      <strong className="block text-white font-semibold">Heavy Med-Drone</strong>
+                      <strong className="block text-[#E8EEF7] font-semibold">Heavy Med-Drone</strong>
                       <div className="mt-1 space-y-0.5 text-[10px] font-mono">
-                        <span className="text-emerald-300 block font-bold">
+                        <span className="text-[#22C58B] block font-semibold">
                           ✓ {currentTheater.id === 'nepal' ? '5 Hamlets' : '6 Villages'} Reconnected
                         </span>
-                        <span className="text-cyan-300 block">
+                        <span className="text-[#13B8D5] block">
                           👥 {currentTheater.id === 'nepal' ? '4,100' : '3,200'} Pop. Protected
                         </span>
-                        <span className="text-amber-300 block">
+                        <span className="text-[#F0B44D] block">
                           ⚡ {currentTheater.id === 'nepal' ? '18m Aerial' : '12m Aerial'}
                         </span>
                       </div>
@@ -1746,27 +1667,27 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                       type="button"
                       disabled={!ecosystemState.hydrology.isBoatViable}
                       onClick={() => onSetIntervention(selectedChoke.id, activeTool === 'boat' ? 'none' : 'boat')}
-                      className={`p-2.5 rounded-xl border text-left transition-all ${
+                      className={`p-2.5 rounded-lg border text-left transition-all ${
                         !ecosystemState.hydrology.isBoatViable
-                          ? 'bg-slate-900/40 border-slate-800/50 text-slate-600 opacity-60 cursor-not-allowed'
+                          ? 'bg-[#0E1625]/40 border-[#26364B]/50 text-[#74859D] opacity-50 cursor-not-allowed'
                           : activeTool === 'boat'
-                          ? 'bg-blue-950/90 border-blue-500 text-blue-200 ring-2 ring-blue-500/40 shadow-lg cursor-pointer'
-                          : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800 cursor-pointer'
+                          ? 'bg-[#182437] border-[#13B8D5] text-[#E8EEF7] shadow-sm cursor-pointer'
+                          : 'bg-[#0E1625] border-[#26364B] text-[#9AAAC0] hover:bg-[#182437] cursor-pointer'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <BoatIcon size={16} color={activeTool === 'boat' ? '#38bdf8' : '#94a3b8'} />
-                        <span className="text-[10px] font-mono font-bold text-blue-400">₹6.5 Lakh</span>
+                        <BoatIcon size={16} color={activeTool === 'boat' ? '#13B8D5' : '#74859D'} />
+                        <span className="text-[10px] font-mono font-bold text-[#13B8D5]">₹6.5 Lakh</span>
                       </div>
-                      <strong className="block text-white font-semibold">NDRF Boat (40HP)</strong>
+                      <strong className="block text-[#E8EEF7] font-semibold">NDRF Boat (40HP)</strong>
                       <div className="mt-1 space-y-0.5 text-[10px] font-mono">
-                        <span className="text-emerald-300 block font-bold">
+                        <span className="text-[#22C58B] block font-semibold">
                           ✓ {currentTheater.id === 'nepal' ? '4 Hamlets' : '12 Villages'} Reconnected
                         </span>
-                        <span className="text-cyan-300 block">
+                        <span className="text-[#13B8D5] block">
                           👥 {currentTheater.id === 'nepal' ? '2,800' : '6,800'} Pop. Protected
                         </span>
-                        <span className="text-amber-300 block">
+                        <span className="text-[#F0B44D] block">
                           ⚡ {currentTheater.id === 'nepal' ? '35m Shuttle' : '25m Shuttle'}
                         </span>
                       </div>
@@ -1775,30 +1696,30 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
 
                   {/* Explicit Resource Allocation KPI Summary Banner */}
                   {activeTool !== 'none' && (
-                    <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-950/90 to-teal-950/90 border border-emerald-500/80 shadow-md space-y-2 text-xs font-mono text-white animate-in fade-in duration-200">
-                      <div className="flex items-center justify-between border-b border-emerald-800/60 pb-1.5">
-                        <span className="text-[11px] font-bold text-emerald-300 uppercase tracking-wide flex items-center gap-1.5">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    <div className="p-3 rounded-lg bg-[#0E1625] border border-[#22C58B]/50 shadow-sm space-y-2 text-xs font-mono text-[#E8EEF7] animate-in fade-in duration-200">
+                      <div className="flex items-center justify-between border-b border-[#26364B] pb-1.5">
+                        <span className="text-[11px] font-semibold text-[#22C58B] uppercase tracking-wide flex items-center gap-1.5">
+                          <CheckCircle2 className="w-4 h-4 text-[#22C58B]" />
                           Allocated: {activeTool === 'bridge' ? 'Class-40 Bailey Bridge' : activeTool === 'booth' ? 'Forward Hospital Camp (MMU)' : activeTool === 'drone' ? 'Heavy Medical Drone' : 'NDRF Motorized Boat'}
                         </span>
-                        <span className="px-2 py-0.5 rounded bg-emerald-900 text-emerald-300 font-bold text-[10px]">ACTIVE</span>
+                        <span className="px-2 py-0.5 rounded bg-[#22C58B]/20 text-[#22C58B] font-bold text-[10px]">ACTIVE</span>
                       </div>
                       <div className="grid grid-cols-3 gap-2 text-center">
-                        <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
-                          <span className="text-[9px] text-slate-400 block uppercase">Villages Reconnected</span>
-                          <span className="text-emerald-400 font-bold text-sm block">
+                        <div className="bg-[#121D2D] p-2 rounded-lg border border-[#26364B]">
+                          <span className="text-[9px] text-[#74859D] block uppercase">Villages Reconnected</span>
+                          <span className="text-[#22C58B] font-semibold text-sm block">
                             {activeTool === 'bridge' ? (currentTheater.id === 'nepal' ? '18 Hamlets' : '42 Villages') : activeTool === 'booth' ? (currentTheater.id === 'nepal' ? '18 Hamlets' : '42 Villages') : activeTool === 'drone' ? (currentTheater.id === 'nepal' ? '5 Hamlets' : '6 Villages') : (currentTheater.id === 'nepal' ? '4 Hamlets' : '12 Villages')}
                           </span>
                         </div>
-                        <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
-                          <span className="text-[9px] text-slate-400 block uppercase">Population Protected</span>
-                          <span className="text-cyan-300 font-bold text-sm block">
+                        <div className="bg-[#121D2D] p-2 rounded-lg border border-[#26364B]">
+                          <span className="text-[9px] text-[#74859D] block uppercase">Population Protected</span>
+                          <span className="text-[#13B8D5] font-semibold text-sm block">
                             {activeTool === 'bridge' || activeTool === 'booth' ? (currentTheater.id === 'nepal' ? '16,300' : '14,000') : activeTool === 'drone' ? (currentTheater.id === 'nepal' ? '4,100' : '3,200') : (currentTheater.id === 'nepal' ? '2,800' : '6,800')}
                           </span>
                         </div>
-                        <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
-                          <span className="text-[9px] text-slate-400 block uppercase">Transit Achieved</span>
-                          <span className="text-amber-300 font-bold text-sm block">
+                        <div className="bg-[#121D2D] p-2 rounded-lg border border-[#26364B]">
+                          <span className="text-[9px] text-[#74859D] block uppercase">Transit Achieved</span>
+                          <span className="text-[#F0B44D] font-semibold text-sm block">
                             {activeTool === 'bridge' ? (currentTheater.id === 'nepal' ? '28m (vs 135m)' : '18m (vs 65m)') : activeTool === 'booth' ? '0m On-Site' : activeTool === 'drone' ? '12m Aerial' : '25m Shuttle'}
                           </span>
                         </div>
@@ -1806,71 +1727,71 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                     </div>
                   )}
 
-                  {/* Sign & Dispatch Execution Bar (P4 Requirement) */}
-                  <div className="pt-2 border-t border-slate-800 space-y-2">
+                  {/* Sign & Dispatch Execution Bar */}
+                  <div className="pt-2 border-t border-[#1E2B3D] space-y-2">
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={onOpenSanctionModal}
-                        className="flex-1 py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                        className="flex-1 h-9 px-3 rounded-lg bg-[#182437] hover:bg-[#26364B] border border-[#26364B] text-[#E8EEF7] text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                       >
-                        <FileCheck className="w-3.5 h-3.5 text-cyan-400" />
+                        <FileCheck className="w-3.5 h-3.5 text-[#13B8D5]" />
                         <span>Form-3B Order</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={handleStartReview}
-                        className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 shadow-lg cursor-pointer ${
+                        className={`flex-1 h-9 px-3 rounded-lg font-semibold text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer ${
                           dispatchState === 'ACCEPTED' || isLiveDispatched
-                            ? 'bg-emerald-600 text-white'
-                            : 'bg-cyan-600 hover:bg-cyan-500 text-white'
+                            ? 'bg-[#22C58B] text-[#080D16]'
+                            : 'bg-[#13B8D5] hover:bg-[#11A3BE] text-[#080D16]'
                         }`}
                       >
                         <CheckCircle2 className="w-3.5 h-3.5" />
                         <span>
                           {dispatchState === 'ACCEPTED' || isLiveDispatched
-                            ? 'Dispatched ✅'
+                            ? 'Dispatched ✓'
                             : 'Review & Sign Sanction'}
                         </span>
                       </button>
                     </div>
                   </div>
 
-                  {/* Response Monitoring Panel (P5 Requirement) */}
+                  {/* Response Monitoring Panel */}
                   {(dispatchState === 'ACCEPTED' || isLiveDispatched) && (
-                    <div className="pt-3 border-t border-slate-800 space-y-2.5 animate-in fade-in">
+                    <div className="pt-3 border-t border-[#1E2B3D] space-y-2.5 animate-in fade-in">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                          <Radio className="w-4 h-4 text-emerald-400 animate-pulse" />
+                        <span className="text-xs font-semibold text-[#E8EEF7] flex items-center gap-1.5">
+                          <Radio className="w-4 h-4 text-[#22C58B] animate-pulse" />
                           <span>Response Monitoring (Live Execution)</span>
                         </span>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-700 font-bold">
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#22C58B]/20 text-[#22C58B] border border-[#22C58B]/40 font-bold">
                           ACCEPTED (ntfy 200 OK)
                         </span>
                       </div>
 
                       <div className="space-y-1.5 text-xs font-mono">
-                        <div className="p-2 rounded bg-slate-900 border border-slate-800 flex items-center justify-between">
-                          <span className="text-slate-300">AMB-01: ALS 4x4 (En Route)</span>
-                          <span className="text-cyan-400 font-bold">EN_ROUTE_SIMULATED</span>
+                        <div className="p-2 rounded bg-[#0E1625] border border-[#26364B] flex items-center justify-between">
+                          <span className="text-[#9AAAC0]">AMB-01: ALS 4x4 (En Route)</span>
+                          <span className="text-[#13B8D5] font-semibold">EN_ROUTE_SIMULATED</span>
                         </div>
-                        <div className="p-2 rounded bg-slate-900 border border-slate-800 flex items-center justify-between">
-                          <span className="text-slate-300">AMB-02: ALS 4x4 (En Route)</span>
-                          <span className="text-cyan-400 font-bold">EN_ROUTE_SIMULATED</span>
+                        <div className="p-2 rounded bg-[#0E1625] border border-[#26364B] flex items-center justify-between">
+                          <span className="text-[#9AAAC0]">AMB-02: ALS 4x4 (En Route)</span>
+                          <span className="text-[#13B8D5] font-semibold">EN_ROUTE_SIMULATED</span>
                         </div>
-                        <div className="p-2 rounded bg-slate-900 border border-slate-800 flex items-center justify-between">
-                          <span className="text-slate-300">AMB-03: S.M. Dev Civil Depot</span>
-                          <span className="text-emerald-400 font-bold">ARRIVED_SIMULATED</span>
+                        <div className="p-2 rounded bg-[#0E1625] border border-[#26364B] flex items-center justify-between">
+                          <span className="text-[#9AAAC0]">AMB-03: S.M. Dev Civil Depot</span>
+                          <span className="text-[#22C58B] font-semibold">ARRIVED_SIMULATED</span>
                         </div>
-                        <div className="p-2 rounded bg-slate-900 border border-slate-800 flex items-center justify-between">
-                          <span className="text-slate-300">IR-16T-01: Bailey Bridge Convoy</span>
-                          <span className="text-amber-400 font-bold">ASSIGNED</span>
+                        <div className="p-2 rounded bg-[#0E1625] border border-[#26364B] flex items-center justify-between">
+                          <span className="text-[#9AAAC0]">IR-16T-01: Bailey Bridge Convoy</span>
+                          <span className="text-[#F0B44D] font-semibold">ASSIGNED</span>
                         </div>
                       </div>
 
-                      <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800 text-[10px] text-slate-400">
-                        <strong className="text-slate-300 block mb-0.5">Physical Verification Notice:</strong>
+                      <div className="p-2 rounded-lg bg-[#0E1625] border border-[#26364B] text-[10px] text-[#74859D]">
+                        <strong className="text-[#E8EEF7] block mb-0.5 font-medium">Physical Verification Notice:</strong>
                         Vehicle transit progress along {currentTheater.id === 'nepal' ? 'corridor bypass' : 'Kumbhirgram bypass'} is simulated for operational decision support. Field patient handover requires formal sign-off.
                       </div>
                     </div>
@@ -1879,7 +1800,7 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                   <button
                     type="button"
                     onClick={() => onSelectChapter('learn')}
-                    className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs transition-colors flex items-center justify-center gap-2 shadow-md cursor-pointer mt-1"
+                    className="w-full h-9 rounded-lg bg-[#13B8D5] hover:bg-[#11A3BE] text-[#080D16] font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer mt-1"
                   >
                     <span>Proceed to Learn (Audit &amp; Benchmarks)</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -1888,35 +1809,35 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
               </div>
             )}
 
-            {/* CHAPTER 5: LEARN (P8 Requirement) */}
+            {/* CHAPTER 5: LEARN */}
             {workspaceMode === 'response' && activeChapter === 'learn' && (
               <div className="space-y-4 animate-in fade-in">
                 {/* 1. Post-Incident Operational Evaluation */}
-                <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-3">
+                <div className="p-3.5 rounded-lg bg-[#121D2D] border border-[#26364B] space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                      <History className="w-4 h-4 text-emerald-400" />
+                    <h3 className="text-sm font-semibold text-[#E8EEF7] flex items-center gap-2">
+                      <History className="w-4 h-4 text-[#22C58B]" />
                       <span>Post-Incident Evaluation &amp; Benchmarks</span>
                     </h3>
-                    <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/60 font-semibold">
+                    <span className="text-[10px] font-mono text-[#22C58B] bg-[#22C58B]/10 px-2 py-0.5 rounded border border-[#22C58B]/30 font-semibold">
                       Statutory Audit Ready
                     </span>
                   </div>
 
                   {/* Accessibility Matrix */}
                   <div className="space-y-1.5 pt-1">
-                    <span className="text-[10px] uppercase font-mono text-slate-400 block font-semibold">
+                    <span className="text-[10px] uppercase font-mono text-[#74859D] block font-semibold">
                       Corridor Accessibility &amp; Delay Delta:
                     </span>
                     <div className="space-y-1 text-xs font-mono">
-                      <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-between">
+                      <div className="p-2 rounded-lg bg-[#0E1625] border border-[#26364B] flex items-center justify-between">
                         <div>
-                          <strong className="text-white block">{selectedChoke.road_name}</strong>
-                          <span className="text-[10px] text-slate-400">
+                          <strong className="text-[#E8EEF7] block font-semibold">{selectedChoke.road_name}</strong>
+                          <span className="text-[10px] text-[#74859D]">
                             Direct {selectedTelemetry.baseline_km.toFixed(1)} km ({Math.round(selectedTelemetry.baseline_min)}m) vs Detour {(selectedTelemetry.scenario_km || 16.8).toFixed(1)} km ({Math.round(selectedTelemetry.scenario_min || 65.7)}m)
                           </span>
                         </div>
-                        <span className="text-emerald-400 font-bold">
+                        <span className="text-[#22C58B] font-semibold">
                           {activeTool === 'bridge' ? 'RESTORED' : `+${Math.round(selectedTelemetry.additional_min || 46.7)}m Delay`}
                         </span>
                       </div>
@@ -1925,58 +1846,58 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
 
                   {/* Budget Allocation Breakdown */}
                   <div className="space-y-1.5 pt-1">
-                    <span className="text-[10px] uppercase font-mono text-slate-400 block font-semibold">
+                    <span className="text-[10px] uppercase font-mono text-[#74859D] block font-semibold">
                       Fiscal Allocation Breakdown (Form-3B):
                     </span>
                     <div className="grid grid-cols-2 gap-1.5 text-xs font-mono">
-                      <div className="p-2 rounded bg-slate-900 border border-slate-800">
-                        <span className="text-slate-400 text-[10px] block">Bailey Bridge (Class-40)</span>
-                        <strong className="text-amber-400">₹1.80 Cr</strong>
+                      <div className="p-2 rounded bg-[#0E1625] border border-[#26364B]">
+                        <span className="text-[#74859D] text-[10px] block">Bailey Bridge (Class-40)</span>
+                        <strong className="text-[#F0B44D]">₹1.80 Cr</strong>
                       </div>
-                      <div className="p-2 rounded bg-slate-900 border border-slate-800">
-                        <span className="text-slate-400 text-[10px] block">Hospital Camp (MMU)</span>
-                        <strong className="text-yellow-400">₹25.0 Lakhs</strong>
+                      <div className="p-2 rounded bg-[#0E1625] border border-[#26364B]">
+                        <span className="text-[#74859D] text-[10px] block">Hospital Camp (MMU)</span>
+                        <strong className="text-[#F0B44D]">₹25.0 Lakhs</strong>
                       </div>
-                      <div className="p-2 rounded bg-slate-900 border border-slate-800">
-                        <span className="text-slate-400 text-[10px] block">Heavy Med-Drone</span>
-                        <strong className="text-purple-400">₹12.0 Lakhs</strong>
+                      <div className="p-2 rounded bg-[#0E1625] border border-[#26364B]">
+                        <span className="text-[#74859D] text-[10px] block">Heavy Med-Drone</span>
+                        <strong className="text-[#13B8D5]">₹12.0 Lakhs</strong>
                       </div>
-                      <div className="p-2 rounded bg-slate-900 border border-slate-800">
-                        <span className="text-slate-400 text-[10px] block">NDRF Boat (40HP)</span>
-                        <strong className="text-sky-400">₹6.5 Lakhs</strong>
+                      <div className="p-2 rounded bg-[#0E1625] border border-[#26364B]">
+                        <span className="text-[#74859D] text-[10px] block">NDRF Boat (40HP)</span>
+                        <strong className="text-[#13B8D5]">₹6.5 Lakhs</strong>
                       </div>
                     </div>
                   </div>
 
                   {/* Historical Replay Scenarios */}
                   <div className="space-y-1.5 pt-1">
-                    <span className="text-[10px] uppercase font-mono text-slate-400 block font-semibold">
+                    <span className="text-[10px] uppercase font-mono text-[#74859D] block font-semibold">
                       Historical Disaster Benchmark Replays:
                     </span>
                     <div className="space-y-1 text-xs">
-                      <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-between">
+                      <div className="p-2 rounded-lg bg-[#0E1625] border border-[#26364B] flex items-center justify-between">
                         <div>
-                          <strong className="text-white block">Silchar Floods (June 2022)</strong>
-                          <span className="text-[10px] text-slate-400">Barak Basin Dyke Breach • 74 Habitations</span>
+                          <strong className="text-[#E8EEF7] block font-semibold">Silchar Floods (June 2022)</strong>
+                          <span className="text-[10px] text-[#74859D]">Barak Basin Dyke Breach • 74 Habitations</span>
                         </div>
                         <button
                           type="button"
                           onClick={() => onSelectTheater?.('silchar')}
-                          className="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold cursor-pointer"
+                          className="px-2.5 py-1 rounded bg-[#13B8D5] hover:bg-[#11A3BE] text-[#080D16] text-[11px] font-semibold cursor-pointer transition-colors"
                         >
                           {currentTheater.id === 'silchar' ? 'Active' : 'Load Replay'}
                         </button>
                       </div>
 
-                      <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-between">
+                      <div className="p-2 rounded-lg bg-[#0E1625] border border-[#26364B] flex items-center justify-between">
                         <div>
-                          <strong className="text-white block">Nepal Trishuli Surge (Sept 2024)</strong>
-                          <span className="text-[10px] text-slate-400">River Surface Velocity &gt; 3.8 m/s</span>
+                          <strong className="text-[#E8EEF7] block font-semibold">Nepal Trishuli Surge (Sept 2024)</strong>
+                          <span className="text-[10px] text-[#74859D]">River Surface Velocity &gt; 3.8 m/s</span>
                         </div>
                         <button
                           type="button"
                           onClick={() => onSelectTheater?.('nepal')}
-                          className="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold cursor-pointer"
+                          className="px-2.5 py-1 rounded bg-[#13B8D5] hover:bg-[#11A3BE] text-[#080D16] text-[11px] font-semibold cursor-pointer transition-colors"
                         >
                           {currentTheater.id === 'nepal' ? 'Active' : 'Load Replay'}
                         </button>
@@ -1985,7 +1906,7 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                   </div>
 
                   {/* Audit Exports */}
-                  <div className="pt-2 border-t border-slate-800 flex items-center gap-2">
+                  <div className="pt-2 border-t border-[#1E2B3D] flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => {
@@ -1998,9 +1919,9 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                         a.click();
                         URL.revokeObjectURL(url);
                       }}
-                      className="flex-1 py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="flex-1 h-9 px-3 rounded-lg bg-[#182437] hover:bg-[#26364B] border border-[#26364B] text-[#E8EEF7] text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                     >
-                      <Download className="w-3.5 h-3.5 text-cyan-400" />
+                      <Download className="w-3.5 h-3.5 text-[#13B8D5]" />
                       <span>Export CSV Audit</span>
                     </button>
 
@@ -2016,9 +1937,9 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                         a.click();
                         URL.revokeObjectURL(url);
                       }}
-                      className="flex-1 py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="flex-1 h-9 px-3 rounded-lg bg-[#182437] hover:bg-[#26364B] border border-[#26364B] text-[#E8EEF7] text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                     >
-                      <Download className="w-3.5 h-3.5 text-emerald-400" />
+                      <Download className="w-3.5 h-3.5 text-[#22C58B]" />
                       <span>Export JSON Audit</span>
                     </button>
                   </div>
@@ -2027,21 +1948,20 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
             )}
           </div>
         </div>
-      </aside>
 
-      {/* 3. STRUCTURED SIGN & DISPATCH REVIEW MODAL (P4 Requirement) */}
+      {/* 3. STRUCTURED SIGN & DISPATCH REVIEW MODAL */}
       {isReviewModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in select-none">
-          <div className="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col text-slate-100">
+        <div className="fixed inset-0 z-50 bg-[#080D16]/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in select-none">
+          <div className="w-full max-w-xl bg-[#0E1625] border border-[#26364B] rounded-xl shadow-2xl overflow-hidden flex flex-col text-[#E8EEF7]">
             {/* Header with Explicit Simulation Banner */}
-            <div className="p-4 bg-amber-950/80 border-b border-amber-700/80 flex items-center justify-between">
+            <div className="p-4 bg-[#F0B44D]/10 border-b border-[#F0B44D]/30 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-amber-400" />
+                <AlertTriangle className="w-5 h-5 text-[#F0B44D]" />
                 <div>
-                  <strong className="text-amber-200 text-sm uppercase tracking-wider block font-bold">
+                  <strong className="text-[#F0B44D] text-sm uppercase tracking-wider block font-bold">
                     SIMULATION ONLY — OPERATIONAL READINESS DEMONSTRATION
                   </strong>
-                  <span className="text-[11px] text-amber-300 font-mono">
+                  <span className="text-[11px] text-[#F0B44D]/80 font-mono">
                     State Emergency Operations Center (SEOC) Form-3B Statutory Review
                   </span>
                 </div>
@@ -2049,7 +1969,7 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
               <button
                 type="button"
                 onClick={() => setIsReviewModalOpen(false)}
-                className="p-1 rounded-lg text-amber-300 hover:text-white cursor-pointer"
+                className="p-1 rounded-lg text-[#9AAAC0] hover:text-[#E8EEF7] transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2057,63 +1977,63 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
 
             {/* Modal Body: Structured Facts */}
             <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto font-sans text-xs">
-              <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
-                <span className="text-[10px] uppercase font-mono text-slate-400 block font-bold">
+              <div className="p-3.5 rounded-lg bg-[#121D2D] border border-[#26364B] space-y-2">
+                <span className="text-[10px] uppercase font-mono text-[#74859D] block font-bold">
                   Verified Incident Parameters:
                 </span>
                 <div className="grid grid-cols-2 gap-2 font-mono text-[11px]">
                   <div>
-                    <span className="text-slate-500 block">Jurisdiction:</span>
-                    <strong className="text-white">{currentTheater.name}</strong>
+                    <span className="text-[#74859D] block">Jurisdiction:</span>
+                    <strong className="text-[#E8EEF7]">{currentTheater.name}</strong>
                   </div>
                   <div>
-                    <span className="text-slate-500 block">Critical Corridor:</span>
-                    <strong className="text-white">{selectedChoke.road_name.split(' (')[0]}</strong>
+                    <span className="text-[#74859D] block">Critical Corridor:</span>
+                    <strong className="text-[#E8EEF7]">{selectedChoke.road_name.split(' (')[0]}</strong>
                   </div>
                   <div>
-                    <span className="text-slate-500 block">Washout Gap:</span>
-                    <strong className="text-rose-400">{selectedChoke.exposed_meters}m Breached Deck</strong>
+                    <span className="text-[#74859D] block">Washout Gap:</span>
+                    <strong className="text-[#F06472]">{selectedChoke.exposed_meters}m Breached Deck</strong>
                   </div>
                   <div>
-                    <span className="text-slate-500 block">Population Protected:</span>
-                    <strong className="text-amber-400">{totalCitizens.toLocaleString()} Citizens ({totalVillages} Villages)</strong>
+                    <span className="text-[#74859D] block">Population Protected:</span>
+                    <strong className="text-[#F0B44D]">{totalCitizens.toLocaleString()} Citizens ({totalVillages} Villages)</strong>
                   </div>
                 </div>
               </div>
 
               {/* Sanctioned Actions */}
-              <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
-                <span className="text-[10px] uppercase font-mono text-slate-400 block font-bold">
+              <div className="p-3.5 rounded-lg bg-[#121D2D] border border-[#26364B] space-y-2">
+                <span className="text-[10px] uppercase font-mono text-[#74859D] block font-bold">
                   Sanctioned Multi-Modal Interventions:
                 </span>
                 <div className="space-y-1 font-mono text-[11px]">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-300">Selected Bridge/Relief Tool:</span>
-                    <strong className="text-cyan-400 uppercase">{activeTool !== 'none' ? activeTool : 'Standard Detour Protocol'}</strong>
+                    <span className="text-[#9AAAC0]">Selected Bridge/Relief Tool:</span>
+                    <strong className="text-[#13B8D5] uppercase">{activeTool !== 'none' ? activeTool : 'Standard Detour Protocol'}</strong>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-300">Ambulance Surge Balancing:</span>
-                    <strong className="text-emerald-400">{rerouteAmbulances ? 'ENGAGED (34 Patients Diverted)' : 'STANDBY'}</strong>
+                    <span className="text-[#9AAAC0]">Ambulance Surge Balancing:</span>
+                    <strong className="text-[#22C58B]">{rerouteAmbulances ? 'ENGAGED (34 Patients Diverted)' : 'STANDBY'}</strong>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-300">Referral Facilities:</span>
-                    <strong className="text-white">SMCH Regional &amp; S.M. Dev Civil Hospital</strong>
+                    <span className="text-[#9AAAC0]">Referral Facilities:</span>
+                    <strong className="text-[#E8EEF7]">SMCH Regional &amp; S.M. Dev Civil Hospital</strong>
                   </div>
                 </div>
               </div>
 
               {/* Explicit Human Authorization */}
-              <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2.5">
-                <span className="text-[10px] uppercase font-mono text-slate-400 block font-bold">
+              <div className="p-3.5 rounded-lg bg-[#121D2D] border border-[#26364B] space-y-2.5">
+                <span className="text-[10px] uppercase font-mono text-[#74859D] block font-bold">
                   Statutory Signatory Authorization:
                 </span>
                 <div className="flex items-center gap-2">
-                  <FileSignature className="w-4 h-4 text-cyan-400 shrink-0" />
+                  <FileSignature className="w-4 h-4 text-[#13B8D5] shrink-0" />
                   <input
                     type="text"
                     value={signatoryName}
                     onChange={(e) => setSignatoryName(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white text-xs font-medium focus:border-cyan-500 focus:outline-none"
+                    className="w-full bg-[#080D16] border border-[#26364B] rounded-lg px-2.5 py-1.5 text-[#E8EEF7] text-xs font-medium focus:border-[#13B8D5] focus:outline-none"
                     title="Authorized Officer"
                   />
                 </div>
@@ -2123,9 +2043,9 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                     type="checkbox"
                     checked={isConfirmedByOperator}
                     onChange={(e) => setIsConfirmedByOperator(e.target.checked)}
-                    className="mt-0.5 rounded border-slate-700 text-cyan-600 focus:ring-cyan-500"
+                    className="mt-0.5 rounded border-[#26364B] text-[#13B8D5] focus:ring-[#13B8D5]"
                   />
-                  <span className="text-[11px] text-slate-300 leading-snug">
+                  <span className="text-[11px] text-[#9AAAC0] leading-snug">
                     I confirm this is an authorized disaster simulation exercise. All resource allocations conform to physical wind/water safety constraints.
                   </span>
                 </label>
@@ -2133,11 +2053,11 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 bg-slate-950 border-t border-slate-800 flex items-center justify-end gap-2 shrink-0">
+            <div className="p-4 bg-[#080D16] border-t border-[#26364B] flex items-center justify-end gap-2 shrink-0">
               <button
                 type="button"
                 onClick={() => setIsReviewModalOpen(false)}
-                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs cursor-pointer"
+                className="px-4 py-2 rounded-lg bg-[#182437] hover:bg-[#26364B] text-[#9AAAC0] hover:text-[#E8EEF7] font-semibold text-xs cursor-pointer transition-colors"
               >
                 Cancel
               </button>
@@ -2146,10 +2066,10 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                 type="button"
                 disabled={!isConfirmedByOperator}
                 onClick={handleApproveAndExecuteDispatch}
-                className={`px-5 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-lg transition-all ${
+                className={`px-5 py-2 rounded-lg font-semibold text-xs flex items-center gap-1.5 shadow-sm transition-all ${
                   isConfirmedByOperator
-                    ? 'bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer'
-                    : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                    ? 'bg-[#22C58B] hover:bg-[#1eb37d] text-[#080D16] cursor-pointer'
+                    : 'bg-[#182437] text-[#74859D] cursor-not-allowed border border-[#26364B]'
                 }`}
               >
                 <Check className="w-4 h-4" />

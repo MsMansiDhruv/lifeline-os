@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Shield,
   Search,
@@ -11,32 +11,40 @@ import {
   Navigation,
   Edit3,
   MoreVertical,
-  Compass,
   RotateCcw,
   Network,
-  Eye,
-  EyeOff,
+  Sun,
+  Moon,
+  Compass,
+  Cloud,
+  HelpCircle,
+  Activity,
+  Layers,
+  FolderUp,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react';
 import { FleetMode } from '../types';
 import { TheaterData, InterventionType } from '../data/theaters';
 import { geocodingService, GeocodingResult } from '../services/geocodingService';
 import { auditService } from '../services/auditService';
+import { Button } from './common/UIPrimitives';
 
-interface HeaderProps {
+export interface HeaderProps {
   onOpenArchitecture?: () => void;
   hideAllPanels?: boolean;
   onToggleHideAllPanels?: () => void;
   currentTheater: TheaterData;
-  interventions: Record<string, InterventionType>;
-  fleetMode: FleetMode;
-  onFleetChange: (mode: FleetMode) => void;
+  interventions?: Record<string, InterventionType>;
+  fleetMode?: FleetMode;
+  onFleetChange?: (mode: FleetMode) => void;
   statusFilter?: string;
   onFilterChange?: (filter: string) => void;
-  onOpenTelemetry: () => void;
+  onOpenTelemetry?: () => void;
   activeTheaterId: string;
   onSelectTheater: (theaterId: string) => void;
-  customTheater: TheaterData | null;
-  onLoadCustomTheater: (theater: TheaterData) => void;
+  customTheater?: TheaterData | null;
+  onLoadCustomTheater?: (theater: TheaterData) => void;
   onSearchFocus?: (coords: [number, number]) => void;
   onNavigateStep?: (step: string) => void;
   onStartInteractiveTour?: () => void;
@@ -56,6 +64,8 @@ interface HeaderProps {
   simulationProgress?: string;
   onResetOverview?: () => void;
   onOpenReportEditor?: () => void;
+  onOpenCloudModal?: () => void;
+  onOpenWhatWeDontKnow?: () => void;
   pendingReportCount?: number;
 }
 
@@ -77,17 +87,41 @@ export const Header: React.FC<HeaderProps> = ({
   simulationProgress = '',
   onResetOverview,
   onOpenArchitecture,
+  onOpenReportEditor,
+  onOpenCloudModal,
+  onOpenWhatWeDontKnow,
+  onOpenTelemetry,
+  pendingReportCount = 0,
   hideAllPanels = false,
   onToggleHideAllPanels,
-  onOpenReportEditor,
-  pendingReportCount = 0,
 }) => {
   const [cityQuery, setCityQuery] = useState<string>('');
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [suggestions, setSuggestions] = useState<GeocodingResult[]>([]);
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState<boolean>(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [isIncidentMenuOpen, setIsIncidentMenuOpen] = useState<boolean>(false);
+
+  const moreMenuRef = useRef<HTMLDivElement>(null);
+  const incidentMenuRef = useRef<HTMLDivElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
+        setIsMoreMenuOpen(false);
+      }
+      if (incidentMenuRef.current && !incidentMenuRef.current.contains(e.target as Node)) {
+        setIsIncidentMenuOpen(false);
+      }
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const compileLocationAndLoad = async (
     lat: number,
@@ -97,8 +131,6 @@ export const Header: React.FC<HeaderProps> = ({
     state: string
   ) => {
     setIsSearching(true);
-    let overpassHospitals: Array<{ name: string; lat: number; lon: number }> = [];
-
     try {
       const overpassQuery = `
         [out:json][timeout:10];
@@ -111,17 +143,7 @@ export const Header: React.FC<HeaderProps> = ({
       const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`;
       const resp = await fetch(url);
       if (resp.ok) {
-        const json = await resp.json();
-        if (json.elements && Array.isArray(json.elements)) {
-          json.elements.forEach((el: any) => {
-            const elLat = el.lat || el.center?.lat;
-            const elLon = el.lon || el.center?.lon;
-            const name = el.tags?.name || 'Regional Medical Facility';
-            if (elLat && elLon) {
-              overpassHospitals.push({ name, lat: elLat, lon: elLon });
-            }
-          });
-        }
+        // success or fallback
       }
     } catch {
       // Continue with fallback
@@ -158,89 +180,235 @@ export const Header: React.FC<HeaderProps> = ({
     e.preventDefault();
     if (!cityQuery.trim()) return;
 
-    if (suggestions.length > 0) {
-      handleSelectSuggestion(suggestions[0]);
-      return;
-    }
-
     setIsSearching(true);
-    try {
-      const results = await geocodingService.search(cityQuery.trim());
-      if (results && results.length > 0) {
-        handleSelectSuggestion(results[0]);
-      }
-    } catch {
-      setIsSearching(false);
+    const results = await geocodingService.search(cityQuery);
+    setIsSearching(false);
+
+    if (results.length > 0) {
+      handleSelectSuggestion(results[0]);
     }
   };
 
+  const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setCityQuery(val);
+    if (val.length >= 2) {
+      setIsSearching(true);
+      const results = await geocodingService.search(val);
+      setIsSearching(false);
+      setSuggestions(results);
+      setShowSuggestions(true);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleCustomFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !onLoadCustomTheater) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const geojson = JSON.parse(event.target?.result as string);
+        let center: [number, number] = [24.8333, 92.7789];
+        const chokePoints: any[] = [];
+
+        if (geojson.features && Array.isArray(geojson.features)) {
+          const firstPoint = geojson.features.find((f: any) => f.geometry?.type === 'Point');
+          if (firstPoint) {
+            center = [firstPoint.geometry.coordinates[1], firstPoint.geometry.coordinates[0]];
+          }
+          geojson.features.forEach((f: any, idx: number) => {
+            if (f.geometry?.type === 'Point') {
+              chokePoints.push({
+                id: `custom_choke_${idx}`,
+                name: f.properties?.name || `Critical Corridor ${idx + 1}`,
+                lat: f.geometry.coordinates[1],
+                lon: f.geometry.coordinates[0],
+                road_name: f.properties?.road || `Access Link ${idx + 1}`,
+                exposed_meters: 60,
+                trapped_villages_count: 5,
+                rank: idx + 1,
+                spans_count: 1,
+                baseline_km: 12,
+                detour_km: 24,
+                priority_tier: 'P1 - Immediate',
+                villages: [],
+                nearest_hospital_id: 'silchar_smch',
+              });
+            }
+          });
+        }
+
+        const customTh: TheaterData = {
+          id: 'custom',
+          name: file.name.replace('.geojson', '').replace('.json', ''),
+          subtitle: 'Tactical Custom Region',
+          authorityName: 'State Emergency Operations Center',
+          authorityShortName: 'SEOC',
+          nodesCount: 'Dynamic',
+          totalRoads: chokePoints.length,
+          center,
+          zoom: 13,
+          chokePoints: chokePoints.length > 0 ? chokePoints : currentTheater.chokePoints,
+          hospitals: currentTheater.hospitals,
+          riverPath: currentTheater.riverPath,
+          floodPolygon: currentTheater.floodPolygon,
+        };
+
+        onLoadCustomTheater(customTh);
+        onSelectTheater('custom');
+        setIsIncidentMenuOpen(false);
+      } catch (err) {
+        alert('Invalid GeoJSON format. Please upload standard FeatureCollection.');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const getIncidentLabel = () => {
+    if (activeTheaterId === 'nepal') return 'Nepal: Roshi Khola (2024)';
+    if (activeTheaterId === 'custom' && customTheater) return `Custom: ${customTheater.name}`;
+    return 'Assam: Silchar Flood (2022)';
+  };
+
   return (
-    <header className="fixed top-0 left-0 right-0 h-14 min-h-14 max-h-14 z-40 bg-slate-950/95 backdrop-blur-xl border-b border-slate-800/80 px-3 sm:px-4 flex items-center justify-between gap-3 shadow-xl select-none">
-      {/* 1. Identity & Scenario Selector */}
+    <header className="h-14 bg-[#0E1625] border-b border-[#26364B] px-4 flex items-center justify-between gap-3 shrink-0 select-none z-30">
+      {/* 1. Logo and Lifeline OS Name */}
       <div className="flex items-center gap-2.5 shrink-0">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-slate-900 border border-slate-700/80 flex items-center justify-center text-cyan-400 shadow-md">
-            <Shield className="w-4 h-4 text-cyan-400" />
-          </div>
-          <div className="flex items-center gap-1.5">
-            <h1 className="text-sm font-extrabold text-white tracking-tight hidden sm:inline">Lifeline OS</h1>
-            <span className="text-slate-500 font-light hidden sm:inline">/</span>
-            <div className="relative flex items-center">
-              <select
-                value={activeTheaterId}
-                onChange={(e) => onSelectTheater(e.target.value)}
-                className="bg-slate-900/90 hover:bg-slate-800 text-cyan-300 hover:text-white font-bold text-xs cursor-pointer border border-slate-700 hover:border-cyan-500 rounded-lg pl-2.5 pr-6 py-1 focus:outline-none focus:ring-1 focus:ring-cyan-400 transition-all shadow-inner appearance-none"
-                title="Select active disaster incident scenario workspace"
-              >
-                <option value="silchar" className="bg-slate-950 text-white font-semibold">🇮🇳 Assam: Silchar / Cachar</option>
-                <option value="nepal" className="bg-slate-950 text-white font-semibold">🇳🇵 Nepal: Roshi Khola / BP Highway</option>
-                {customTheater && <option value="custom" className="bg-slate-950 text-white font-semibold">{customTheater.name}</option>}
-              </select>
-              <ChevronDown className="w-3.5 h-3.5 text-cyan-400 absolute right-2 pointer-events-none" />
-            </div>
+        <div className="w-8 h-8 rounded-lg bg-[#182437] border border-[#26364B] flex items-center justify-center text-[#13B8D5] shadow-sm">
+          <Shield className="w-4 h-4" />
+        </div>
+        <div className="flex flex-col">
+          <div className="flex items-center gap-2">
+            <span className="text-[15px] font-semibold text-[#E8EEF7] tracking-tight">
+              Lifeline OS
+            </span>
+            <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded bg-[#182437] text-[#13B8D5] border border-[#26364B] font-semibold hidden sm:inline-block">
+              SEOC Command
+            </span>
           </div>
         </div>
       </div>
 
-      {/* 2. Full-Width Center Search Box */}
-      <div ref={dropdownRef} className="relative flex-1 max-w-xl mx-2">
+      {/* 2. Incident Selector Dropdown */}
+      <div className="relative shrink-0" ref={incidentMenuRef}>
+        <button
+          type="button"
+          onClick={() => setIsIncidentMenuOpen((prev) => !prev)}
+          className="h-9 px-3 rounded-lg bg-[#121D2D] border border-[#26364B] text-[#E8EEF7] hover:bg-[#182437] hover:border-[#354964] transition-colors flex items-center gap-2 text-xs font-medium cursor-pointer"
+          title="Select Active Incident Workspace"
+        >
+          <span className="text-sm">
+            {activeTheaterId === 'nepal' ? '🇳🇵' : '🇮🇳'}
+          </span>
+          <span className="font-semibold max-w-[150px] md:max-w-[180px] truncate">
+            {getIncidentLabel()}
+          </span>
+          <ChevronDown className="w-3.5 h-3.5 text-[#9AAAC0]" />
+        </button>
+
+        {isIncidentMenuOpen && (
+          <div className="absolute left-0 top-full mt-1.5 w-64 bg-[#0E1625] border border-[#26364B] rounded-lg shadow-xl p-1 z-50 text-xs text-[#E8EEF7] space-y-0.5 animate-in fade-in">
+            <div className="px-2.5 py-1.5 text-[10px] font-mono uppercase text-[#74859D] font-bold border-b border-[#1E2B3D]">
+              Select Disaster Incident
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                onSelectTheater('silchar');
+                setIsIncidentMenuOpen(false);
+              }}
+              className={`w-full px-2.5 py-2 rounded-md flex items-center justify-between transition-colors text-left cursor-pointer ${
+                activeTheaterId === 'silchar'
+                  ? 'bg-[#182437] text-[#13B8D5] font-semibold'
+                  : 'text-[#E8EEF7] hover:bg-[#121D2D]'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span>🇮🇳</span>
+                <div>
+                  <div className="font-medium">Assam: Silchar Flood</div>
+                  <div className="text-[10px] text-[#9AAAC0]">Historical Replay • June 2022</div>
+                </div>
+              </div>
+              <span className="text-[9px] font-mono px-1 py-0.5 rounded bg-[#121D2D] text-[#9AAAC0] border border-[#26364B]">
+                319 Hab
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                onSelectTheater('nepal');
+                setIsIncidentMenuOpen(false);
+              }}
+              className={`w-full px-2.5 py-2 rounded-md flex items-center justify-between transition-colors text-left cursor-pointer ${
+                activeTheaterId === 'nepal'
+                  ? 'bg-[#182437] text-[#13B8D5] font-semibold'
+                  : 'text-[#E8EEF7] hover:bg-[#121D2D]'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span>🇳🇵</span>
+                <div>
+                  <div className="font-medium">Nepal: BP Highway</div>
+                  <div className="text-[10px] text-[#9AAAC0]">Roshi Khola Surge • Oct 2024</div>
+                </div>
+              </div>
+              <span className="text-[9px] font-mono px-1 py-0.5 rounded bg-[#121D2D] text-[#9AAAC0] border border-[#26364B]">
+                18 Hamlets
+              </span>
+            </button>
+
+            <div className="pt-1 border-t border-[#1E2B3D]">
+              <label className="w-full px-2.5 py-2 rounded-md flex items-center gap-2 text-[#9AAAC0] hover:text-[#E8EEF7] hover:bg-[#121D2D] transition-colors cursor-pointer">
+                <FolderUp className="w-3.5 h-3.5 text-[#13B8D5]" />
+                <span className="text-xs">Upload Custom GeoJSON...</span>
+                <input
+                  type="file"
+                  accept=".geojson,.json"
+                  onChange={handleCustomFileUpload}
+                  className="hidden"
+                />
+              </label>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 3. Global Search with Geocoding */}
+      <div className="flex-1 max-w-md relative min-w-[140px]" ref={searchContainerRef}>
         <form onSubmit={handleSearchSubmit} className="relative w-full">
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={cityQuery}
-            onChange={(e) => setCityQuery(e.target.value)}
-            onFocus={() => {
-              if (suggestions.length > 0) setShowSuggestions(true);
-            }}
-            placeholder="Search place, district, or coordinates (lat, lon)..."
-            className="w-full bg-slate-900/90 hover:bg-slate-900 border border-slate-700/80 rounded-xl pl-8 pr-8 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors font-mono"
+            onChange={handleInputChange}
+            placeholder="Search settlements, hospitals, coordinates..."
+            className="w-full h-9 pl-8 pr-8 rounded-lg bg-[#121D2D] border border-[#26364B] text-xs text-[#E8EEF7] placeholder-[#74859D] focus:outline-none focus:border-[#13B8D5] focus:ring-1 focus:ring-[#13B8D5] transition-colors"
           />
+          <Search className="w-3.5 h-3.5 text-[#74859D] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           {isSearching && (
-            <Loader2 className="w-3.5 h-3.5 animate-spin text-cyan-400 absolute right-2.5 top-1/2 -translate-y-1/2" />
+            <Loader2 className="w-3.5 h-3.5 text-[#13B8D5] absolute right-2.5 top-1/2 -translate-y-1/2 animate-spin" />
           )}
         </form>
 
-        {/* Suggestions Popover */}
         {showSuggestions && suggestions.length > 0 && (
-          <div className="absolute top-full left-0 right-0 mt-1.5 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden divide-y divide-slate-800 max-h-56 overflow-y-auto">
-            {suggestions.map((item, index) => (
+          <div className="absolute left-0 top-full mt-1.5 w-full bg-[#0E1625] border border-[#26364B] rounded-lg shadow-2xl p-1 z-50 text-xs space-y-0.5 max-h-60 overflow-y-auto">
+            {suggestions.map((item, idx) => (
               <button
-                key={item.id || index}
+                key={idx}
                 type="button"
                 onClick={() => handleSelectSuggestion(item)}
-                className="w-full px-3 py-2 text-left hover:bg-slate-800 transition-colors flex items-center justify-between gap-2 text-xs text-slate-200 cursor-pointer"
+                className="w-full px-3 py-2 rounded-md text-left text-[#E8EEF7] hover:bg-[#182437] transition-colors flex items-center justify-between gap-2 cursor-pointer"
               >
-                <div className="truncate flex items-center gap-2">
-                  <MapPin className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                  <span className="font-semibold text-white truncate text-xs font-mono">
-                    {item.displayName.split(',')[0]}
-                  </span>
-                  <span className="text-[10px] text-slate-400 truncate">
-                    {item.displayName.split(',').slice(1, 3).join(',')}
-                  </span>
+                <div className="flex items-center gap-2 min-w-0">
+                  <MapPin className="w-3.5 h-3.5 text-[#13B8D5] shrink-0" />
+                  <span className="truncate">{item.displayName}</span>
                 </div>
-                <span className="text-[9px] font-mono text-cyan-400 shrink-0 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-800/40">
+                <span className="text-[10px] font-mono text-[#74859D] shrink-0">
                   {item.coordinates[0].toFixed(2)}, {item.coordinates[1].toFixed(2)}
                 </span>
               </button>
@@ -249,210 +417,271 @@ export const Header: React.FC<HeaderProps> = ({
         )}
       </div>
 
-      {/* 3, 4, 5. Map Mode + Single Run Button + More Menu */}
-      <div className="flex items-center gap-2 shrink-0">
-        {/* 3. Basemap Switcher (Dark Canvas / Satellite / Street) */}
-        <div className="flex items-center bg-slate-900/90 border border-slate-700/80 rounded-xl p-0.5 shadow-md">
-          <button
-            type="button"
-            onClick={() => onSelectViewMode ? onSelectViewMode('map') : onToggleViewMode?.()}
-            className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-              viewMode === 'map'
-                ? 'bg-slate-800 text-cyan-300 border border-cyan-500/50 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-            title="Dark Tactical Canvas Vector Basemap"
-          >
-            <Map className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden sm:inline">Dark Canvas</span>
-          </button>
+      {/* 4. Basemap Selector (Dark Canvas | Satellite | Street) */}
+      <div className="hidden lg:flex items-center bg-[#121D2D] border border-[#26364B] rounded-lg p-0.5 shrink-0">
+        <button
+          type="button"
+          onClick={() => (onSelectViewMode ? onSelectViewMode('map') : onToggleViewMode?.())}
+          className={`h-7 px-2.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer ${
+            viewMode === 'map'
+              ? 'bg-[#182437] text-[#13B8D5] font-semibold'
+              : 'text-[#9AAAC0] hover:text-[#E8EEF7]'
+          }`}
+          title="Tactical Dark Basemap"
+        >
+          <Map className="w-3.5 h-3.5" />
+          <span>Dark</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => (onSelectViewMode ? onSelectViewMode('satellite') : onToggleViewMode?.())}
+          className={`h-7 px-2.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer ${
+            viewMode === 'satellite'
+              ? 'bg-[#182437] text-[#13B8D5] font-semibold'
+              : 'text-[#9AAAC0] hover:text-[#E8EEF7]'
+          }`}
+          title="Satellite Imagery"
+        >
+          <Satellite className="w-3.5 h-3.5" />
+          <span>Satellite</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => (onSelectViewMode ? onSelectViewMode('street') : onToggleViewMode?.())}
+          className={`h-7 px-2.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer ${
+            viewMode === 'street'
+              ? 'bg-[#182437] text-[#13B8D5] font-semibold'
+              : 'text-[#9AAAC0] hover:text-[#E8EEF7]'
+          }`}
+          title="Street Network Basemap"
+        >
+          <Navigation className="w-3.5 h-3.5" />
+          <span>Street</span>
+        </button>
+      </div>
 
-          <button
-            type="button"
-            onClick={() => onSelectViewMode ? onSelectViewMode('satellite') : onToggleViewMode?.()}
-            className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-              viewMode === 'satellite'
-                ? 'bg-slate-800 text-emerald-300 border border-emerald-500/50 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-            title="High-Resolution Satellite Basemap"
-          >
-            <Satellite className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="hidden sm:inline">Satellite</span>
-          </button>
+      {/* 5. Primary Simulation Action */}
+      {onRunResponseSimulation && (
+        <Button
+          variant="primary"
+          size="md"
+          icon={Play}
+          isLoading={isSimulationRunning}
+          onClick={onRunResponseSimulation}
+          className="shrink-0 font-semibold"
+          title="Run closure simulation: Disruption -> Consequence -> Decision"
+        >
+          <span className="hidden sm:inline">
+            {isSimulationRunning ? (simulationProgress || 'Simulating...') : 'Run Simulation'}
+          </span>
+          <span className="sm:hidden">
+            {isSimulationRunning ? '...' : 'Run'}
+          </span>
+        </Button>
+      )}
 
-          <button
-            type="button"
-            onClick={() => onSelectViewMode ? onSelectViewMode('street') : onToggleViewMode?.()}
-            className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-              viewMode === 'street'
-                ? 'bg-slate-800 text-amber-300 border border-amber-500/50 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-            title="OpenStreetMap Street Infrastructure Basemap"
-          >
-            <Navigation className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden sm:inline">Street</span>
-          </button>
-        </div>
+      {/* 6. Overflow Menu */}
+      <div className="relative shrink-0" ref={moreMenuRef}>
+        <button
+          type="button"
+          onClick={() => setIsMoreMenuOpen((prev) => !prev)}
+          className="h-9 w-9 rounded-lg bg-[#121D2D] border border-[#26364B] text-[#9AAAC0] hover:text-[#E8EEF7] hover:bg-[#182437] transition-colors flex items-center justify-center cursor-pointer"
+          title="Secondary Actions & Tools"
+        >
+          <MoreVertical className="w-4 h-4" />
+        </button>
 
-        {/* Dedicated Draft Field Report Button with Pending Review Counter */}
-        {onOpenReportEditor && (
-          <button
-            type="button"
-            onClick={onOpenReportEditor}
-            className="px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer bg-gradient-to-r from-emerald-950/70 to-teal-950/70 hover:from-emerald-900/80 hover:to-teal-900/80 text-emerald-300 border border-emerald-500/40 shadow-sm shadow-emerald-500/10"
-            title="Draft Tactical Field Damage Report or Review Pending Submissions"
-          >
-            <Edit3 className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="hidden md:inline">Draft Report</span>
-            {pendingReportCount > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-500 text-black">
-                {pendingReportCount}
-              </span>
-            )}
-          </button>
-        )}
-
-        {/* System Architecture & Process Visualization Button */}
-        {onOpenArchitecture && (
-          <button
-            type="button"
-            onClick={onOpenArchitecture}
-            className="px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer bg-gradient-to-r from-cyan-950/70 to-blue-950/70 hover:from-cyan-900/80 hover:to-blue-900/80 text-cyan-300 border border-cyan-500/40 shadow-sm shadow-cyan-500/10"
-            title="Explore Interactive System Architecture, Process Flow & Use Cases"
-          >
-            <Network className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden lg:inline">Architecture &amp; Flow</span>
-          </button>
-        )}
-
-        {/* 4. Single Run Button: Run closure simulation */}
-        {onRunResponseSimulation && (
-          <button
-            type="button"
-            onClick={onRunResponseSimulation}
-            disabled={isSimulationRunning}
-            className={`px-3 py-1 rounded-lg text-xs font-mono font-bold border transition-all flex items-center gap-1.5 cursor-pointer shadow-md ${
-              isSimulationRunning
-                ? 'bg-amber-950/80 border-amber-600 text-amber-300 animate-pulse'
-                : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border-emerald-400/60 shadow-[0_0_15px_rgba(16,185,129,0.3)]'
-            }`}
-            title="Run closure simulation: Disruption -> Consequence -> Decision"
-          >
-            <Play className={`w-3.5 h-3.5 ${isSimulationRunning ? 'animate-spin' : 'fill-white'}`} />
-            <span>{isSimulationRunning ? (simulationProgress || 'Simulating...') : 'Run closure simulation'}</span>
-          </button>
-        )}
-
-        {/* Hide All Panels Button */}
-        {onToggleHideAllPanels && (
-          <button
-            type="button"
-            onClick={onToggleHideAllPanels}
-            className={`px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
-              hideAllPanels
-                ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-md shadow-amber-500/20'
-                : 'bg-slate-900 border-slate-700/80 hover:bg-slate-800 text-slate-300 hover:text-white'
-            }`}
-            title="Toggle Clean Map View: Hide or show all UI panels (Shortcut: H)"
-          >
-            {hideAllPanels ? <Eye className="w-3.5 h-3.5 text-amber-400" /> : <EyeOff className="w-3.5 h-3.5 text-slate-400" />}
-            <span className="hidden xl:inline">{hideAllPanels ? 'Show Panels' : 'Hide Panels'}</span>
-          </button>
-        )}
-
-        {/* 5. More Menu */}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setIsMoreMenuOpen((prev) => !prev)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white bg-slate-900 border border-slate-700/80 hover:bg-slate-800 transition-colors cursor-pointer"
-            title="More Options"
-          >
-            <MoreVertical className="w-4 h-4" />
-          </button>
-
-          {isMoreMenuOpen && (
-            <div className="absolute right-0 top-full mt-2 w-52 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-1 z-50 text-xs font-mono text-slate-300 space-y-0.5 animate-in fade-in">
-              <a
-                href="/lifeline-os"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setIsMoreMenuOpen(false)}
-                className="w-full px-2.5 py-1.5 rounded-lg text-left hover:bg-slate-800 hover:text-white flex items-center gap-2 cursor-pointer text-emerald-400 font-bold border-b border-slate-800 mb-1"
-                title="Open Lifeline OS Dedicated Showcase & Documentation Page"
-              >
-                <Shield className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Lifeline OS Page ↗</span>
-              </a>
-              {onToggleHideAllPanels && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onToggleHideAllPanels();
-                    setIsMoreMenuOpen(false);
-                  }}
-                  className="w-full px-2.5 py-1.5 rounded-lg text-left hover:bg-slate-800 hover:text-white flex items-center gap-2 cursor-pointer text-amber-300 font-bold"
-                >
-                  {hideAllPanels ? <Eye className="w-3.5 h-3.5 text-amber-400" /> : <EyeOff className="w-3.5 h-3.5 text-slate-400" />}
-                  <span>{hideAllPanels ? 'Show All Panels (H)' : 'Hide All Panels (H)'}</span>
-                </button>
-              )}
-              {onOpenArchitecture && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onOpenArchitecture();
-                    setIsMoreMenuOpen(false);
-                  }}
-                  className="w-full px-2.5 py-1.5 rounded-lg text-left hover:bg-slate-800 hover:text-white flex items-center gap-2 cursor-pointer text-cyan-300 font-bold"
-                >
-                  <Network className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>Architecture & Flow</span>
-                </button>
-              )}
-              {onResetOverview && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onResetOverview();
-                    setIsMoreMenuOpen(false);
-                  }}
-                  className="w-full px-2.5 py-1.5 rounded-lg text-left hover:bg-slate-800 hover:text-white flex items-center gap-2 cursor-pointer"
-                >
-                  <RotateCcw className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>Reset Overview</span>
-                </button>
-              )}
-              {onStartInteractiveTour && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onStartInteractiveTour();
-                    setIsMoreMenuOpen(false);
-                  }}
-                  className="w-full px-2.5 py-1.5 rounded-lg text-left hover:bg-slate-800 hover:text-white flex items-center gap-2 cursor-pointer"
-                >
-                  <Compass className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Interactive Tour</span>
-                </button>
-              )}
-              {onToggleOpsMode && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onToggleOpsMode();
-                    setIsMoreMenuOpen(false);
-                  }}
-                  className="w-full px-2.5 py-1.5 rounded-lg text-left hover:bg-slate-800 hover:text-white flex items-center gap-2 cursor-pointer"
-                >
-                  <span>{opsMode === 'day' ? '🌙 Night Ops' : '☀️ Day Ops'}</span>
-                </button>
-              )}
+        {isMoreMenuOpen && (
+          <div className="absolute right-0 top-full mt-1.5 w-60 bg-[#0E1625] border border-[#26364B] rounded-lg shadow-2xl p-1 z-50 text-xs text-[#E8EEF7] space-y-0.5 animate-in fade-in">
+            <div className="px-2.5 py-1.5 text-[10px] font-mono uppercase text-[#74859D] font-bold border-b border-[#1E2B3D]">
+              Workspace Actions &amp; Tools
             </div>
-          )}
-        </div>
+
+            {/* Draft Report */}
+            {onOpenReportEditor && (
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenReportEditor();
+                  setIsMoreMenuOpen(false);
+                }}
+                className="w-full px-2.5 py-2 rounded-md flex items-center justify-between text-[#E8EEF7] hover:bg-[#182437] transition-colors text-left cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <Edit3 className="w-3.5 h-3.5 text-[#13B8D5]" />
+                  <span>Draft Tactical Report</span>
+                </div>
+                {pendingReportCount > 0 && (
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#F0B44D] text-[#080D16]">
+                    {pendingReportCount}
+                  </span>
+                )}
+              </button>
+            )}
+
+            {/* Architecture & Flow */}
+            {onOpenArchitecture && (
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenArchitecture();
+                  setIsMoreMenuOpen(false);
+                }}
+                className="w-full px-2.5 py-2 rounded-md flex items-center gap-2 text-[#E8EEF7] hover:bg-[#182437] transition-colors text-left cursor-pointer"
+              >
+                <Network className="w-3.5 h-3.5 text-[#13B8D5]" />
+                <span>Architecture &amp; Process Flow</span>
+              </button>
+            )}
+
+            {/* Cloud GEE Pipeline */}
+            {onOpenCloudModal && (
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenCloudModal();
+                  setIsMoreMenuOpen(false);
+                }}
+                className="w-full px-2.5 py-2 rounded-md flex items-center gap-2 text-[#E8EEF7] hover:bg-[#182437] transition-colors text-left cursor-pointer"
+              >
+                <Cloud className="w-3.5 h-3.5 text-[#13B8D5]" />
+                <span>Google Cloud GEE Pipeline</span>
+              </button>
+            )}
+
+            {/* What We Don't Know */}
+            {onOpenWhatWeDontKnow && (
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenWhatWeDontKnow();
+                  setIsMoreMenuOpen(false);
+                }}
+                className="w-full px-2.5 py-2 rounded-md flex items-center gap-2 text-[#E8EEF7] hover:bg-[#182437] transition-colors text-left cursor-pointer"
+              >
+                <HelpCircle className="w-3.5 h-3.5 text-[#F0B44D]" />
+                <span>Epistemic Uncertainty Analysis</span>
+              </button>
+            )}
+
+            {/* Live Weather & Telemetry */}
+            {onOpenTelemetry && (
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenTelemetry();
+                  setIsMoreMenuOpen(false);
+                }}
+                className="w-full px-2.5 py-2 rounded-md flex items-center gap-2 text-[#E8EEF7] hover:bg-[#182437] transition-colors text-left cursor-pointer"
+              >
+                <Activity className="w-3.5 h-3.5 text-[#13B8D5]" />
+                <span>Live Weather &amp; Telemetry</span>
+              </button>
+            )}
+
+            {/* Reset Map Overview */}
+            {onResetOverview && (
+              <button
+                type="button"
+                onClick={() => {
+                  onResetOverview();
+                  setIsMoreMenuOpen(false);
+                }}
+                className="w-full px-2.5 py-2 rounded-md flex items-center gap-2 text-[#E8EEF7] hover:bg-[#182437] transition-colors text-left cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-[#74859D]" />
+                <span>Reset Map Overview</span>
+              </button>
+            )}
+
+            {/* Guided Tour */}
+            {onStartInteractiveTour && (
+              <button
+                type="button"
+                onClick={() => {
+                  onStartInteractiveTour();
+                  setIsMoreMenuOpen(false);
+                }}
+                className="w-full px-2.5 py-2 rounded-md flex items-center gap-2 text-[#E8EEF7] hover:bg-[#182437] transition-colors text-left cursor-pointer"
+              >
+                <Compass className="w-3.5 h-3.5 text-[#13B8D5]" />
+                <span>Interactive Guided Tour</span>
+              </button>
+            )}
+
+            {/* Day / Night Mode Toggle */}
+            {onToggleOpsMode && (
+              <button
+                type="button"
+                onClick={() => {
+                  onToggleOpsMode();
+                  setIsMoreMenuOpen(false);
+                }}
+                className="w-full px-2.5 py-2 rounded-md flex items-center justify-between text-[#E8EEF7] hover:bg-[#182437] transition-colors text-left cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  {opsMode === 'day' ? (
+                    <Sun className="w-3.5 h-3.5 text-[#F0B44D]" />
+                  ) : (
+                    <Moon className="w-3.5 h-3.5 text-[#13B8D5]" />
+                  )}
+                  <span>Ops Lighting Mode</span>
+                </div>
+                <span className="text-[10px] font-mono uppercase text-[#74859D]">
+                  {opsMode}
+                </span>
+              </button>
+            )}
+
+            {/* Panel Management: Toggle Zen Map View */}
+            {onToggleHideAllPanels && (
+              <button
+                type="button"
+                onClick={() => {
+                  onToggleHideAllPanels();
+                  setIsMoreMenuOpen(false);
+                }}
+                className="w-full px-2.5 py-2 rounded-md flex items-center justify-between text-[#E8EEF7] hover:bg-[#182437] transition-colors text-left cursor-pointer border-t border-[#1E2B3D] pt-2"
+              >
+                <div className="flex items-center gap-2">
+                  {hideAllPanels ? (
+                    <PanelLeftOpen className="w-3.5 h-3.5 text-[#13B8D5]" />
+                  ) : (
+                    <PanelLeftClose className="w-3.5 h-3.5 text-[#9AAAC0]" />
+                  )}
+                  <span>{hideAllPanels ? 'Show Sidebar' : 'Hide Sidebar (Zen)'}</span>
+                </div>
+                <span className="text-[10px] font-mono text-[#74859D]">Key 'H'</span>
+              </button>
+            )}
+
+            {/* Responsive Basemap Switcher (Available at < lg) */}
+            <div className="lg:hidden border-t border-[#1E2B3D] pt-2 px-1">
+              <span className="text-[10px] font-mono uppercase text-[#74859D] font-bold block mb-1">
+                Basemap Layer
+              </span>
+              <div className="grid grid-cols-3 gap-1">
+                {(['map', 'satellite', 'street'] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => {
+                      if (onSelectViewMode) onSelectViewMode(m);
+                      setIsMoreMenuOpen(false);
+                    }}
+                    className={`py-1 rounded text-[11px] font-medium text-center transition-colors ${
+                      viewMode === m
+                        ? 'bg-[#182437] text-[#13B8D5] font-semibold border border-[#26364B]'
+                        : 'text-[#9AAAC0] hover:text-[#E8EEF7] bg-[#121D2D]'
+                    }`}
+                  >
+                    {m === 'map' ? 'Dark' : m === 'satellite' ? 'Sat' : 'Street'}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );

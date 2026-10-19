@@ -1,17 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Header } from './components/Header';
+import { NavigationRail } from './components/NavigationRail';
+import { RightContextualInspector } from './components/RightContextualInspector';
 import { TelemetryDrawer } from './components/TelemetryDrawer';
 import { InteractiveTourCoach } from './components/InteractiveTourCoach';
 import { AutoDemoPlayer } from './components/AutoDemoPlayer';
 import { LeafletMap, MapMarker, MapLine, CameraCommand } from './components/LeafletMap';
 
-// 5 Operational Incident Command Chapters
-import { Step1WhatBroke } from './components/UnifiedSteps/Step1WhatBroke';
-import { Chapter2Predict } from './components/UnifiedSteps/Chapter2Predict';
-import { Step2WhoIsAtRisk } from './components/UnifiedSteps/Step2WhoIsAtRisk';
-import { Step3TestFixes } from './components/UnifiedSteps/Step3TestFixes';
-import { Step4EditLaunchRescue } from './components/UnifiedSteps/Step4EditLaunchRescue';
-import { Chapter5Learn } from './components/UnifiedSteps/Chapter5Learn';
 import { CommandPanel, IncidentChapter } from './components/CommandPanel';
 import { ContextualFeatureInspector, InspectedFeatureData } from './components/ContextualFeatureInspector';
 import { LiveMeteoTelemetryPanel } from './components/LiveMeteoTelemetryPanel';
@@ -44,7 +39,6 @@ import {
   CorridorRoadNetwork,
 } from './services/osrmRouting';
 import { FleetMode } from './types';
-import { BottomScenarioNavigator } from './components/BottomScenarioNavigator';
 import { EvidenceCatalogueModal } from './components/EvidenceCatalogueModal';
 import { FieldEvidenceEditorModal } from './components/FieldEvidenceEditorModal';
 import { CloudArchitectureModal } from './components/CloudArchitectureModal';
@@ -89,6 +83,7 @@ export function App() {
   const [isDrawerCollapsed, setIsDrawerCollapsed] = useState<boolean>(false);
   const [liveWindSpeed, setLiveWindSpeed] = useState<number>(14.2);
   const [isSimulatedHighWind, setIsSimulatedHighWind] = useState<boolean>(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
 
   const handleToggleSimulateHighWind = () => {
     setIsSimulatedHighWind((prev) => {
@@ -219,9 +214,8 @@ export function App() {
     setIsSimulatedClosureActive(val > 0);
   };
 
-  // Left SEOC Drawer Dynamic Width & Drag State (380px to 640px)
-  const [panelWidth, setPanelWidth] = useState<number>(typeof window !== 'undefined' && window.innerWidth < 1400 ? 320 : 380);
-  const [isDragging, setIsDragging] = useState<boolean>(false);
+  // Panel width derived from sidebar state
+  const panelWidth = isSidebarOpen ? 340 : 60;
 
   // Strict Map Camera Commands & Pulsing Target
   const [cameraCommand, setCameraCommand] = useState<CameraCommand | null>(null);
@@ -257,41 +251,17 @@ export function App() {
   const [autoDemoSceneIdx, setAutoDemoSceneIdx] = useState<number>(0);
   const [opsMode, setOpsMode] = useState<'day' | 'night'>('day');
 
-  // Zen Map Mode / Hide All Panels
-  const [hideAllPanels, setHideAllPanels] = useState<boolean>(false);
-
-  // Keyboard shortcut: 'H' or 'h' toggles all panels
+  // Keyboard shortcut: 'H' or 'h' toggles sidebar (Zen mode)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) return;
       if (e.key === 'h' || e.key === 'H') {
-        setHideAllPanels((prev) => !prev);
+        setIsSidebarOpen((prev) => !prev);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
-
-  // Drag-to-Resize Mouse Events Handler (380px to 640px)
-  useEffect(() => {
-    if (!isDragging) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const newWidth = Math.max(380, Math.min(640, e.clientX - 16));
-      setPanelWidth(newWidth);
-    };
-
-    const handleMouseUp = () => {
-      setIsDragging(false);
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isDragging]);
 
   const currentTheater =
     activeTheaterId === 'custom' && customTheater
@@ -1554,81 +1524,11 @@ export function App() {
   ];
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-slate-950 font-sans text-slate-100 select-none">
-      {/* 1. 100% FULL-SCREEN MAP OCCUPYING ENTIRE VIEWPORT */}
-      <div className="fixed inset-0 w-screen h-screen">
-        <LeafletMap
-          theaterId={currentTheater.id}
-          center={mapCenter}
-          zoom={mapZoom}
-          riverPath={currentTheater.riverPath}
-          floodStage={floodStage}
-          floodPolygon={currentTheater.floodPolygon}
-          chokePoints={currentTheater.chokePoints}
-          markers={masterMapMarkers}
-          lines={masterMapLines}
-          activeChokeId={selectedChoke?.id}
-          activeTool={activeSelectedTool}
-          corridorNet={activeCorridorNet}
-          isTourActive={tourMode !== 'none'}
-          isLiveDispatched={isLiveDispatched}
-          cameraCommand={cameraCommand}
-          panelWidth={panelWidth}
-          pulsingTarget={pulsingTarget}
-          onResetOverview={handleResetOverview}
-          isWindVisualized={ecosystemState.weather.wind_speed_10m > 30 || isSimulatedHighWind}
-          windSpeed={isSimulatedHighWind ? 52.4 : ecosystemState.weather.wind_speed_10m}
-          fieldSosEvents={ecosystemState.activeSosEvents}
-          mapMode={viewMode === 'map' ? 'vector' : viewMode}
-          onMapModeChange={(mode) => setViewMode(mode === 'vector' ? 'map' : mode)}
-          rerouteAmbulances={rerouteAmbulances}
-          isBreachTemporarilyReopened={isBreachTemporarilyReopened}
-          onToggleBreachTemporarilyReopened={() => setIsBreachTemporarilyReopened((prev) => !prev)}
-          isSimulationRunning={isSimulationRunning}
-          baselineAccessSliderValue={baselineAccessSliderValue}
-          onSelectFeature={(feat) => setInspectedFeature(feat)}
-        />
-      </div>
-
-      {/* Real Live Dispatch Broadcast Alert Banner */}
-      {isLiveDispatched && showLiveDispatchBanner && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[2500] max-w-2xl w-full px-4 animate-in fade-in slide-in-from-top-4 duration-300">
-          <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-950/95 via-slate-900/95 to-teal-950/95 border-2 border-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.4)] backdrop-blur-2xl flex items-center justify-between gap-3 text-white">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-400 flex items-center justify-center shrink-0">
-                <CheckCircle2 className="w-5 h-5 text-emerald-400 animate-pulse" />
-              </div>
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-emerald-500 text-black">
-                    LIVE DISPATCH SANCTIONED
-                  </span>
-                  <span className="text-[10px] font-mono text-emerald-300 font-bold">
-                    Form-3B Broadcast Active
-                  </span>
-                </div>
-                <p className="text-xs text-slate-200 font-sans">
-                  Tactical dispatch order transmitted to PWD, Army Engr Regt, NDRF &amp; State Health Command. Units Mobilized.
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowLiveDispatchBanner(false)}
-              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 shrink-0 cursor-pointer"
-              title="Dismiss dispatch banner"
-            >
-              <ChevronLeft className="w-4 h-4 rotate-90" />
-            </button>
-          </div>
-        </div>
-      )}
-
-
-      {/* 2. COMPACT SLEEK FLOATING TOP BAR */}
+    <div className="flex flex-col w-screen h-screen overflow-hidden bg-[#080D16] text-[#E8EEF7] font-sans select-none">
+      {/* 1. COMPACT GLOBAL HEADER (56px) */}
       <Header
-        hideAllPanels={hideAllPanels}
-        onToggleHideAllPanels={() => setHideAllPanels((prev) => !prev)}
+        hideAllPanels={!isSidebarOpen}
+        onToggleHideAllPanels={() => setIsSidebarOpen((prev) => !prev)}
         currentTheater={currentTheater}
         interventions={interventions}
         fleetMode={fleetMode}
@@ -1643,6 +1543,8 @@ export function App() {
         onOpenTelemetry={() => setIsWeatherPanelOpen((prev) => !prev)}
         onOpenEcosystemBus={() => setIsEcosystemDrawerOpen(true)}
         onOpenArchitecture={() => setActiveRightPopover(prev => prev === 'architecture' ? null : 'architecture')}
+        onOpenCloudModal={() => setIsCloudModalOpen(true)}
+        onOpenWhatWeDontKnow={() => setIsWhatWeDontKnowOpen(true)}
         activeTheaterId={activeTheaterId}
         onSelectTheater={handleSelectScenario}
         customTheater={customTheater}
@@ -1681,25 +1583,44 @@ export function App() {
         onResetOverview={handleResetOverview}
       />
 
-      {/* Floating HUD Pill to Unhide All Panels */}
-      {hideAllPanels && (
-        <div className="fixed top-4 left-4 z-[3000] flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
-          <button
-            type="button"
-            onClick={() => setHideAllPanels(false)}
-            className="px-4 py-2 rounded-xl bg-slate-900/95 backdrop-blur-md border border-cyan-500/70 text-cyan-300 font-mono text-xs font-bold shadow-[0_0_20px_rgba(6,182,212,0.4)] flex items-center gap-2 hover:bg-cyan-950/90 hover:text-white cursor-pointer transition-all"
-            title="Unhide all UI panels (Shortcut: H)"
-          >
-            <Eye className="w-4 h-4 text-cyan-400 animate-pulse" />
-            <span>Show All Panels (H)</span>
-          </button>
+      {/* Real Live Dispatch Broadcast Alert Banner */}
+      {isLiveDispatched && showLiveDispatchBanner && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[2500] max-w-2xl w-full px-4 animate-in fade-in slide-in-from-top-4 duration-300 pointer-events-auto">
+          <div className="p-3 rounded-xl bg-[#0E1625]/95 border border-[#22C58B] shadow-2xl backdrop-blur-2xl flex items-center justify-between gap-3 text-white">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-[#22C58B]/20 border border-[#22C58B]/40 flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-4 h-4 text-[#22C58B] animate-pulse" />
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono font-bold uppercase px-1.5 py-0.5 rounded bg-[#22C58B] text-[#080D16]">
+                    LIVE DISPATCH SANCTIONED
+                  </span>
+                  <span className="text-[10px] font-mono text-[#22C58B] font-semibold">
+                    Form-3B Broadcast Active
+                  </span>
+                </div>
+                <p className="text-xs text-[#9AAAC0] font-sans">
+                  Tactical dispatch order transmitted to PWD, Army Engr Regt, NDRF &amp; State Health Command. Units Mobilized.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowLiveDispatchBanner(false)}
+              className="p-1 rounded-lg text-[#74859D] hover:text-[#E8EEF7] hover:bg-[#182437] shrink-0 cursor-pointer"
+              title="Dismiss dispatch banner"
+            >
+              <ChevronLeft className="w-4 h-4 rotate-90" />
+            </button>
+          </div>
         </div>
       )}
 
-      {/* 3. EDITORIAL 5-CHAPTER INCIDENT COMMAND PANEL DOCKED ON LEFT */}
-      {!hideAllPanels && (
-        <CommandPanel
-          currentTheater={currentTheater}
+      {/* 2. MAIN WORKSPACE FLEX CONTAINER */}
+      <div className="flex-1 flex min-h-0 overflow-hidden relative">
+        {/* Navigation Rail (vertical ~60px) */}
+        <NavigationRail
           activeChapter={activeChapter}
           onSelectChapter={(chapter) => {
             setActiveChapter(chapter);
@@ -1711,56 +1632,122 @@ export function App() {
               learn: 'chapter5_learn',
             };
             setActiveStep(stepMap[chapter]);
+            if (!isSidebarOpen) setIsSidebarOpen(true);
           }}
-          selectedChokeIdx={validIdx}
-          onSelectChokeIdx={(idx) => triggerCorridorFocus(idx)}
-          interventions={interventions}
-          onSetIntervention={(chokeId, tool) => {
-            setInterventions((prev) => ({ ...prev, [chokeId]: tool }));
-            ecosystemBus.broadcastInterventionChange(chokeId, tool);
-            if (tourMode === 'interactive' && interactiveTask === 3) {
-              handleNextInteractiveTask();
-            }
-          }}
-          onResetInterventions={() => {
-            setInterventions({});
-            currentTheater.chokePoints.forEach((cp) =>
-              ecosystemBus.broadcastInterventionChange(cp.id, 'none')
-            );
-          }}
-          fleetMode={fleetMode}
-          onFleetChange={(mode) => setFleetMode(mode)}
-          rerouteAmbulances={rerouteAmbulances}
-          onToggleRerouteAmbulances={() => setRerouteAmbulances((prev) => !prev)}
-          activateSurgeBeds={activateSurgeBeds}
-          onToggleActivateSurgeBeds={() => setActivateSurgeBeds((prev) => !prev)}
-          isLiveDispatched={isLiveDispatched}
-          onSignAndDispatch={() => {
-            handleExecuteDispatch();
-            if (tourMode === 'interactive' && interactiveTask === 4) {
-              setInteractiveTask(5);
-            }
-          }}
-          onOpenSanctionModal={() => setIsSanctionModalOpen(true)}
-          onOpenEcosystemDrawer={() => setIsEcosystemDrawerOpen(true)}
-          isSimulatedHighWind={isSimulatedHighWind}
-          onToggleHighWind={handleToggleSimulateHighWind}
-          ecosystemState={ecosystemState}
-          onFocusMapPoint={triggerPointFocus}
-          detourRouteMode={detourRouteMode}
-          onSetDetourRouteMode={(mode) => setDetourRouteMode(mode)}
-          isBreachTemporarilyReopened={isBreachTemporarilyReopened}
-          onToggleBreachTemporarilyReopened={() => setIsBreachTemporarilyReopened((prev) => !prev)}
-          onSelectTheater={(tId) => handleSelectScenario(tId)}
-          onInspectDamageReport={handleInspectDamageReport}
+          isSidebarOpen={isSidebarOpen}
+          onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
         />
-      )}
 
-      {/* 4. CONTEXTUAL FEATURE INSPECTOR (OPENS DYNAMICALLY ON MAP PIN CLICK) */}
-      <ContextualFeatureInspector
-        feature={inspectedFeature}
-        onClose={() => setInspectedFeature(null)}
-      />
+        {/* Left Contextual Sidebar (~320px) */}
+        {isSidebarOpen && (
+          <aside className="w-[320px] lg:w-[340px] shrink-0 h-full bg-[#0E1625] border-r border-[#26364B] flex flex-col overflow-hidden z-10 transition-all duration-200">
+            <CommandPanel
+              currentTheater={currentTheater}
+              activeChapter={activeChapter}
+              onSelectChapter={(chapter) => {
+                setActiveChapter(chapter);
+                const stepMap: Record<IncidentChapter, string> = {
+                  prevent: 'chapter1_prevent',
+                  predict: 'chapter2_predict',
+                  protect: 'chapter3_protect',
+                  respond: 'chapter4_respond',
+                  learn: 'chapter5_learn',
+                };
+                setActiveStep(stepMap[chapter]);
+              }}
+              selectedChokeIdx={validIdx}
+              onSelectChokeIdx={(idx) => triggerCorridorFocus(idx)}
+              interventions={interventions}
+              onSetIntervention={(chokeId, tool) => {
+                setInterventions((prev) => ({ ...prev, [chokeId]: tool }));
+                ecosystemBus.broadcastInterventionChange(chokeId, tool);
+                if (tourMode === 'interactive' && interactiveTask === 3) {
+                  handleNextInteractiveTask();
+                }
+              }}
+              onResetInterventions={() => {
+                setInterventions({});
+                currentTheater.chokePoints.forEach((cp) =>
+                  ecosystemBus.broadcastInterventionChange(cp.id, 'none')
+                );
+              }}
+              fleetMode={fleetMode}
+              onFleetChange={(mode) => setFleetMode(mode)}
+              rerouteAmbulances={rerouteAmbulances}
+              onToggleRerouteAmbulances={() => setRerouteAmbulances((prev) => !prev)}
+              activateSurgeBeds={activateSurgeBeds}
+              onToggleActivateSurgeBeds={() => setActivateSurgeBeds((prev) => !prev)}
+              isLiveDispatched={isLiveDispatched}
+              onSignAndDispatch={() => {
+                handleExecuteDispatch();
+                if (tourMode === 'interactive' && interactiveTask === 4) {
+                  setInteractiveTask(5);
+                }
+              }}
+              onOpenSanctionModal={() => setIsSanctionModalOpen(true)}
+              onOpenEcosystemDrawer={() => setIsEcosystemDrawerOpen(true)}
+              isSimulatedHighWind={isSimulatedHighWind}
+              onToggleHighWind={handleToggleSimulateHighWind}
+              ecosystemState={ecosystemState}
+              onFocusMapPoint={triggerPointFocus}
+              detourRouteMode={detourRouteMode}
+              onSetDetourRouteMode={(mode) => setDetourRouteMode(mode)}
+              isBreachTemporarilyReopened={isBreachTemporarilyReopened}
+              onToggleBreachTemporarilyReopened={() => setIsBreachTemporarilyReopened((prev) => !prev)}
+              onSelectTheater={(tId) => handleSelectScenario(tId)}
+              onInspectDamageReport={handleInspectDamageReport}
+            />
+          </aside>
+        )}
+
+        {/* Central Map Canvas (Takes flex-1, resizes smoothly!) */}
+        <main className="flex-1 h-full min-w-0 relative bg-[#080D16] overflow-hidden">
+          <LeafletMap
+            theaterId={currentTheater.id}
+            center={mapCenter}
+            zoom={mapZoom}
+            riverPath={currentTheater.riverPath}
+            floodStage={floodStage}
+            floodPolygon={currentTheater.floodPolygon}
+            chokePoints={currentTheater.chokePoints}
+            markers={masterMapMarkers}
+            lines={masterMapLines}
+            activeChokeId={selectedChoke?.id}
+            activeTool={activeSelectedTool}
+            corridorNet={activeCorridorNet}
+            isTourActive={tourMode !== 'none'}
+            isLiveDispatched={isLiveDispatched}
+            cameraCommand={cameraCommand}
+            panelWidth={isSidebarOpen ? 340 : 60}
+            pulsingTarget={pulsingTarget}
+            onResetOverview={handleResetOverview}
+            isWindVisualized={ecosystemState.weather.wind_speed_10m > 30 || isSimulatedHighWind}
+            windSpeed={isSimulatedHighWind ? 52.4 : ecosystemState.weather.wind_speed_10m}
+            fieldSosEvents={ecosystemState.activeSosEvents}
+            mapMode={viewMode === 'map' ? 'vector' : viewMode}
+            onMapModeChange={(mode) => setViewMode(mode === 'vector' ? 'map' : mode)}
+            rerouteAmbulances={rerouteAmbulances}
+            isBreachTemporarilyReopened={isBreachTemporarilyReopened}
+            onToggleBreachTemporarilyReopened={() => setIsBreachTemporarilyReopened((prev) => !prev)}
+            isSimulationRunning={isSimulationRunning}
+            baselineAccessSliderValue={baselineAccessSliderValue}
+            onSelectFeature={(feat) => setInspectedFeature(feat)}
+          />
+        </main>
+
+        {/* Right Contextual Inspector (REAL layout column!) */}
+        {inspectedFeature && (
+          <aside className="w-[320px] lg:w-[340px] shrink-0 h-full bg-[#0E1625] border-l border-[#26364B] flex flex-col overflow-hidden z-10 transition-all duration-200">
+            <RightContextualInspector
+              feature={inspectedFeature}
+              onClose={() => setInspectedFeature(null)}
+              onFocusCoordinates={(coords) =>
+                triggerPointFocus({ lat: coords[0], lon: coords[1], name: inspectedFeature.title })
+              }
+            />
+          </aside>
+        )}
+      </div>
 
       {/* Guided Tour Tooltip Anchored next to the active element */}
       {tourMode === 'interactive' && (
@@ -1805,41 +1792,41 @@ export function App() {
         onClose={() => setIsTelemetryOpen(false)}
       />
 
-      {/* Inbound Live Field SOS Notification (Compact, Non-Intrusive Tactical Pill with Close Button) */}
+      {/* Inbound Live Field SOS Notification */}
       {ecosystemState.lastInboundSos && !isSosDismissed && (
-        <div className="fixed top-20 right-6 z-40 max-w-sm p-3 rounded-xl bg-slate-900/95 border-2 border-fuchsia-500 text-white shadow-[0_0_25px_rgba(217,70,239,0.5)] backdrop-blur-md animate-in slide-in-from-top-3 select-none">
-          <div className="flex items-center justify-between gap-3 border-b border-fuchsia-800/60 pb-1.5">
+        <div className="fixed top-20 right-6 z-40 max-w-sm p-3 rounded-xl bg-[#0E1625]/95 border border-[#F06472] text-[#E8EEF7] shadow-2xl backdrop-blur-md animate-in slide-in-from-top-3 select-none">
+          <div className="flex items-center justify-between gap-3 border-b border-[#26364B] pb-1.5">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-fuchsia-400 animate-ping shrink-0" />
-              <span className="text-xs font-bold uppercase tracking-wider text-fuchsia-300">
-                🚨 Live Distress Beacon
+              <span className="w-2.5 h-2.5 rounded-full bg-[#F06472] animate-ping shrink-0" />
+              <span className="text-xs font-bold uppercase tracking-wider text-[#F06472]">
+                Live Distress Beacon
               </span>
-              <span className="text-[9px] font-mono bg-fuchsia-950 px-1 py-0.2 rounded text-fuchsia-300 border border-fuchsia-800">
+              <span className="text-[9px] font-mono bg-[#182437] px-1 py-0.5 rounded text-[#9AAAC0] border border-[#26364B]">
                 {ecosystemState.lastInboundSos.sender}
               </span>
             </div>
             <button
               type="button"
               onClick={() => setIsSosDismissed(true)}
-              className="text-slate-400 hover:text-white p-0.5 rounded hover:bg-slate-800 text-xs font-bold cursor-pointer"
+              className="text-[#74859D] hover:text-[#E8EEF7] p-0.5 rounded hover:bg-[#182437] text-xs font-bold cursor-pointer"
               title="Dismiss alert"
             >
               ✕
             </button>
           </div>
-          <p className="text-xs text-slate-200 mt-1.5 font-medium leading-relaxed truncate">
+          <p className="text-xs text-[#9AAAC0] mt-1.5 font-medium leading-relaxed truncate">
             "{ecosystemState.lastInboundSos.message}"
           </p>
-          <div className="text-[10px] text-fuchsia-300 font-mono mt-1.5 flex items-center justify-between">
+          <div className="text-[10px] text-[#13B8D5] font-mono mt-1.5 flex items-center justify-between">
             <span>Beacon Pinned on Tactical Map</span>
-            <span className="text-slate-400">
+            <span className="text-[#74859D]">
               {ecosystemState.lastInboundSos.lat.toFixed(4)}, {ecosystemState.lastInboundSos.lon.toFixed(4)}
             </span>
           </div>
         </div>
       )}
 
-      {/* Ecosystem Service Bus Inspector Drawer (6/6 Live External Services) */}
+      {/* Ecosystem Service Bus Inspector Drawer */}
       <EcosystemBusDrawer
         isOpen={isEcosystemDrawerOpen}
         onClose={() => setIsEcosystemDrawerOpen(false)}
@@ -1856,110 +1843,14 @@ export function App() {
         onApproveAndDispatch={handleExecuteDispatch}
       />
 
-      {/* Toast notification for camera movement (Requirement 4) */}
+      {/* Toast notification for camera movement */}
       {cameraToast && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[3000] bg-slate-900/95 border border-cyan-500/50 shadow-2xl rounded-lg px-4 py-2 flex items-center gap-2 text-xs text-cyan-200 animate-in fade-in slide-in-from-top-2 duration-200">
-          <MapPin className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[3000] bg-[#0E1625]/95 border border-[#13B8D5]/50 shadow-2xl rounded-lg px-4 py-2 flex items-center gap-2 text-xs text-[#E8EEF7] animate-in fade-in slide-in-from-top-2 duration-200">
+          <MapPin className="w-3.5 h-3.5 text-[#13B8D5] shrink-0" />
           <span>
             <strong className="text-white">{cameraToast.title}</strong>: {cameraToast.reason}
           </span>
         </div>
-      )}
-
-      {/* Right Toolbar with visible text labels and clear tooltips (3D removed) */}
-      {!hideAllPanels && (
-        <div className="fixed right-4 top-20 z-[2000] flex flex-col gap-1.5 bg-slate-900/95 backdrop-blur-md border border-slate-700/80 rounded-xl p-1.5 shadow-2xl select-none">
-          <button
-            onClick={() => setHideAllPanels(true)}
-            title="Hide all UI panels for clean map mode (Shortcut: H)"
-            className="px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white hover:bg-slate-800"
-          >
-            <EyeOff className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden sm:inline">Hide Panels</span>
-          </button>
-          <button
-            onClick={() => setActiveRightPopover((prev) => (prev === 'evidence' ? null : 'evidence'))}
-            title="Evidence Ledger & Catalog: View ground-truth satellite & field datasets"
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all flex items-center gap-2 cursor-pointer ${
-              activeRightPopover === 'evidence'
-                ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-500/30'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800'
-            }`}
-          >
-            <Database className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden sm:inline">Evidence</span>
-          </button>
-          <button
-            onClick={() => setActiveRightPopover((prev) => (prev === 'whatwedontknow' ? null : 'whatwedontknow'))}
-            title="Epistemic Uncertainty: View sensor blindspots and unverified assumptions"
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all flex items-center gap-2 cursor-pointer ${
-              activeRightPopover === 'whatwedontknow'
-                ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/30'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800'
-            }`}
-          >
-            <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden sm:inline">Uncertainty</span>
-          </button>
-          <button
-            onClick={() => setActiveRightPopover((prev) => (prev === 'cloud' ? null : 'cloud'))}
-            title="Google Cloud & Verification: Earth Engine and BigQuery pipelines"
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all flex items-center gap-2 cursor-pointer ${
-              activeRightPopover === 'cloud'
-                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800'
-            }`}
-          >
-            <Cloud className="w-3.5 h-3.5 text-indigo-400" />
-            <span className="hidden sm:inline">Cloud GEE</span>
-          </button>
-          <button
-            onClick={() => setActiveRightPopover((prev) => (prev === 'architecture' ? null : 'architecture'))}
-            title="Lifeline OS System Architecture: Process flow and Gemini MCP integration"
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all flex items-center gap-2 cursor-pointer ${
-              activeRightPopover === 'architecture'
-                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 ring-1 ring-cyan-400'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800'
-            }`}
-          >
-            <Network className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden sm:inline">Architecture</span>
-          </button>
-          <button
-            onClick={() => setActiveRightPopover((prev) => (prev === 'field' ? null : 'field'))}
-            title="Field Evidence Editor: Draft tactical report or review ground observations"
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all flex items-center gap-2 cursor-pointer ${
-              activeRightPopover === 'field'
-                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/30'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800'
-            }`}
-          >
-            <Edit3 className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="hidden sm:inline">Draft Report</span>
-          </button>
-        </div>
-      )}
-
-      {/* Bottom Floating Scenario Navigator & Investigation Workspace Dock */}
-      {!hideAllPanels && (
-        <BottomScenarioNavigator
-          activeScenarioId={(activeTheaterId === 'nepal' ? 'nepal' : 'silchar')}
-          onSelectScenario={handleSelectScenario}
-          onRunSimulation={handleRunResponseSimulation}
-          isSimulationRunning={isSimulationRunning}
-          simulationProgress={simulationProgress}
-          sliderValue={baselineAccessSliderValue}
-          onChangeSliderValue={handleChangeAccessSlider}
-          isSimulatedClosureActive={isSimulatedClosureActive}
-          onToggleSimulatedClosure={handleToggleSimulatedClosure}
-          isRerouted={rerouteAmbulances}
-          onToggleReroute={() => setRerouteAmbulances(prev => !prev)}
-          reachableCount={activeTheaterId === 'nepal' ? (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 18 : (isSimulatedClosureActive ? 0 : 18)) : (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 319 : ASSAM_TELEMETRY_RESULTS.reachableCount)}
-          reroutedCount={activeTheaterId === 'nepal' ? 0 : (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 0 : ASSAM_TELEMETRY_RESULTS.reroutedCount)}
-          isolatedCount={activeTheaterId === 'nepal' ? (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 0 : (isSimulatedClosureActive ? 18 : 0)) : (isBreachTemporarilyReopened || activeSelectedTool === 'bridge' ? 0 : ASSAM_TELEMETRY_RESULTS.noRouteCount)}
-          analysedCount={activeTheaterId === 'nepal' ? 18 : ASSAM_TELEMETRY_RESULTS.analysedCount}
-          excludedCount={activeTheaterId === 'nepal' ? 0 : ASSAM_TELEMETRY_RESULTS.excludedCount}
-        />
       )}
 
       {/* Evidence Catalogue Modal */}
@@ -1995,7 +1886,7 @@ export function App() {
         activeTheaterName={currentTheater.name}
       />
 
-      {/* Requirement F: What We Don't Know Epistemic Uncertainty Modal */}
+      {/* Epistemic Uncertainty Modal */}
       <WhatWeDontKnowModal
         isOpen={activeRightPopover === 'whatwedontknow' || isWhatWeDontKnowOpen}
         onClose={() => {

@@ -133,7 +133,6 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
 
   // Pane element references for dynamic CSS clip-path
   const [isLegendCollapsed, setIsLegendCollapsed] = useState<boolean>(false);
-  const [isNarrativeOpen, setIsNarrativeOpen] = useState<boolean>(true);
   const beforePaneRef = useRef<HTMLElement | null>(null);
   const afterPaneRef = useRef<HTMLElement | null>(null);
   const afterFloodPaneRef = useRef<HTMLElement | null>(null);
@@ -290,7 +289,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       zoomControl: false,
     });
 
-    L.control.zoom({ position: 'topright' }).addTo(map);
+    L.control.zoom({ position: 'topleft' }).addTo(map);
 
     // Panes for Draggable Swipe Split
     const beforePane = map.createPane('beforePane');
@@ -355,7 +354,15 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
 
     mapInstanceRef.current = map;
 
+    const resizeObserver = new ResizeObserver(() => {
+      map.invalidateSize();
+    });
+    if (mapContainerRef.current) {
+      resizeObserver.observe(mapContainerRef.current);
+    }
+
     return () => {
+      resizeObserver.disconnect();
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
@@ -986,17 +993,17 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         const showLabel = isSelected || !isZoomedOut;
         const cpIcon = L.divIcon({
           html: showLabel ? `
-            <div class="cursor-pointer transition-transform hover:scale-110" style="position:relative; transform:translate(-50%, -50%);">
-              <div style="display:flex; align-items:center; gap:4px; padding:3px 6px; background:rgba(15,23,42,0.95); border:1.5px solid ${isSelected ? '#38bdf8' : '#e11d48'}; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.7);">
-                <span style="font-size:9px; font-weight:800; font-family:monospace; background:#4c0519; color:#fda4af; border:1px solid #e11d48; padding:1px 3px; border-radius:4px;">SIMULATED</span>
-                ${SVG_BRIDGE_HTML(14, isSelected ? '#38bdf8' : '#f43f5e')}
-                <span style="font-size:11px; font-weight:700; color:#ffffff; font-family:sans-serif; white-space:nowrap;">${cp.road_name.split(' (')[0]}</span>
+            <div class="cursor-pointer transition-transform hover:scale-105" style="position:relative; transform:translate(-50%, -50%);">
+              <div style="display:flex; align-items:center; gap:5px; padding:3px 7px; background:#0E1625; border:1px solid ${isSelected ? '#13B8D5' : '#F06472'}; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.6);">
+                <span style="font-size:9px; font-weight:700; font-family:monospace; background:${isSelected ? 'rgba(19,184,213,0.15)' : 'rgba(240,100,114,0.15)'}; color:${isSelected ? '#13B8D5' : '#F06472'}; border:1px solid ${isSelected ? 'rgba(19,184,213,0.3)' : 'rgba(240,100,114,0.3)'}; padding:1px 3px; border-radius:4px;">SIMULATED</span>
+                ${SVG_BRIDGE_HTML(13, isSelected ? '#13B8D5' : '#F06472')}
+                <span style="font-size:11px; font-weight:600; color:#E8EEF7; font-family:sans-serif; white-space:nowrap;">${cp.road_name.split(' (')[0]}</span>
               </div>
             </div>
           ` : `
-            <div class="cursor-pointer transition-transform hover:scale-125" style="position:relative; transform:translate(-50%, -50%);" title="${cp.road_name} (SIMULATED CLOSURE)">
-              <div style="display:flex; align-items:center; justify-content:center; width:22px; height:22px; background:rgba(15,23,42,0.95); border:1.5px solid ${isSelected ? '#38bdf8' : '#e11d48'}; border-radius:50%; box-shadow:0 2px 8px rgba(0,0,0,0.6);">
-                ${SVG_BRIDGE_HTML(12, isSelected ? '#38bdf8' : '#f43f5e')}
+            <div class="cursor-pointer transition-transform hover:scale-115" style="position:relative; transform:translate(-50%, -50%);" title="${cp.road_name} (SIMULATED CLOSURE)">
+              <div style="display:flex; align-items:center; justify-content:center; width:22px; height:22px; background:#0E1625; border:1px solid ${isSelected ? '#13B8D5' : '#F06472'}; border-radius:50%; box-shadow:0 2px 6px rgba(0,0,0,0.6);">
+                ${SVG_BRIDGE_HTML(12, isSelected ? '#13B8D5' : '#F06472')}
               </div>
             </div>
           `,
@@ -1075,17 +1082,17 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         const showHospLabel = !isZoomedOut || m.stepCategory === 'dest';
         const hospIcon = L.divIcon({
           html: showHospLabel ? `
-            <div class="cursor-pointer transition-transform hover:scale-110" style="position:relative; transform:translate(-50%, -50%);">
-              <div style="display:flex; align-items:center; gap:4px; padding:3px 6px; background:rgba(15,23,42,0.95); border:1.5px solid #0284c7; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.7);">
-                <span style="font-size:9px; font-weight:800; font-family:monospace; background:#082f49; color:#7dd3fc; border:1px solid #0284c7; padding:1px 3px; border-radius:4px;">HOSPITAL</span>
-                ${SVG_HOSPITAL_HTML(14, '#38bdf8')}
-                <span style="font-size:11px; font-weight:700; color:#ffffff; font-family:sans-serif; white-space:nowrap; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;">${m.customBanner || m.title}</span>
+            <div class="cursor-pointer transition-transform hover:scale-105" style="position:relative; transform:translate(-50%, -50%);">
+              <div style="display:flex; align-items:center; gap:5px; padding:3px 7px; background:#0E1625; border:1px solid #26364B; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.6);">
+                <span style="font-size:9px; font-weight:700; font-family:monospace; background:rgba(19,184,213,0.15); color:#13B8D5; border:1px solid rgba(19,184,213,0.3); padding:1px 3px; border-radius:4px;">HOSPITAL</span>
+                ${SVG_HOSPITAL_HTML(13, '#13B8D5')}
+                <span style="font-size:11px; font-weight:600; color:#E8EEF7; font-family:sans-serif; white-space:nowrap;">${m.customBanner || m.title}</span>
               </div>
             </div>
           ` : `
-            <div class="cursor-pointer transition-transform hover:scale-125" style="position:relative; transform:translate(-50%, -50%);" title="${m.title} (REPORTED HOSPITAL)">
-              <div style="display:flex; align-items:center; justify-content:center; width:22px; height:22px; background:rgba(15,23,42,0.95); border:1.5px solid #0284c7; border-radius:50%; box-shadow:0 2px 8px rgba(0,0,0,0.6);">
-                ${SVG_HOSPITAL_HTML(12, '#38bdf8')}
+            <div class="cursor-pointer transition-transform hover:scale-115" style="position:relative; transform:translate(-50%, -50%);" title="${m.title} (REPORTED HOSPITAL)">
+              <div style="display:flex; align-items:center; justify-content:center; width:22px; height:22px; background:#0E1625; border:1px solid #26364B; border-radius:50%; box-shadow:0 2px 6px rgba(0,0,0,0.6);">
+                ${SVG_HOSPITAL_HTML(12, '#13B8D5')}
               </div>
             </div>
           `,
@@ -1106,11 +1113,10 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       if (isFieldReport) {
         const repIcon = L.divIcon({
           html: `
-            <div class="cursor-pointer transition-transform hover:scale-110" style="position:relative; transform:translate(-50%, -50%); z-index:900;">
-              <div style="display:flex; align-items:center; gap:5px; padding:3px 8px; background:rgba(20,20,10,0.96); border:2px solid #f59e0b; border-radius:8px; box-shadow:0 0 16px rgba(245,158,11,0.5);">
-                <span style="font-size:9px; font-weight:800; font-family:monospace; background:#451a03; color:#fde68a; border:1px solid #d97706; padding:1px 4px; border-radius:4px;">FIELD REPORT</span>
-                <span style="font-size:12px;">📝</span>
-                <span style="font-size:11px; font-weight:700; color:#fef3c7; font-family:sans-serif; white-space:nowrap;">${m.customBanner || m.title}</span>
+            <div class="cursor-pointer transition-transform hover:scale-105" style="position:relative; transform:translate(-50%, -50%); z-index:900;">
+              <div style="display:flex; align-items:center; gap:5px; padding:3px 7px; background:#0E1625; border:1px solid #F0B44D; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.6);">
+                <span style="font-size:9px; font-weight:700; font-family:monospace; background:rgba(240,180,77,0.15); color:#F0B44D; border:1px solid rgba(240,180,77,0.3); padding:1px 3px; border-radius:4px;">FIELD REPORT</span>
+                <span style="font-size:11px; font-weight:600; color:#E8EEF7; font-family:sans-serif; white-space:nowrap;">${m.customBanner || m.title}</span>
               </div>
             </div>
           `,
@@ -1130,17 +1136,16 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       // 4.4 Disrupted vs Rescued Village Pins
       if (isVillage) {
         const isIsolated = m.type === 'isolated';
-        const borderColor = isIsolated ? '#ef4444' : '#10b981';
-        const badgeBg = isIsolated ? '#450a0a' : '#064e3b';
-        const badgeText = isIsolated ? '#fca5a5' : '#a7f3d0';
-        const badgeLabel = isIsolated ? 'DANGER: DISCONNECTED' : 'RESCUE: CONNECTED';
+        const statusColor = isIsolated ? '#F06472' : '#22C58B';
+        const badgeLabel = isIsolated ? 'DISCONNECTED' : 'CONNECTED';
 
         const villageIcon = L.divIcon({
           html: `
-            <div class="cursor-pointer transition-transform hover:scale-110" style="position:relative; transform:translate(-50%, -50%);">
-              <div style="display:flex; align-items:center; gap:4px; padding:3px 7px; background:rgba(15,23,42,0.96); border:1.5px solid ${borderColor}; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.7);">
-                <span style="font-size:9px; font-weight:800; font-family:monospace; background:${badgeBg}; color:${badgeText}; border:1px solid ${borderColor}; padding:1px 4px; border-radius:4px;">${badgeLabel}</span>
-                <span style="font-size:11px; font-weight:700; color:#ffffff; font-family:sans-serif; white-space:nowrap; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;">${m.customBanner || m.title}</span>
+            <div class="cursor-pointer transition-transform hover:scale-105" style="position:relative; transform:translate(-50%, -50%);">
+              <div style="display:flex; align-items:center; gap:4px; padding:2px 6px; background:#0E1625; border:1px solid ${statusColor}; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,0.6);">
+                <span style="width:6px; height:6px; border-radius:50%; background:${statusColor}; shrink-0"></span>
+                <span style="font-size:9px; font-weight:700; font-family:monospace; color:${statusColor}; padding:0 2px;">${badgeLabel}</span>
+                <span style="font-size:11px; font-weight:600; color:#E8EEF7; font-family:sans-serif; white-space:nowrap;">${m.title}</span>
               </div>
             </div>
           `,
@@ -1150,6 +1155,9 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         });
 
         const marker = L.marker([m.lat, m.lon], { icon: villageIcon, pane: 'markersPane' });
+        if (m.customBanner) {
+          marker.bindTooltip(m.customBanner, { direction: 'top', offset: [0, -4] });
+        }
         if (m.onClick) {
           marker.on('click', m.onClick);
         }
@@ -1161,11 +1169,10 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       if (isAmbulance) {
         const ambIcon = L.divIcon({
           html: `
-            <div class="cursor-pointer transition-transform hover:scale-110" style="position:relative; transform:translate(-50%, -50%);">
-              <div style="display:flex; align-items:center; gap:4px; padding:3px 6px; background:rgba(15,23,42,0.95); border:1.5px solid #0ea5e9; border-radius:8px; box-shadow:0 4px 12px rgba(14,165,233,0.3);">
-                <span style="font-size:9px; font-weight:800; font-family:monospace; background:#082f49; color:#7dd3fc; border:1px solid #0284c7; padding:1px 3px; border-radius:4px;">SURGE</span>
-                <span style="font-size:12px;">🚑</span>
-                <span style="font-size:11px; font-weight:700; color:#e0f2fe; font-family:sans-serif; white-space:nowrap;">${m.customBanner || m.title}</span>
+            <div class="cursor-pointer transition-transform hover:scale-105" style="position:relative; transform:translate(-50%, -50%);">
+              <div style="display:flex; align-items:center; gap:5px; padding:3px 7px; background:#0E1625; border:1px solid #13B8D5; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.6);">
+                <span style="font-size:9px; font-weight:700; font-family:monospace; background:rgba(19,184,213,0.15); color:#13B8D5; border:1px solid rgba(19,184,213,0.3); padding:1px 3px; border-radius:4px;">SURGE</span>
+                <span style="font-size:11px; font-weight:600; color:#E8EEF7; font-family:sans-serif; white-space:nowrap;">${m.customBanner || m.title}</span>
               </div>
             </div>
           `,
@@ -1241,40 +1248,40 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   };
 
   return (
-    <div className="relative w-full h-full select-none overflow-hidden bg-slate-950">
+    <div className="relative w-full h-full select-none overflow-hidden bg-[#080D16]">
       {/* Real Map Canvas with Dual Panes for Before/After */}
       <div ref={mapContainerRef} className="w-full h-full z-10" />
 
-      {/* DRAGGABLE BEFORE/AFTER SWIPE DIVIDER (Requirement 1: Hidden when no compatible imagery pair loaded) */}
+      {/* DRAGGABLE BEFORE/AFTER SWIPE DIVIDER */}
       {hasCompatibleImageryPair && swipeMode === 'swipe' && (
         <div
-          className="absolute top-0 bottom-0 z-[800] w-1 bg-white cursor-ew-resize select-none pointer-events-auto shadow-[0_0_15px_rgba(255,255,255,0.7)]"
+          className="absolute top-0 bottom-0 z-[800] w-1 bg-[#13B8D5] cursor-ew-resize select-none pointer-events-auto shadow-[0_0_12px_rgba(19,184,213,0.7)]"
           style={{ left: `${swipePos}%` }}
           onMouseDown={handleDividerMouseDown}
           onTouchStart={handleDividerTouchStart}
         >
           {/* Circular Divider Handle */}
-          <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-slate-900 border-2 border-white shadow-2xl flex items-center justify-center text-white cursor-ew-resize font-bold select-none hover:scale-110 transition-transform">
-            <span className="text-white font-mono text-xs font-black tracking-tight select-none leading-none">◂ ▸</span>
+          <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#0E1625] border-2 border-[#13B8D5] shadow-2xl flex items-center justify-center text-[#13B8D5] cursor-ew-resize font-bold select-none hover:scale-110 transition-transform">
+            <span className="font-mono text-xs font-black tracking-tight select-none leading-none">◂ ▸</span>
           </div>
         </div>
       )}
 
-      {/* TOP PILLS: Reference image 2 style Before / After indicators */}
+      {/* TOP PILLS: Before / After indicators positioned cleanly inside map canvas */}
       {(swipeMode === 'swipe' || swipeMode === 'before') && (
         <div
-          className="absolute top-16 z-[790] pointer-events-none transition-all hidden md:block"
+          className="absolute top-4 z-[790] pointer-events-none transition-all hidden md:block"
           style={{
-            left: `${panelWidth + 24}px`,
-            maxWidth: swipeMode === 'swipe' ? `calc(${swipePos}% - ${panelWidth + 40}px)` : 'auto',
+            left: '16px',
+            maxWidth: swipeMode === 'swipe' ? `calc(${swipePos}% - 28px)` : 'calc(100% - 32px)',
           }}
         >
-          <div className="px-3 py-1 rounded-lg bg-rose-950/95 border border-rose-600/80 text-[11px] font-mono font-bold text-rose-200 shadow-xl truncate flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0 animate-ping" />
+          <div className="px-3 py-1 rounded-lg bg-[#0E1625]/95 border border-[#F06472] text-[11px] font-mono font-bold text-[#F06472] shadow-xl truncate flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#F06472] shrink-0 animate-ping" />
             <span>
               {theaterId === 'nepal'
-                ? '🔴 BEFORE: 120M GORGE WASHOUT / 18 HAMLETS CUT OFF'
-                : '🔴 BEFORE: 80M JT ROAD BREACH / 42 VILLAGES CUT OFF'}
+                ? 'BEFORE: 120M GORGE WASHOUT / 18 HAMLETS CUT OFF'
+                : 'BEFORE: 80M JT ROAD BREACH / 42 VILLAGES CUT OFF'}
             </span>
           </div>
         </div>
@@ -1282,79 +1289,27 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
 
       {(swipeMode === 'swipe' || swipeMode === 'after') && (
         <div
-          className="absolute top-16 z-[790] pointer-events-none transition-all hidden md:block"
+          className="absolute top-4 z-[790] pointer-events-none transition-all hidden md:block"
           style={{
-            left: swipeMode === 'swipe' ? `calc(${swipePos}% + 15px)` : `${panelWidth + 30}px`,
-            maxWidth: 'calc(100vw - 780px)',
+            left: swipeMode === 'swipe' ? `calc(${swipePos}% + 16px)` : '16px',
+            maxWidth: 'calc(100% - 32px)',
           }}
         >
-          <div className="px-3 py-1 rounded-lg bg-emerald-950/95 border border-emerald-500/80 text-[11px] font-mono font-bold text-emerald-200 shadow-xl truncate flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 animate-pulse" />
+          <div className="px-3 py-1 rounded-lg bg-[#0E1625]/95 border border-[#22C58B] text-[11px] font-mono font-bold text-[#22C58B] shadow-xl truncate flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#22C58B] shrink-0 animate-pulse" />
             <span>
               {theaterId === 'nepal'
-                ? '🟢 AFTER: RESCUE / BP HIGHWAY RESTORED IN 28M'
-                : '🟢 AFTER: RESCUE / HIGHWAY RESTORED IN 18M'}
+                ? 'AFTER: RESCUE / BP HIGHWAY RESTORED IN 28M'
+                : 'AFTER: RESCUE / HIGHWAY RESTORED IN 18M'}
             </span>
           </div>
         </div>
       )}
 
-      {/* Floating Simulation Story & Timely Intervention Narrative Card */}
-      <div className="fixed top-16 right-16 z-[780] max-w-sm pointer-events-auto hidden lg:block">
-        <div className="bg-slate-950/95 backdrop-blur-xl border border-slate-700/80 rounded-2xl shadow-2xl p-3 text-white transition-all">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
-            <div className="flex items-center gap-2">
-              <span className="text-base">{theaterId === 'nepal' ? '🇳🇵' : '🇮🇳'}</span>
-              <span className="text-xs font-bold font-mono text-cyan-300">
-                {theaterId === 'nepal' ? 'Nepal Roshi Gorge Simulation' : 'Assam Flood Simulation Story'}
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsNarrativeOpen((prev) => !prev)}
-              className="text-[10px] font-mono text-slate-400 hover:text-white px-1.5 py-0.5 rounded hover:bg-slate-800 cursor-pointer"
-            >
-              {isNarrativeOpen ? '▲ Collapse' : '▼ Read Story'}
-            </button>
-          </div>
-
-          {isNarrativeOpen && (
-            <div className="mt-2 space-y-2 text-xs font-sans">
-              <div className="p-2 rounded-xl bg-rose-950/40 border border-rose-900/60">
-                <span className="text-[10px] font-mono uppercase font-bold text-rose-400 block mb-0.5">
-                  1. Disaster Incident (Before)
-                </span>
-                <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
-                  {theaterId === 'nepal'
-                    ? 'September 2024: Torrential monsoon flash floods along Roshi Khola triggered landslides, washing away a 120m section of BP Highway (NH08) at Km 48. 18 hamlets were isolated with an impassable 135m mountain detour.'
-                    : 'June 2022: Barak River crested 1.8m above Danger Level. 80m JT Road breach severed 42 villages & 14,000 citizens from Silchar Civil Hospital with an unviable +47m detour.'}
-                </p>
-              </div>
-
-              <div className="p-2 rounded-xl bg-emerald-950/40 border border-emerald-900/60">
-                <span className="text-[10px] font-mono uppercase font-bold text-emerald-400 block mb-0.5">
-                  2. Timely Intervention (Lifeline OS)
-                </span>
-                <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
-                  {theaterId === 'nepal'
-                    ? 'Lifeline OS deployed modular Class-40 bridging and high-altitude UAV airbridges across Roshi Gorge, reconnecting all 18 hamlets and restoring direct hospital transit in 28 minutes.'
-                    : 'Lifeline OS multi-modal triage dispatched Class-40 Bailey spans and 40HP rescue boats, restoring direct hospital transit for 14,000 residents in 18 minutes.'}
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 pt-0.5">
-                <span>Drag divider ◂ ▸ to compare</span>
-                <span className="text-cyan-400 font-bold">{theaterId === 'nepal' ? '28m vs 135m' : '18m vs 65m'}</span>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
       {/* TOP-RIGHT VIEW MODE SWITCHER: [ Before (Danger) | ↔ Swipe Split | After (Rescue) ] */}
-      <div className="absolute bottom-20 right-6 z-[850] flex items-center gap-2 pointer-events-auto">
-        <div className="flex items-center bg-slate-900/95 border border-slate-700/80 rounded-xl p-1 shadow-2xl">
-          <span className="text-[10px] font-mono uppercase font-bold text-slate-400 px-2">Map Compare:</span>
+      <div className="absolute bottom-12 right-4 z-[850] flex items-center gap-2 pointer-events-auto">
+        <div className="flex items-center bg-[#0E1625]/95 border border-[#26364B] rounded-lg p-1 shadow-lg">
+          <span className="text-[10px] font-mono uppercase font-bold text-[#74859D] px-2">Compare:</span>
           {(
             [
               { id: 'before', label: '🔴 Before (Danger)' },
@@ -1366,10 +1321,10 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
               key={item.id}
               type="button"
               onClick={() => setSwipeMode(item.id)}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
                 swipeMode === item.id
-                  ? 'bg-cyan-600 text-white shadow-md'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  ? 'bg-[#182437] text-[#13B8D5] border border-[#26364B]'
+                  : 'text-[#9AAAC0] hover:text-[#E8EEF7]'
               }`}
             >
               {item.label}
@@ -1379,143 +1334,98 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       </div>
 
       {/* Live GIS Coordinates & Zoom Level */}
-      <div className="fixed bottom-3 right-6 z-[850] px-2.5 py-1 rounded-lg bg-slate-950/90 border border-slate-800 text-[10px] font-mono text-slate-400 backdrop-blur-md shadow-lg pointer-events-none select-none flex items-center gap-2">
+      <div className="absolute bottom-3 right-4 z-[850] px-2.5 py-1 rounded-lg bg-[#0E1625]/90 border border-[#26364B] text-[10px] font-mono text-[#9AAAC0] backdrop-blur-md shadow-lg pointer-events-none select-none flex items-center gap-2">
         <span>{currentCoords[0].toFixed(5)}°N, {currentCoords[1].toFixed(5)}°E</span>
-        <span className="text-slate-600">|</span>
+        <span className="text-[#26364B]">|</span>
         <span>z{currentZoomLevel}</span>
       </div>
 
       {/* Zoomed-Out Declutter Cluster Chip (Requirement 4) */}
       {currentZoomLevel < 12 && (
-        <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[850] px-3 py-1 rounded-full bg-slate-900/90 border border-slate-700/80 text-[10px] font-mono text-cyan-300 shadow-xl backdrop-blur-md pointer-events-none select-none flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-          <span>{chokePoints.length} Choke Corridors • {theaterId === 'nepal' ? '18 Hamlets' : '319 Habitations'} (Zoom in to expand individual labels)</span>
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-[850] px-3 py-1 rounded-full bg-[#0E1625]/90 border border-[#26364B] text-[10px] font-mono text-[#13B8D5] shadow-xl backdrop-blur-md pointer-events-none select-none flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#13B8D5] animate-pulse" />
+          <span>{chokePoints.length} Choke Corridors • {theaterId === 'nepal' ? '18 Hamlets' : '319 Habitations'}</span>
         </div>
       )}
 
-      {/* LAYER CATALOGUE & VISIBILITY CONTROLS (Deconflicted to Top Right Toolbar Area) */}
-      <div className="fixed top-18 right-16 z-[450] bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-2xl w-[310px] max-w-[90vw] backdrop-blur-md select-none pointer-events-auto overflow-hidden transition-all">
+      {/* LAYER CATALOGUE & VISIBILITY CONTROLS */}
+      <div className="absolute top-4 right-4 z-[450] bg-[#0E1625]/95 border border-[#26364B] rounded-xl shadow-2xl w-[300px] max-w-[90vw] backdrop-blur-md select-none pointer-events-auto overflow-hidden transition-all">
         {/* Toggle Header Bar */}
         <div
           onClick={() => setIsLegendOpen(!isLegendOpen)}
-          className="p-2.5 px-3 flex items-center justify-between cursor-pointer hover:bg-slate-800/80 transition-colors border-b border-slate-800"
+          className="p-2.5 px-3 flex items-center justify-between cursor-pointer hover:bg-[#121D2D] transition-colors border-b border-[#26364B]"
         >
           <div className="flex items-center gap-2">
-            <Layers className="w-4 h-4 text-cyan-400" />
-            <span className="text-xs font-bold text-white tracking-wide">
-              Layer Catalogue &amp; Controls
+            <Layers className="w-4 h-4 text-[#13B8D5]" />
+            <span className="text-xs font-semibold text-[#E8EEF7] tracking-wide">
+              Evidence Layers
             </span>
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-slate-400">
-            <span className="text-[10px] font-mono uppercase bg-slate-800 px-1.5 py-0.5 rounded text-slate-300">
+          <div className="flex items-center gap-1.5 text-xs text-[#9AAAC0]">
+            <span className="text-[10px] font-mono uppercase bg-[#182437] px-1.5 py-0.5 rounded text-[#13B8D5] border border-[#26364B]">
               {activeMapMode}
             </span>
-            {isLegendOpen ? <ChevronDown className="w-3.5 h-3.5 text-slate-400" /> : <ChevronUp className="w-3.5 h-3.5 text-slate-400" />}
+            {isLegendOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
           </div>
         </div>
 
         {/* Expandable Body */}
         {isLegendOpen && (
-          <div className="p-3 space-y-3 max-h-[calc(100vh-250px)] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 animate-in fade-in text-xs">
+          <div className="p-3 space-y-3 max-h-[calc(100vh-250px)] overflow-y-auto scrollbar-thin scrollbar-thumb-[#26364B] animate-in fade-in text-xs">
             {/* Quick All On / All Off Actions */}
-            <div className="flex items-center justify-between pb-1.5 border-b border-slate-800">
-              <span className="text-[10px] font-mono uppercase font-bold text-slate-400">Layer Toggles</span>
+            <div className="flex items-center justify-between pb-1.5 border-b border-[#26364B]">
+              <span className="text-[10px] font-mono uppercase font-semibold text-[#74859D]">Layer Toggles</span>
               <div className="flex items-center gap-1 text-[10px] font-mono">
                 <button
                   type="button"
                   onClick={() => setAllLayers(true)}
-                  className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 cursor-pointer"
+                  className="px-2 py-0.5 rounded bg-[#182437] text-[#9AAAC0] hover:text-[#E8EEF7] border border-[#26364B] cursor-pointer"
                 >
                   All On
                 </button>
                 <button
                   type="button"
                   onClick={() => setAllLayers(false)}
-                  className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 cursor-pointer"
+                  className="px-2 py-0.5 rounded bg-[#182437] text-[#9AAAC0] hover:text-[#E8EEF7] border border-[#26364B] cursor-pointer"
                 >
                   All Off
                 </button>
               </div>
             </div>
 
-            {/* Base Layer Switcher (Working Street, Satellite, Dark) */}
-            <div>
-              <span className="text-[10px] uppercase font-semibold text-slate-400 block mb-1.5 font-mono">
-                Basemap:
-              </span>
-              <div className="grid grid-cols-3 gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setMapMode('street')}
-                  className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                    activeMapMode === 'street'
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700'
-                  }`}
-                >
-                  <Map className="w-3.5 h-3.5" />
-                  <span>Street</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMapMode('satellite')}
-                  className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                    activeMapMode === 'satellite'
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700'
-                  }`}
-                >
-                  <Satellite className="w-3.5 h-3.5" />
-                  <span>Satellite</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMapMode('vector')}
-                  className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                    activeMapMode === 'vector'
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700'
-                  }`}
-                >
-                  <Moon className="w-3.5 h-3.5" />
-                  <span>Dark</span>
-                </button>
-              </div>
-            </div>
-
             {/* Layer Rows with Opacity Sliders & Badges */}
-            <div className="space-y-2 pt-1 border-t border-slate-800/80">
-              <span className="text-[10px] uppercase font-mono font-bold text-slate-400 block">
+            <div className="space-y-2 pt-1 border-t border-[#1E2B3D]">
+              <span className="text-[10px] uppercase font-mono font-bold text-[#74859D] block">
                 Evidence Layers
               </span>
 
               {/* 1. Sentinel-1 SAR Extent */}
-              <div className="p-2 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1.5">
+              <div className="p-2 rounded-xl bg-[#121D2D] border border-[#26364B] space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="flex items-center gap-2 cursor-pointer font-sans text-xs text-white">
+                  <label className="flex items-center gap-2 cursor-pointer font-sans text-xs text-[#E8EEF7]">
                     <input
                       type="checkbox"
                       checked={layerVisibility.floodExtent}
                       onChange={() => toggleLayerItem('floodExtent')}
-                      className="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0"
+                      className="rounded border-[#26364B] bg-[#182437] text-[#13B8D5] focus:ring-0"
                     />
                     <span>Flood Extent</span>
                   </label>
                   <div className="flex items-center gap-1">
-                    <span className="text-[9px] font-mono px-1.5 py-0.2 rounded font-bold bg-zinc-900 text-zinc-400 border border-zinc-700" title="origin undocumented">
+                    <span className="text-[9px] font-mono px-1.5 py-0.2 rounded font-bold bg-[#182437] text-[#9AAAC0] border border-[#26364B]" title="origin undocumented">
                       UNKNOWN
                     </span>
                     <button
                       type="button"
                       onClick={() => zoomToLayer('floodExtent')}
-                      className="p-1 text-slate-400 hover:text-white"
+                      className="p-1 text-[#9AAAC0] hover:text-[#E8EEF7]"
                       title="Zoom to flood extent"
                     >
                       <Maximize2 className="w-3 h-3" />
                     </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400">
+                <div className="flex items-center gap-2 text-[10px] font-mono text-[#9AAAC0]">
                   <span className="w-12">Opacity:</span>
                   <input
                     type="range"
@@ -1526,29 +1436,29 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                     onChange={(e) =>
                       setLayerOpacity((prev) => ({ ...prev, floodExtent: parseFloat(e.target.value) }))
                     }
-                    className="w-full h-1 bg-slate-800 rounded accent-cyan-400"
+                    className="w-full h-1 bg-[#182437] rounded accent-[#13B8D5]"
                   />
                   <span className="w-8 text-right">{Math.round(layerOpacity.floodExtent * 100)}%</span>
                 </div>
               </div>
 
               {/* 2. Contours */}
-              <div className="p-2 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1.5">
+              <div className="p-2 rounded-xl bg-[#121D2D] border border-[#26364B] space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="flex items-center gap-2 cursor-pointer font-sans text-xs text-white">
+                  <label className="flex items-center gap-2 cursor-pointer font-sans text-xs text-[#E8EEF7]">
                     <input
                       type="checkbox"
                       checked={layerVisibility.contours}
                       onChange={() => toggleLayerItem('contours')}
-                      className="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0"
+                      className="rounded border-[#26364B] bg-[#182437] text-[#13B8D5] focus:ring-0"
                     />
                     <span>Contours GLO-30 (10–50m)</span>
                   </label>
-                  <span className="text-[9px] font-mono px-1.5 py-0.2 rounded font-bold bg-sky-950 text-sky-300 border border-sky-700">
+                  <span className="text-[9px] font-mono px-1.5 py-0.2 rounded font-bold bg-[#182437] text-[#13B8D5] border border-[#26364B]">
                     OFFICIAL
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400">
+                <div className="flex items-center gap-2 text-[10px] font-mono text-[#9AAAC0]">
                   <span className="w-12">Opacity:</span>
                   <input
                     type="range"
@@ -1559,29 +1469,29 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                     onChange={(e) =>
                       setLayerOpacity((prev) => ({ ...prev, contours: parseFloat(e.target.value) }))
                     }
-                    className="w-full h-1 bg-slate-800 rounded accent-amber-400"
+                    className="w-full h-1 bg-[#182437] rounded accent-[#F0B44D]"
                   />
                   <span className="w-8 text-right">{Math.round(layerOpacity.contours * 100)}%</span>
                 </div>
               </div>
 
               {/* 3. Settlements */}
-              <div className="p-2 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1.5">
+              <div className="p-2 rounded-xl bg-[#121D2D] border border-[#26364B] space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="flex items-center gap-2 cursor-pointer font-sans text-xs text-white">
+                  <label className="flex items-center gap-2 cursor-pointer font-sans text-xs text-[#E8EEF7]">
                     <input
                       type="checkbox"
                       checked={layerVisibility.settlements}
                       onChange={() => toggleLayerItem('settlements')}
-                      className="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0"
+                      className="rounded border-[#26364B] bg-[#182437] text-[#13B8D5] focus:ring-0"
                     />
                     <span>319 Settlements (Access)</span>
                   </label>
-                  <span className="text-[9px] font-mono px-1.5 py-0.2 rounded font-bold bg-rose-950 text-rose-300 border border-rose-700">
+                  <span className="text-[9px] font-mono px-1.5 py-0.2 rounded font-bold bg-[#F06472]/15 text-[#F06472] border border-[#F06472]/30">
                     SIMULATED
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400">
+                <div className="flex items-center gap-2 text-[10px] font-mono text-[#9AAAC0]">
                   <span className="w-12">Opacity:</span>
                   <input
                     type="range"
@@ -1592,39 +1502,39 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                     onChange={(e) =>
                       setLayerOpacity((prev) => ({ ...prev, settlements: parseFloat(e.target.value) }))
                     }
-                    className="w-full h-1 bg-slate-800 rounded accent-cyan-400"
+                    className="w-full h-1 bg-[#182437] rounded accent-[#13B8D5]"
                   />
                   <span className="w-8 text-right">{Math.round(layerOpacity.settlements * 100)}%</span>
                 </div>
               </div>
 
               {/* 4. Road Corridors */}
-              <div className="p-2 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1.5">
+              <div className="p-2 rounded-xl bg-[#121D2D] border border-[#26364B] space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="flex items-center gap-2 cursor-pointer font-sans text-xs text-white">
+                  <label className="flex items-center gap-2 cursor-pointer font-sans text-xs text-[#E8EEF7]">
                     <input
                       type="checkbox"
                       checked={layerVisibility.roads}
                       onChange={() => toggleLayerItem('roads')}
-                      className="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0"
+                      className="rounded border-[#26364B] bg-[#182437] text-[#13B8D5] focus:ring-0"
                     />
                     <span>Road Corridors &amp; Detours</span>
                   </label>
                   <div className="flex items-center gap-1">
-                    <span className="text-[9px] font-mono px-1.5 py-0.2 rounded font-bold bg-sky-950 text-sky-300 border border-sky-700">
+                    <span className="text-[9px] font-mono px-1.5 py-0.2 rounded font-bold bg-[#182437] text-[#13B8D5] border border-[#26364B]">
                       MODELLED
                     </span>
                     <button
                       type="button"
                       onClick={() => zoomToLayer('roads')}
-                      className="p-1 text-slate-400 hover:text-white"
+                      className="p-1 text-[#9AAAC0] hover:text-[#E8EEF7]"
                       title="Zoom to corridors"
                     >
                       <Maximize2 className="w-3 h-3" />
                     </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400">
+                <div className="flex items-center gap-2 text-[10px] font-mono text-[#9AAAC0]">
                   <span className="w-12">Opacity:</span>
                   <input
                     type="range"
@@ -1635,29 +1545,29 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                     onChange={(e) =>
                       setLayerOpacity((prev) => ({ ...prev, roads: parseFloat(e.target.value) }))
                     }
-                    className="w-full h-1 bg-slate-800 rounded accent-cyan-400"
+                    className="w-full h-1 bg-[#182437] rounded accent-[#13B8D5]"
                   />
                   <span className="w-8 text-right">{Math.round(layerOpacity.roads * 100)}%</span>
                 </div>
               </div>
 
               {/* 5. Hospitals */}
-              <div className="p-2 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1.5">
+              <div className="p-2 rounded-xl bg-[#121D2D] border border-[#26364B] space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="flex items-center gap-2 cursor-pointer font-sans text-xs text-white">
+                  <label className="flex items-center gap-2 cursor-pointer font-sans text-xs text-[#E8EEF7]">
                     <input
                       type="checkbox"
                       checked={layerVisibility.hospitals}
                       onChange={() => toggleLayerItem('hospitals')}
-                      className="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0"
+                      className="rounded border-[#26364B] bg-[#182437] text-[#13B8D5] focus:ring-0"
                     />
                     <span>Hospitals &amp; Clinics</span>
                   </label>
-                  <span className="text-[9px] font-mono px-1.5 py-0.2 rounded font-bold bg-sky-950 text-sky-300 border border-sky-700">
+                  <span className="text-[9px] font-mono px-1.5 py-0.2 rounded font-bold bg-[#182437] text-[#13B8D5] border border-[#26364B]">
                     REPORTED
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400">
+                <div className="flex items-center gap-2 text-[10px] font-mono text-[#9AAAC0]">
                   <span className="w-12">Opacity:</span>
                   <input
                     type="range"
@@ -1668,7 +1578,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                     onChange={(e) =>
                       setLayerOpacity((prev) => ({ ...prev, hospitals: parseFloat(e.target.value) }))
                     }
-                    className="w-full h-1 bg-slate-800 rounded accent-cyan-400"
+                    className="w-full h-1 bg-[#182437] rounded accent-[#13B8D5]"
                   />
                   <span className="w-8 text-right">{Math.round(layerOpacity.hospitals * 100)}%</span>
                 </div>
@@ -1679,26 +1589,26 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       </div>
 
       {/* Requirement 5: Small Collapsible Map Legend */}
-      <div className="absolute bottom-28 left-4 z-20 pointer-events-auto select-none">
-        <div className="bg-slate-950/90 backdrop-blur-md border border-slate-800 rounded-xl shadow-xl overflow-hidden text-xs font-mono text-slate-200">
+      <div className="absolute bottom-4 left-4 z-20 pointer-events-auto select-none">
+        <div className="bg-[#0E1625]/95 backdrop-blur-md border border-[#26364B] rounded-lg shadow-xl overflow-hidden text-xs font-mono text-[#E8EEF7]">
           <button
             type="button"
             onClick={() => setIsLegendCollapsed((prev) => !prev)}
-            className="w-full px-2.5 py-1.5 bg-slate-900/90 hover:bg-slate-800 flex items-center justify-between gap-2 font-bold text-[11px] cursor-pointer"
+            className="w-full px-2.5 py-1.5 bg-[#121D2D] hover:bg-[#182437] flex items-center justify-between gap-2 font-semibold text-[11px] cursor-pointer"
           >
-            <span className="flex items-center gap-1.5 text-cyan-300">
-              <span className="w-2 h-2 rounded-full bg-cyan-400" />
+            <span className="flex items-center gap-1.5 text-[#13B8D5]">
+              <span className="w-2 h-2 rounded-full bg-[#13B8D5]" />
               Map Legend
             </span>
-            {isLegendCollapsed ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />}
+            {isLegendCollapsed ? <ChevronUp className="w-3.5 h-3.5 text-[#9AAAC0]" /> : <ChevronDown className="w-3.5 h-3.5 text-[#9AAAC0]" />}
           </button>
           {!isLegendCollapsed && (
-            <div className="p-2 space-y-2 border-t border-slate-800/80 text-[10px]">
+            <div className="p-2.5 space-y-2 border-t border-[#1E2B3D] text-[10px]">
               {/* Dot colours */}
               <div className="space-y-1">
-                <div className="text-slate-400 font-semibold uppercase text-[9px]">Settlements:</div>
+                <div className="text-[#74859D] font-semibold uppercase text-[9px]">Settlements:</div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 border border-emerald-300 shrink-0" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#22C58B] border border-[#22C58B]/50 shrink-0" />
                   <span>
                     {activeTool === 'bridge' || isBreachTemporarilyReopened
                       ? 'Rescued & connected (319)'
@@ -1708,7 +1618,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-blue-500 border border-blue-300 shrink-0" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#13B8D5] border border-[#13B8D5]/50 shrink-0" />
                   <span>
                     {rerouteAmbulances
                       ? 'Rescued via bypass (83)'
@@ -1718,7 +1628,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500 border border-rose-300 shrink-0" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#F06472] border border-[#F06472]/50 shrink-0" />
                   <span>
                     {activeTool === 'bridge' || isBreachTemporarilyReopened || rerouteAmbulances
                       ? 'No route (0 severed)'
@@ -1729,10 +1639,10 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                 </div>
               </div>
               {/* Line styles */}
-              <div className="space-y-1 pt-1.5 border-t border-slate-800">
-                <div className="text-slate-400 font-semibold uppercase text-[9px]">Line Styles:</div>
+              <div className="space-y-1 pt-1.5 border-t border-[#1E2B3D]">
+                <div className="text-[#74859D] font-semibold uppercase text-[9px]">Line Styles:</div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-4 h-0.5 bg-emerald-400 shrink-0" />
+                  <span className="w-4 h-0.5 bg-[#22C58B] shrink-0" />
                   <span>
                     {activeTool === 'bridge' || isBreachTemporarilyReopened
                       ? 'Rescued highway route'
@@ -1740,13 +1650,13 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-4 border-t-2 border-dashed border-blue-400 shrink-0" />
+                  <span className="w-4 border-t-2 border-dashed border-[#13B8D5] shrink-0" />
                   <span>
                     {rerouteAmbulances ? 'Rescued detour bypass' : 'Detour bypass'}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-4 h-1 bg-rose-500 border-y border-rose-300 shrink-0" />
+                  <span className="w-4 h-1 bg-[#F06472] border-y border-[#F06472]/50 shrink-0" />
                   <span>Severed breach</span>
                 </div>
               </div>
