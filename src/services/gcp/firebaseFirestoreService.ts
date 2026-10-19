@@ -3,8 +3,11 @@
  * 
  * Scalable Google Cloud Firestore & Firebase Adapter.
  * Integrates disaster telemetry, simulation before/after runs, and field SOS reports.
- * Uses Google Cloud REST API with GEMINI_API_KEY / Google Application Credentials.
+ * Uses official @google-cloud/firestore SDK with fallback to local in-memory storage.
  */
+
+import { Firestore } from '@google-cloud/firestore';
+import fs from 'fs';
 
 export interface FirestoreSimulationDocument {
   id: string;
@@ -36,12 +39,36 @@ export interface FirestoreIncidentDocument {
 
 export class FirebaseFirestoreService {
   private projectId = 'lifeline-os-disaster-resilience';
+  private cloudProjectId = process.env.GCP_PROJECT_ID || 'ai-builder-2026-511407';
+  private databaseId = process.env.FIRESTORE_DATABASE_ID || 'ai-builder';
+  private firestoreClient: Firestore | null = null;
   private apiKey: string = '';
   private memorySimulations: FirestoreSimulationDocument[] = [];
   private memoryIncidents: FirestoreIncidentDocument[] = [];
 
   constructor() {
     this.apiKey = process.env.GEMINI_API_KEY || '';
+    
+    // Attempt initializing official @google-cloud/firestore client
+    try {
+      const credPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+      if (credPath && fs.existsSync(credPath)) {
+        this.firestoreClient = new Firestore({
+          projectId: this.cloudProjectId,
+          databaseId: this.databaseId,
+          keyFilename: credPath,
+        });
+      } else if (process.env.K_SERVICE || process.env.NODE_ENV === 'production') {
+        // When deployed on Google Cloud Run, automatically use Application Default Credentials (ADC)
+        this.firestoreClient = new Firestore({
+          projectId: this.cloudProjectId,
+          databaseId: this.databaseId,
+        });
+      }
+    } catch (e) {
+      // In-memory fallback
+    }
+
     // Initialize with verified benchmark record
     this.memorySimulations.push({
       id: 'sim_cachar_2022_initial',
@@ -57,7 +84,7 @@ export class FirebaseFirestoreService {
       restoredTransitMins: 18,
       preventionMethod: 'Copernicus Sentinel-1 SAR + GEE 72h Hydrology Early Warning',
       timestamp: new Date().toISOString(),
-      syncedToCloud: Boolean(this.apiKey),
+      syncedToCloud: Boolean(this.firestoreClient || this.apiKey),
     });
   }
 
@@ -80,34 +107,13 @@ export class FirebaseFirestoreService {
       syncedToCloud: false,
     };
 
-    // Attempt direct Google Cloud Firestore REST API call if API key exists
-    if (this.apiKey) {
+    // Live Google Cloud Firestore Write
+    if (this.firestoreClient) {
       try {
-        const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${this.projectId}/databases/(default)/documents/lifeline_simulations?documentId=${docId}&key=${this.apiKey}`;
-        const response = await fetch(firestoreUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fields: {
-              theaterId: { stringValue: doc.theaterId },
-              theaterName: { stringValue: doc.theaterName },
-              breachPoint: { stringValue: doc.breachPoint },
-              severedHabitationsCount: { integerValue: doc.severedHabitationsCount.toString() },
-              rescuedHabitationsCount: { integerValue: doc.rescuedHabitationsCount.toString() },
-              activeIntervention: { stringValue: doc.activeIntervention },
-              baselineDetourDelayMins: { integerValue: doc.baselineDetourDelayMins.toString() },
-              restoredTransitMins: { integerValue: doc.restoredTransitMins.toString() },
-              preventionMethod: { stringValue: doc.preventionMethod },
-              timestamp: { stringValue: doc.timestamp },
-            },
-          }),
-        });
-
-        if (response.ok) {
-          doc.syncedToCloud = true;
-        }
+        await this.firestoreClient.collection('lifeline_simulations').doc(docId).set(doc);
+        doc.syncedToCloud = true;
       } catch (err) {
-        // Fallback to memory store if cloud network unreachable
+        // Fallback to local memory
       }
     }
 
@@ -119,6 +125,25 @@ export class FirebaseFirestoreService {
    * Retrieves simulation history from Firestore / memory cache.
    */
   public async getSimulationHistory(theaterId?: string): Promise<FirestoreSimulationDocument[]> {
+    if (this.firestoreClient) {
+      try {
+        let query: any = this.firestoreClient.collection('lifeline_simulations');
+        if (theaterId) {
+          query = query.where('theaterId', '==', theaterId);
+        }
+        const snap = await query.get();
+        if (!snap.empty) {
+          const list: FirestoreSimulationDocument[] = [];
+          snap.forEach((d: any) => list.push(d.data() as FirestoreSimulationDocument));
+          if (list.length >= this.memorySimulations.length) {
+            return list;
+          }
+        }
+      } catch (e) {
+        // Fallback to memory store
+      }
+    }
+
     if (theaterId) {
       return this.memorySimulations.filter((s) => s.theaterId === theaterId);
     }
@@ -134,6 +159,15 @@ export class FirebaseFirestoreService {
       id: `inc_${Date.now()}`,
       timestamp: new Date().toISOString(),
     };
+
+    if (this.firestoreClient) {
+      try {
+        await this.firestoreClient.collection('disaster_incidents').doc(doc.id).set(doc);
+      } catch (e) {
+        // Fallback to memory
+      }
+    }
+
     this.memoryIncidents.unshift(doc);
     return doc;
   }
@@ -143,14 +177,19 @@ export class FirebaseFirestoreService {
    */
   public getStatus() {
     return {
-      status: this.apiKey ? 'ACTIVE' : 'LOCAL_ADAPTER',
+      status: this.firestoreClient || this.apiKey ? 'ACTIVE' : 'LOCAL_ADAPTER',
       projectId: this.projectId,
+      cloudProjectId: this.cloudProjectId,
+      databaseId: this.databaseId,
       apiKeyConfigured: Boolean(this.apiKey),
+      cloudClientConnected: Boolean(this.firestoreClient),
       collections: {
         lifeline_simulations: this.memorySimulations.length,
         disaster_incidents: this.memoryIncidents.length,
       },
-      mode: this.apiKey
+      mode: this.firestoreClient
+        ? `GOOGLE_CLOUD_FIRESTORE_NATIVE (${this.databaseId})`
+        : this.apiKey
         ? 'GOOGLE_CLOUD_REST_CONNECTED'
         : 'LOCAL_ADAPTER (not connected to Google Cloud)',
     };

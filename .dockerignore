@@ -6,6 +6,9 @@ dist
 datasets/gemini api key.txt
 *key*.txt
 **/*key*.txt
+*service*account*.json
+*gcp*.json
+gcp-service-account.json
 *.zip
 *.tar.gz
 temp_extracted
