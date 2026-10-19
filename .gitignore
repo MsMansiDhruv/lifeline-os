@@ -58,3 +58,5 @@ docs/videos/node_modules/
 *.wav
 test_deck.pptx
 pdf_inspection_output.txt
+/Lifeline_OS_Pitch_Deck*.pdf
+/Lifeline_OS_Pitch_Deck*.pptx

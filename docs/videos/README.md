@@ -1,4 +1,4 @@
-# Lifeline OS — Hackathon Technical Product Demonstration Video
+# Lifeline OS — Technical Product Demonstration & Operational Walkthrough Video
 
 Story-led, programmatic demonstration video engineered with [Remotion](https://www.remotion.dev/) (React 19 + TypeScript + Tailwind CSS).
 
@@ -6,7 +6,7 @@ Story-led, programmatic demonstration video engineered with [Remotion](https://w
 - **Target Duration:** 3 minutes 40 seconds (220.0 seconds)
 - **Total Frames:** 6,600 frames @ 30 FPS
 - **Resolution:** 1920 × 1080 (Full HD, 16:9 widescreen)
-- **Output Artifact:** `demo-assets/Lifeline_OS_Hackathon_Demo_3m40s.mp4`
+- **Output Artifact:** `docs/videos/Lifeline_OS_Walkthrough_Demo.mp4` (and `demo-assets/Lifeline_OS_Hackathon_Demo_3m40s.mp4`)
 
 ---
 
@@ -37,7 +37,7 @@ Story-led, programmatic demonstration video engineered with [Remotion](https://w
 
 ## Project Structure
 ```
-remotion-video/
+docs/videos/
 ├── public/
 │   ├── assets/       # Live application screenshots and architecture diagrams
 │   └── audio/        # Synchronized scene narration WAV tracks
@@ -63,5 +63,5 @@ npm run dev
 
 ### Render Final High-Resolution MP4
 ```bash
-npx remotion render LifelineOS-Demo ../demo-assets/Lifeline_OS_Hackathon_Demo_3m40s.mp4
+npx remotion render LifelineOS-Demo docs/videos/Lifeline_OS_Walkthrough_Demo.mp4
 ```

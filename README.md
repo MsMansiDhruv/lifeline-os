@@ -12,7 +12,7 @@
 
 **Deterministic Disaster Accessibility, Physical Asset Optimization & Resilient Public Health Equity**
 
-[🚀 Live Deployed Prototype](https://lifeline-os.ai.studio/) • [📊 Pitch Deck (PowerPoint)](Lifeline_OS_Pitch_Deck.pptx) • [📑 Pitch Deck (PDF)](Lifeline_OS_Pitch_Deck.pdf) • [📚 Technical Docs](docs/ARCHITECTURE.md) • [📲 Live Phone Demo](https://ntfy.sh/lifeline-os-alert-2026)
+[🚀 Live Deployed Platform](https://lifeline-os.ai.studio/) • [🎥 Video Walkthrough](docs/videos/Lifeline_OS_Walkthrough_Demo.mp4) • [📊 Executive Brief (PPTX)](docs/presentation/Lifeline_OS_Pitch_Deck.pptx) • [📑 Executive Brief (PDF)](docs/presentation/Lifeline_OS_Pitch_Deck.pdf) • [📚 Technical Docs](docs/ARCHITECTURE.md) • [📲 Live Phone Demo](https://ntfy.sh/lifeline-os-alert-2026)
 
 </div>
 
@@ -128,6 +128,14 @@ $$v = \sqrt{Q} \times 0.062 + 0.3$$
 
 <div align="center">
 
+### 🎥 Live Operational Simulation & Dynamic Re-Routing
+![Lifeline OS Live Simulation](lifeline_os_live_simulation.gif)  
+*Figure: Real-time dual-panel situational awareness showing 10m Sentinel-1 SAR flood extent overlay, topological graph percolation over 69,663 road links, dynamic Dijkstra ambulance re-routing around severed causeways, and instantaneous $k$-medoids boat staging calculations.*
+
+</div>
+
+<div align="center">
+
 | 1. Situational Command Dashboard | 2. Health Catchment Vulnerability |
 | :---: | :---: |
 | ![Situational Command Dashboard](demo-assets/screenshots/01_application_overview.png) | ![Health Vulnerability Summary](demo-assets/screenshots/06_flood_impact_analysis.png) |
@@ -150,9 +158,28 @@ $$v = \sqrt{Q} \times 0.062 + 0.3$$
 
 ---
 
+## 🎥 Video Demonstration & Operational Walkthrough
+
+A complete, story-led technical walkthrough of Lifeline OS is recorded and programmatically engineered using the Remotion engine in `docs/videos/`:
+
+- **Video Asset**: [`docs/videos/Lifeline_OS_Walkthrough_Demo.mp4`](docs/videos/Lifeline_OS_Walkthrough_Demo.mp4) *(3 minutes 40 seconds, Full HD 1080p @ 30 FPS, 6,600 frames)*.
+- **Remotion Project**: Complete React 19 source code, assets, and narration scripts are located in [`docs/videos/`](docs/videos/).
+- **Operational Capabilities Demonstrated**:
+  1. **Disaster Context & Dilemma**: Inundation vs operational disruption across Cachar / Silchar 2022.
+  2. **Live Incident Selection & Watershed Bounds**: Ingestion of Sentinel-1 radar and GloFAS river discharge.
+  3. **Evidence Provenance & Confidence Register**: 7-tier epistemic lineage and local adapter disclosures.
+  4. **Topological Network Breakdown**: 1,830 severed road links identified in 840ms with dynamic Dijkstra re-routing.
+  5. **Clinical Triage & BPHC Hospital Bed Surge**: 60-minute Golden Hour isochrones and medical diversion.
+  6. **Constrained Resource Allocation**: Linear programming for Class-40 Bailey Bridges and Zodiac rescue boats.
+  7. **Statutory Requisition Orders**: Legally binding SDRF Form-3B order generation with digital commander signature.
+  8. **Cryptographic Audit Trail**: Immutable SHA-256 Merkle chain recording every run for judicial review.
+  9. **Sub-Second Hardware Dispatch**: Live 420ms push notification to mobile handsets via ntfy.sh.
+
+---
+
 ## 📲 Zero-Cost Live Smartphone Hardware Demo
 
-Evaluators and judges can trigger a real, sub-second physical emergency dispatch alert directly on their own mobile device:
+Field commanders and evaluators can trigger a real, sub-second physical emergency dispatch alert directly on their own mobile device:
 
 1. Open **[ntfy.sh/lifeline-os-alert-2026](https://ntfy.sh/lifeline-os-alert-2026)** in any mobile browser (or install the free [ntfy app](https://ntfy.sh/) on iOS/Android).
 2. Tap **Subscribe** to topic: `lifeline-os-alert-2026`.
@@ -255,24 +282,29 @@ docker run -p 3000:3000 -e PORT=3000 lifeline-os
 
 ---
 
-## 📚 Technical Documentation Directory
+## 📚 Technical Documentation & Field Dossiers
 
 Comprehensive architectural, scientific, and governance specifications are maintained in the [`docs/`](docs/) directory:
 
-| Document | Purpose & Description |
-| :--- | :--- |
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Technical system architecture, visual diagrams, data-flow pipelines, and cloud adapters. |
-| [`docs/SIMULATION_METHODOLOGY.md`](docs/SIMULATION_METHODOLOGY.md) | Complete mathematical formulations: percolation, Dijkstra, $k$-medoids, and bridge ROI engine. |
-| [`docs/TECHNICAL_AUDIT.md`](docs/TECHNICAL_AUDIT.md) | Phase Zero architecture critique, identified defects, and engineering corrections. |
-| [`docs/DATA_SOURCE_REGISTER.md`](docs/DATA_SOURCE_REGISTER.md) | Registry of all external telemetry providers, licenses, spatial resolutions, and update cadences. |
-| [`docs/DATA_DICTIONARY.md`](docs/DATA_DICTIONARY.md) | Canonical evidence states, field definitions, units of measurement, and physical bounds. |
-| [`docs/PROVENANCE_AND_CONFIDENCE.md`](docs/PROVENANCE_AND_CONFIDENCE.md) | 7-tier confidence scoring and zero-fabrication data lineage governance. |
-| [`docs/VALIDATION_AND_BENCHMARKING.md`](docs/VALIDATION_AND_BENCHMARKING.md) | Cachar 2022, Wayanad 2024, and Nepal 2024 empirical benchmark results. |
-| [`docs/SECURITY_AND_SAFETY.md`](docs/SECURITY_AND_SAFETY.md) | Human-in-the-loop authorization, panic prevention, and data privacy protocols. |
-| [`docs/TEST_PLAN.md`](docs/TEST_PLAN.md) | Automated verification matrix and end-to-end testing workflow (235 tests). |
-| [`docs/GCP_DEPLOYMENT_PLAN.md`](docs/GCP_DEPLOYMENT_PLAN.md) | Google Cloud Run, Cloud Storage, and BigQuery production deployment guide. |
-| [`docs/KNOWN_LIMITATIONS.md`](docs/KNOWN_LIMITATIONS.md) | Assumptions, rating curve boundaries, and future sensor telemetry roadmap. |
-| [`Lifeline_OS_Pitch_Deck.pdf`](Lifeline_OS_Pitch_Deck.pdf) | Official 16-slide competition pitch deck in high-resolution vector PDF format. |
+| Document | Category | Purpose & Description |
+| :--- | :--- | :--- |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | **Architecture** | Technical system architecture, visual diagrams, data-flow pipelines, and cloud adapters. |
+| [`docs/SIMULATION_METHODOLOGY.md`](docs/SIMULATION_METHODOLOGY.md) | **Mathematics** | Complete mathematical formulations: percolation, Dijkstra, $k$-medoids, and bridge ROI engine. |
+| [`docs/TECHNICAL_AUDIT.md`](docs/TECHNICAL_AUDIT.md) | **Audit** | Phase Zero architecture critique, identified defects, and engineering corrections. |
+| [`docs/DATA_SOURCE_REGISTER.md`](docs/DATA_SOURCE_REGISTER.md) | **Data** | Registry of external telemetry providers, licenses, spatial resolutions, and update cadences. |
+| [`docs/DATA_DICTIONARY.md`](docs/DATA_DICTIONARY.md) | **Data** | Canonical evidence states, field definitions, units of measurement, and physical bounds. |
+| [`docs/PROVENANCE_AND_CONFIDENCE.md`](docs/PROVENANCE_AND_CONFIDENCE.md) | **Lineage** | 7-tier confidence scoring and zero-fabrication data lineage governance. |
+| [`docs/VALIDATION_AND_BENCHMARKING.md`](docs/VALIDATION_AND_BENCHMARKING.md) | **Validation** | Cachar 2022, Wayanad 2024, and Nepal 2024 empirical benchmark results. |
+| [`docs/SECURITY_AND_SAFETY.md`](docs/SECURITY_AND_SAFETY.md) | **Safety** | Human-in-the-loop authorization, panic prevention, and data privacy protocols. |
+| [`docs/TEST_PLAN.md`](docs/TEST_PLAN.md) | **Quality** | Automated verification matrix and end-to-end testing workflow (235 tests). |
+| [`docs/GCP_DEPLOYMENT_PLAN.md`](docs/GCP_DEPLOYMENT_PLAN.md) | **DevOps** | Google Cloud Run, Cloud Storage, and BigQuery production deployment guide. |
+| [`docs/KNOWN_LIMITATIONS.md`](docs/KNOWN_LIMITATIONS.md) | **Engineering** | Assumptions, rating curve boundaries, and future sensor telemetry roadmap. |
+| [`docs/presentation/Lifeline_OS_Pitch_Deck.pdf`](docs/presentation/Lifeline_OS_Pitch_Deck.pdf) | **Executive Brief** | High-resolution 16-slide technical pitch deck in vector PDF format. |
+| [`docs/presentation/Lifeline_OS_Pitch_Deck.pptx`](docs/presentation/Lifeline_OS_Pitch_Deck.pptx) | **Presentation** | Fully editable native PowerPoint presentation with vector diagrams and operational schematics. |
+| [`docs/sustainability/Lifeline_OS_Sustainability_Impact.pdf`](docs/sustainability/Lifeline_OS_Sustainability_Impact.pdf) | **Sustainability** | Socio-economic impact, climate adaptation metrics, and public health equity assessment. |
+| [`docs/research/`](docs/research/) | **Research** | Initial field research papers, flood mitigation concepts, and domain analyses. |
+| [`docs/specifications/`](docs/specifications/) | **Specifications** | Comprehensive platform requirements and systems design documentation. |
+| [`docs/videos/`](docs/videos/) | **Demonstration** | Full 3m40s technical video walkthrough (`Lifeline_OS_Walkthrough_Demo.mp4`) and Remotion studio project. |
 
 ---
 

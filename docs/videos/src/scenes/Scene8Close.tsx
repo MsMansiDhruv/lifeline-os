@@ -73,7 +73,7 @@ export const Scene8Close: React.FC = () => {
               marginBottom: 16,
             }}
           >
-            <span>HACKATHON TECHNICAL SUBMISSION</span>
+            <span>DISASTER MANAGEMENT DECISION SUPPORT SYSTEM</span>
           </div>
 
           <h1

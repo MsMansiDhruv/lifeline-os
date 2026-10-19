@@ -11,6 +11,10 @@
     "start": "NODE_ENV=production tsx server.ts"
   },
   "dependencies": {
+    "@google-cloud/bigquery": "^9.3.0",
+    "@google-cloud/firestore": "^9.3.1",
+    "@google-cloud/pubsub": "^6.3.0",
+    "@google-cloud/storage": "^8.4.0",
     "@google/genai": "^2.29.1",
     "@types/three": "^0.186.0",
     "express": "^4.21.2",

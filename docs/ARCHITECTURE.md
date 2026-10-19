@@ -95,7 +95,7 @@ flowchart TD
 - **Express 4.21 with Node.js & TypeScript (`tsx server.ts`)**: Fast HTTP routing, static distribution, and lightweight proxying.
 - **Google GenAI SDK (`@google/genai`)**: Optional generative briefing copilot (`/api/genai/chat`), with deterministic graceful fallbacks if offline or unkeyed.
 
-### External Keyless APIs (Zero-Cost, Unlimited Hackathon Replicability)
+### External Keyless APIs (Zero-Cost, Unlimited Production Replicability)
 1. **Open-Meteo Weather Forecast API**: Real-time 10m wind speed, precipitation, 2m ambient temperature, barometric surface pressure.
 2. **Copernicus GloFAS Flood Discharge API**: Continental river discharge ($Q\text{ m}^3/\text{s}$) updated daily.
 3. **Open-Meteo SRTM Topographic Elevation API**: 90m shuttle radar topography for terrain ASL analysis.
