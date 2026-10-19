@@ -269,13 +269,13 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const getIncidentLabel = () => {
-    if (activeTheaterId === 'nepal') return 'Nepal: Roshi Khola (2024)';
+    if (activeTheaterId === 'nepal') return 'Nepal: Roshi Khola (2026)';
     if (activeTheaterId === 'custom' && customTheater) return `Custom: ${customTheater.name}`;
     return 'Assam: Silchar Flood (2022)';
   };
 
   return (
-    <header className="h-14 bg-[#0E1625] border-b border-[#26364B] px-4 flex items-center justify-between gap-3 shrink-0 select-none z-30">
+    <header className="h-14 bg-[#0E1625] border-b border-[#26364B] px-4 flex items-center justify-between gap-3 shrink-0 select-none z-50 relative">
       {/* 1. Logo and Lifeline OS Name */}
       <div className="flex items-center gap-2.5 shrink-0">
         <div className="w-8 h-8 rounded-lg bg-[#182437] border border-[#26364B] flex items-center justify-center text-[#13B8D5] shadow-sm">
@@ -298,20 +298,22 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           type="button"
           onClick={() => setIsIncidentMenuOpen((prev) => !prev)}
-          className="h-9 px-3 rounded-lg bg-[#121D2D] border border-[#26364B] text-[#E8EEF7] hover:bg-[#182437] hover:border-[#354964] transition-colors flex items-center gap-2 text-xs font-medium cursor-pointer"
+          className="h-9 px-3 rounded-lg bg-[#121D2D] border border-[#26364B] text-[#E8EEF7] hover:bg-[#182437] hover:border-[#354964] transition-colors flex items-center gap-2 text-xs font-medium cursor-pointer min-w-[210px] md:min-w-[240px] justify-between"
           title="Select Active Incident Workspace"
         >
-          <span className="text-sm">
-            {activeTheaterId === 'nepal' ? '🇳🇵' : '🇮🇳'}
-          </span>
-          <span className="font-semibold max-w-[150px] md:max-w-[180px] truncate">
-            {getIncidentLabel()}
-          </span>
-          <ChevronDown className="w-3.5 h-3.5 text-[#9AAAC0]" />
+          <div className="flex items-center gap-2 truncate">
+            <span className="text-sm shrink-0">
+              {activeTheaterId === 'nepal' ? '🇳🇵' : '🇮🇳'}
+            </span>
+            <span className="font-semibold truncate">
+              {getIncidentLabel()}
+            </span>
+          </div>
+          <ChevronDown className="w-3.5 h-3.5 text-[#9AAAC0] shrink-0" />
         </button>
 
         {isIncidentMenuOpen && (
-          <div className="absolute left-0 top-full mt-1.5 w-64 bg-[#0E1625] border border-[#26364B] rounded-lg shadow-xl p-1 z-50 text-xs text-[#E8EEF7] space-y-0.5 animate-in fade-in">
+          <div className="absolute left-0 top-full mt-1.5 w-72 bg-[#0E1625] border border-[#26364B] rounded-lg shadow-xl p-1 z-50 text-xs text-[#E8EEF7] space-y-0.5 animate-in fade-in">
             <div className="px-2.5 py-1.5 text-[10px] font-mono uppercase text-[#74859D] font-bold border-b border-[#1E2B3D]">
               Select Disaster Incident
             </div>
@@ -355,7 +357,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <span>🇳🇵</span>
                 <div>
                   <div className="font-medium">Nepal: BP Highway</div>
-                  <div className="text-[10px] text-[#9AAAC0]">Roshi Khola Surge • Oct 2024</div>
+                  <div className="text-[10px] text-[#9AAAC0]">Roshi Khola Surge • Oct 2026</div>
                 </div>
               </div>
               <span className="text-[9px] font-mono px-1 py-0.5 rounded bg-[#121D2D] text-[#9AAAC0] border border-[#26364B]">
@@ -492,7 +494,7 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
 
         {isMoreMenuOpen && (
-          <div className="absolute right-0 top-full mt-1.5 w-60 bg-[#0E1625] border border-[#26364B] rounded-lg shadow-2xl p-1 z-50 text-xs text-[#E8EEF7] space-y-0.5 animate-in fade-in">
+          <div className="absolute right-0 top-full mt-2 w-64 bg-[#0E1625] border border-[#26364B] rounded-lg shadow-2xl p-1 z-[100] text-xs text-[#E8EEF7] space-y-0.5 animate-in fade-in">
             <div className="px-2.5 py-1.5 text-[10px] font-mono uppercase text-[#74859D] font-bold border-b border-[#1E2B3D]">
               Workspace Actions &amp; Tools
             </div>

@@ -1349,7 +1349,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       )}
 
       {/* LAYER CATALOGUE & VISIBILITY CONTROLS */}
-      <div className="absolute top-4 right-4 z-[450] bg-[#0E1625]/95 border border-[#26364B] rounded-xl shadow-2xl w-[300px] max-w-[90vw] backdrop-blur-md select-none pointer-events-auto overflow-hidden transition-all">
+      <div className="absolute top-16 right-4 z-[35] bg-[#0E1625]/95 border border-[#26364B] rounded-xl shadow-2xl w-[300px] max-w-[90vw] backdrop-blur-md select-none pointer-events-auto overflow-hidden transition-all">
         {/* Toggle Header Bar */}
         <div
           onClick={() => setIsLegendOpen(!isLegendOpen)}

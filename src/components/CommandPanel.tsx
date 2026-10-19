@@ -524,7 +524,7 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
                   <span>{currentTheater.name}</span>
                 </span>
                 <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-[#182437] text-[#F0B44D] border border-[#26364B]">
-                  {currentTheater.id === 'silchar' ? 'June 2022 Event' : 'Sep 2024 Event'}
+                  {currentTheater.id === 'silchar' ? 'June 2022 Event' : 'Sep 2026 Event'}
                 </span>
               </div>
 
@@ -1107,11 +1107,11 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
 
                   {/* Corridor Selector Dropdown in Chapter 3 */}
                   <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-[#0E1625] border border-[#26364B]">
-                    <span className="text-[11px] font-mono text-[#74859D]">Select Road:</span>
+                    <span className="text-[11px] font-mono text-[#74859D] shrink-0">Select Road:</span>
                     <select
                       value={selectedChokeIdx}
                       onChange={(e) => onSelectChokeIdx(Number(e.target.value))}
-                      className="bg-[#080D16] text-[#13B8D5] border border-[#26364B] hover:border-[#13B8D5] rounded-lg px-2 py-1 text-xs font-semibold cursor-pointer focus:outline-none max-w-[240px] truncate"
+                      className="flex-1 min-w-0 max-w-full bg-[#080D16] text-[#13B8D5] border border-[#26364B] hover:border-[#13B8D5] rounded-lg px-2 py-1 text-xs font-semibold cursor-pointer focus:outline-none truncate"
                     >
                       {currentTheater.chokePoints.map((cp, idx) => (
                         <option key={cp.id} value={idx}>
@@ -1891,7 +1891,7 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
 
                       <div className="p-2 rounded-lg bg-[#0E1625] border border-[#26364B] flex items-center justify-between">
                         <div>
-                          <strong className="text-[#E8EEF7] block font-semibold">Nepal Trishuli Surge (Sept 2024)</strong>
+                          <strong className="text-[#E8EEF7] block font-semibold">Nepal Trishuli Surge (Sept 2026)</strong>
                           <span className="text-[10px] text-[#74859D]">River Surface Velocity &gt; 3.8 m/s</span>
                         </div>
                         <button
